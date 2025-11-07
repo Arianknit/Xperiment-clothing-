@@ -428,14 +428,14 @@ function App() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="fabric-unit">Unit</Label>
-                          <Select value={fabricForm.unit} onValueChange={(value) => setFabricForm({...fabricForm, unit: value})} required>
+                          <Select value={fabricForm.unit} onValueChange={(value) => setFabricForm({...fabricForm, unit: value})}>
                             <SelectTrigger id="fabric-unit" data-testid="fabric-unit-select">
-                              <SelectValue />
+                              <SelectValue placeholder="Select unit" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="kg">Kilograms (kg)</SelectItem>
                               <SelectItem value="meters">Meters</SelectItem>
                               <SelectItem value="yards">Yards</SelectItem>
-                              <SelectItem value="kg">Kilograms</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
