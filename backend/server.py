@@ -36,6 +36,7 @@ class Fabric(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patch_number: str
     name: str
     fabric_type: str
     color: str
@@ -52,6 +53,7 @@ class FabricCreate(BaseModel):
     quantity: float
     unit: str
     supplier: str
+    patch_number: Optional[str] = None
 
 class FabricUpdate(BaseModel):
     name: Optional[str] = None
