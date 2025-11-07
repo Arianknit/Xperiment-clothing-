@@ -396,7 +396,7 @@ function App() {
                 <h2 className="text-3xl font-bold text-slate-800">Fabric Inventory</h2>
                 <Dialog open={fabricDialogOpen} onOpenChange={setFabricDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg" onClick={() => { setEditingFabric(null); setFabricForm({ name: "", fabric_type: "", color: "", quantity: "", unit: "meters", supplier: "" }); }} data-testid="add-fabric-button">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg" onClick={() => { setEditingFabric(null); setFabricForm({ name: "", fabric_type: "", color: "", quantity: "", unit: "kg", supplier: "" }); }} data-testid="add-fabric-button">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Fabric
                     </Button>
