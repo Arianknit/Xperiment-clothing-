@@ -694,6 +694,65 @@ function App() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Barcode View Dialog */}
+      <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
+        <DialogContent className="sm:max-w-[500px]" data-testid="barcode-dialog">
+          <DialogHeader>
+            <DialogTitle>Fabric Barcode</DialogTitle>
+            <DialogDescription>
+              {barcodeView && `${barcodeView.name} - ${barcodeView.patch_number}`}
+            </DialogDescription>
+          </DialogHeader>
+          {barcodeView && (
+            <div className="space-y-4">
+              <div className="bg-white p-6 rounded-lg border-2 border-slate-200 flex justify-center">
+                <img 
+                  src={`${API}/fabrics/${barcodeView.id}/barcode`} 
+                  alt={`Barcode for ${barcodeView.patch_number}`}
+                  className="max-w-full"
+                  data-testid="barcode-image"
+                />
+              </div>
+              <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Patch Number:</span>
+                  <span className="font-mono font-bold text-slate-800">{barcodeView.patch_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Fabric Name:</span>
+                  <span className="font-semibold text-slate-800">{barcodeView.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Type:</span>
+                  <span className="text-slate-800">{barcodeView.fabric_type}</span>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setBarcodeView(null)}
+                  data-testid="barcode-close-button"
+                >
+                  Close
+                </Button>
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = `${API}/fabrics/${barcodeView.id}/barcode`;
+                    link.download = `barcode-${barcodeView.patch_number}.png`;
+                    link.click();
+                  }}
+                  data-testid="barcode-download-button"
+                >
+                  Download
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
