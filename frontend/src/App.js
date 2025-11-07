@@ -25,6 +25,7 @@ function App() {
   
   // Fabric form state
   const [fabricForm, setFabricForm] = useState({
+    patch_number: "",
     name: "",
     fabric_type: "",
     color: "",
