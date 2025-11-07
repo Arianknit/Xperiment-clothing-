@@ -29,7 +29,7 @@ function App() {
     fabric_type: "",
     color: "",
     quantity: "",
-    unit: "meters",
+    unit: "kg",
     supplier: ""
   });
   const [editingFabric, setEditingFabric] = useState(null);
