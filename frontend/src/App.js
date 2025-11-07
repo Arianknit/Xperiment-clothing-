@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Package, TrendingUp, ClipboardList, Plus, Pencil, Trash2, Factory } from "lucide-react";
+import { Package, TrendingUp, ClipboardList, Plus, Pencil, Trash2, Factory, Barcode } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
