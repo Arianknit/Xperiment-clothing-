@@ -99,10 +99,21 @@ class ProductionOrderUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+# Helper function to generate patch number
+def generate_patch_number():
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    random_suffix = random.randint(1000, 9999)
+    return f"PATCH-{timestamp}-{random_suffix}"
+
 # Fabric Routes
 @api_router.post("/fabrics", response_model=Fabric)
 async def create_fabric(fabric: FabricCreate):
     fabric_dict = fabric.model_dump()
+    
+    # Auto-generate patch number if not provided
+    if not fabric_dict.get('patch_number'):
+        fabric_dict['patch_number'] = generate_patch_number()
+    
     fabric_obj = Fabric(**fabric_dict)
     
     doc = fabric_obj.model_dump()
