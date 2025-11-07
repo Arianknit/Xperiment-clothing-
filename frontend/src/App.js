@@ -35,6 +35,7 @@ function App() {
   });
   const [editingFabric, setEditingFabric] = useState(null);
   const [fabricDialogOpen, setFabricDialogOpen] = useState(false);
+  const [barcodeView, setBarcodeView] = useState(null);
   
   // Production order form state
   const [orderForm, setOrderForm] = useState({
