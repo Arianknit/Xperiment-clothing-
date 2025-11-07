@@ -411,6 +411,11 @@ function App() {
                     </DialogHeader>
                     <form onSubmit={handleFabricSubmit} className="space-y-4">
                       <div className="space-y-2">
+                        <Label htmlFor="patch-number">Patch Number</Label>
+                        <Input id="patch-number" value={fabricForm.patch_number} onChange={(e) => setFabricForm({...fabricForm, patch_number: e.target.value})} placeholder="Auto-generated if left empty" data-testid="patch-number-input" />
+                        <p className="text-xs text-slate-500">Leave empty to auto-generate</p>
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="fabric-name">Fabric Name</Label>
                         <Input id="fabric-name" value={fabricForm.name} onChange={(e) => setFabricForm({...fabricForm, name: e.target.value})} placeholder="Cotton Blend" required data-testid="fabric-name-input" />
                       </div>
