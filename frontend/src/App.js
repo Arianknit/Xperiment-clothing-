@@ -203,6 +203,7 @@ function App() {
   const openEditFabric = (fabric) => {
     setEditingFabric(fabric);
     setFabricForm({
+      patch_number: fabric.patch_number,
       name: fabric.name,
       fabric_type: fabric.fabric_type,
       color: fabric.color,
