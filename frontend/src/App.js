@@ -483,7 +483,22 @@ function App() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        <div className="bg-slate-100 p-2 rounded-lg flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Barcode className="h-4 w-4 text-slate-600" />
+                            <span className="text-xs font-mono text-slate-700">{fabric.patch_number}</span>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 text-xs text-blue-600 hover:bg-blue-50"
+                            onClick={() => setBarcodeView(fabric)}
+                            data-testid={`view-barcode-${fabric.id}`}
+                          >
+                            View
+                          </Button>
+                        </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-slate-600">Color:</span>
                           <span className="font-semibold text-slate-800">{fabric.color}</span>
