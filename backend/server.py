@@ -251,6 +251,31 @@ async def delete_production_order(order_id: str):
     return {"message": "Production order deleted successfully"}
 
 
+# Barcode Generation
+@api_router.get("/fabrics/{fabric_id}/barcode")
+async def get_fabric_barcode(fabric_id: str):
+    fabric = await db.fabrics.find_one({"id": fabric_id}, {"_id": 0})
+    if not fabric:
+        raise HTTPException(status_code=404, detail="Fabric not found")
+    
+    # Generate barcode using Code128
+    code128 = barcode.get_barcode_class('code128')
+    barcode_instance = code128(fabric['patch_number'], writer=ImageWriter())
+    
+    # Generate barcode image in memory
+    buffer = io.BytesIO()
+    barcode_instance.write(buffer, options={
+        'module_width': 0.3,
+        'module_height': 10,
+        'font_size': 10,
+        'text_distance': 5,
+        'quiet_zone': 3
+    })
+    buffer.seek(0)
+    
+    return StreamingResponse(buffer, media_type="image/png")
+
+
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
