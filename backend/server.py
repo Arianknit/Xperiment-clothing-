@@ -62,6 +62,7 @@ class FabricUpdate(BaseModel):
     quantity: Optional[float] = None
     unit: Optional[str] = None
     supplier: Optional[str] = None
+    patch_number: Optional[str] = None
 
 class ProductionOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
