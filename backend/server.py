@@ -126,6 +126,7 @@ class OutsourcingOrder(BaseModel):
     dc_number: str
     dc_date: datetime
     cutting_order_id: str
+    cutting_lot_number: Optional[str] = ""
     lot_number: str
     category: str
     style_type: str
