@@ -7,13 +7,12 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 import barcode
 from barcode.writer import ImageWriter
 import io
-import random
 
 
 ROOT_DIR = Path(__file__).parent
@@ -32,235 +31,222 @@ api_router = APIRouter(prefix="/api")
 
 
 # Define Models
-class Fabric(BaseModel):
+class FabricLot(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patch_number: str
-    name: str
+    lot_number: str
+    entry_date: datetime
     fabric_type: str
+    supplier_name: str
     color: str
-    quantity: float
-    unit: str  # meters, yards, kg
-    supplier: str
-    date_added: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class FabricCreate(BaseModel):
-    name: str
-    fabric_type: str
-    color: str
-    quantity: float
-    unit: str
-    supplier: str
-    patch_number: Optional[str] = None
-
-class FabricUpdate(BaseModel):
-    name: Optional[str] = None
-    fabric_type: Optional[str] = None
-    color: Optional[str] = None
-    quantity: Optional[float] = None
-    unit: Optional[str] = None
-    supplier: Optional[str] = None
-    patch_number: Optional[str] = None
-
-class ProductionOrder(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    order_number: str
-    garment_type: str
-    fabric_id: str
-    fabric_name: str
-    fabric_quantity: float
-    production_quantity: int
-    status: str  # Pending, In Progress, Completed, Cancelled
-    priority: str  # Low, Medium, High
-    start_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    completion_date: Optional[datetime] = None
-    notes: Optional[str] = None
+    quantity: float  # in kg
+    rib_quantity: float  # in kg
+    rate_per_kg: float
+    total_amount: float
+    remaining_quantity: float
+    remaining_rib_quantity: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class ProductionOrderCreate(BaseModel):
-    order_number: str
-    garment_type: str
-    fabric_id: str
-    fabric_name: str
-    fabric_quantity: float
-    production_quantity: int
-    status: str = "Pending"
-    priority: str = "Medium"
-    notes: Optional[str] = None
+class FabricLotCreate(BaseModel):
+    lot_number: str
+    entry_date: datetime
+    fabric_type: str
+    supplier_name: str
+    color: str
+    quantity: float
+    rib_quantity: float
+    rate_per_kg: float
 
-class ProductionOrderUpdate(BaseModel):
-    status: Optional[str] = None
-    priority: Optional[str] = None
-    completion_date: Optional[datetime] = None
-    notes: Optional[str] = None
+class CuttingOrder(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    cutting_date: datetime
+    fabric_lot_id: str
+    lot_number: str
+    category: str  # Kids, Mens, Women
+    style_type: str
+    fabric_taken: float
+    fabric_returned: float
+    fabric_used: float
+    rib_taken: float
+    rib_returned: float
+    rib_used: float
+    size_distribution: Dict[str, int]  # {"S": 10, "M": 20, ...}
+    total_quantity: int
+    total_fabric_cost: float
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CuttingOrderCreate(BaseModel):
+    cutting_date: datetime
+    fabric_lot_id: str
+    lot_number: str
+    category: str
+    style_type: str
+    fabric_taken: float
+    fabric_returned: float
+    rib_taken: float
+    rib_returned: float
+    size_distribution: Dict[str, int]
 
 
-# Helper function to generate patch number
-def generate_patch_number():
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    random_suffix = random.randint(1000, 9999)
-    return f"PATCH-{timestamp}-{random_suffix}"
+# Fabric Lot Routes
+@api_router.post("/fabric-lots", response_model=FabricLot)
+async def create_fabric_lot(lot: FabricLotCreate):
+    lot_dict = lot.model_dump()
+    
+    # Calculate total amount
+    total_amount = lot_dict['quantity'] * lot_dict['rate_per_kg']
+    lot_dict['total_amount'] = round(total_amount, 2)
+    lot_dict['remaining_quantity'] = lot_dict['quantity']
+    lot_dict['remaining_rib_quantity'] = lot_dict['rib_quantity']
+    
+    lot_obj = FabricLot(**lot_dict)
+    
+    doc = lot_obj.model_dump()
+    doc['entry_date'] = doc['entry_date'].isoformat()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.fabric_lots.insert_one(doc)
+    return lot_obj
 
-# Fabric Routes
-@api_router.post("/fabrics", response_model=Fabric)
-async def create_fabric(fabric: FabricCreate):
-    fabric_dict = fabric.model_dump()
+@api_router.get("/fabric-lots", response_model=List[FabricLot])
+async def get_fabric_lots():
+    lots = await db.fabric_lots.find({}, {"_id": 0}).to_list(1000)
     
-    # Auto-generate patch number if not provided
-    if not fabric_dict.get('patch_number'):
-        fabric_dict['patch_number'] = generate_patch_number()
+    for lot in lots:
+        if isinstance(lot['entry_date'], str):
+            lot['entry_date'] = datetime.fromisoformat(lot['entry_date'])
+        if isinstance(lot['created_at'], str):
+            lot['created_at'] = datetime.fromisoformat(lot['created_at'])
     
-    fabric_obj = Fabric(**fabric_dict)
-    
-    doc = fabric_obj.model_dump()
-    doc['date_added'] = doc['date_added'].isoformat()
-    doc['updated_at'] = doc['updated_at'].isoformat()
-    
-    await db.fabrics.insert_one(doc)
-    return fabric_obj
+    return lots
 
-@api_router.get("/fabrics", response_model=List[Fabric])
-async def get_fabrics():
-    fabrics = await db.fabrics.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/fabric-lots/{lot_id}", response_model=FabricLot)
+async def get_fabric_lot(lot_id: str):
+    lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
     
-    for fabric in fabrics:
-        if isinstance(fabric['date_added'], str):
-            fabric['date_added'] = datetime.fromisoformat(fabric['date_added'])
-        if isinstance(fabric['updated_at'], str):
-            fabric['updated_at'] = datetime.fromisoformat(fabric['updated_at'])
+    if isinstance(lot['entry_date'], str):
+        lot['entry_date'] = datetime.fromisoformat(lot['entry_date'])
+    if isinstance(lot['created_at'], str):
+        lot['created_at'] = datetime.fromisoformat(lot['created_at'])
     
-    return fabrics
+    return lot
 
-@api_router.get("/fabrics/{fabric_id}", response_model=Fabric)
-async def get_fabric(fabric_id: str):
-    fabric = await db.fabrics.find_one({"id": fabric_id}, {"_id": 0})
-    if not fabric:
-        raise HTTPException(status_code=404, detail="Fabric not found")
-    
-    if isinstance(fabric['date_added'], str):
-        fabric['date_added'] = datetime.fromisoformat(fabric['date_added'])
-    if isinstance(fabric['updated_at'], str):
-        fabric['updated_at'] = datetime.fromisoformat(fabric['updated_at'])
-    
-    return fabric
-
-@api_router.put("/fabrics/{fabric_id}", response_model=Fabric)
-async def update_fabric(fabric_id: str, fabric_update: FabricUpdate):
-    update_data = {k: v for k, v in fabric_update.model_dump().items() if v is not None}
-    
-    if not update_data:
-        raise HTTPException(status_code=400, detail="No fields to update")
-    
-    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
-    result = await db.fabrics.update_one(
-        {"id": fabric_id},
-        {"$set": update_data}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Fabric not found")
-    
-    return await get_fabric(fabric_id)
-
-@api_router.delete("/fabrics/{fabric_id}")
-async def delete_fabric(fabric_id: str):
-    result = await db.fabrics.delete_one({"id": fabric_id})
+@api_router.delete("/fabric-lots/{lot_id}")
+async def delete_fabric_lot(lot_id: str):
+    result = await db.fabric_lots.delete_one({"id": lot_id})
     
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Fabric not found")
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
     
-    return {"message": "Fabric deleted successfully"}
+    return {"message": "Fabric lot deleted successfully"}
 
 
-# Production Order Routes
-@api_router.post("/production-orders", response_model=ProductionOrder)
-async def create_production_order(order: ProductionOrderCreate):
+# Cutting Order Routes
+@api_router.post("/cutting-orders", response_model=CuttingOrder)
+async def create_cutting_order(order: CuttingOrderCreate):
     order_dict = order.model_dump()
-    order_obj = ProductionOrder(**order_dict)
+    
+    # Calculate fabric and rib used
+    fabric_used = order_dict['fabric_taken'] - order_dict['fabric_returned']
+    rib_used = order_dict['rib_taken'] - order_dict['rib_returned']
+    
+    order_dict['fabric_used'] = round(fabric_used, 2)
+    order_dict['rib_used'] = round(rib_used, 2)
+    
+    # Calculate total quantity from size distribution
+    total_quantity = sum(order_dict['size_distribution'].values())
+    order_dict['total_quantity'] = total_quantity
+    
+    # Get fabric lot to calculate cost
+    fabric_lot = await db.fabric_lots.find_one({"id": order_dict['fabric_lot_id']}, {"_id": 0})
+    if not fabric_lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
+    
+    # Calculate total fabric cost
+    total_fabric_cost = fabric_used * fabric_lot['rate_per_kg']
+    order_dict['total_fabric_cost'] = round(total_fabric_cost, 2)
+    
+    order_obj = CuttingOrder(**order_dict)
     
     doc = order_obj.model_dump()
-    doc['start_date'] = doc['start_date'].isoformat()
+    doc['cutting_date'] = doc['cutting_date'].isoformat()
     doc['created_at'] = doc['created_at'].isoformat()
-    if doc['completion_date']:
-        doc['completion_date'] = doc['completion_date'].isoformat()
     
-    await db.production_orders.insert_one(doc)
+    await db.cutting_orders.insert_one(doc)
+    
+    # Update fabric lot remaining quantities
+    new_remaining_qty = fabric_lot['remaining_quantity'] - fabric_used
+    new_remaining_rib_qty = fabric_lot['remaining_rib_quantity'] - rib_used
+    
+    await db.fabric_lots.update_one(
+        {"id": order_dict['fabric_lot_id']},
+        {"$set": {
+            "remaining_quantity": round(new_remaining_qty, 2),
+            "remaining_rib_quantity": round(new_remaining_rib_qty, 2)
+        }}
+    )
+    
     return order_obj
 
-@api_router.get("/production-orders", response_model=List[ProductionOrder])
-async def get_production_orders():
-    orders = await db.production_orders.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/cutting-orders", response_model=List[CuttingOrder])
+async def get_cutting_orders():
+    orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
     
     for order in orders:
-        if isinstance(order['start_date'], str):
-            order['start_date'] = datetime.fromisoformat(order['start_date'])
+        if isinstance(order['cutting_date'], str):
+            order['cutting_date'] = datetime.fromisoformat(order['cutting_date'])
         if isinstance(order['created_at'], str):
             order['created_at'] = datetime.fromisoformat(order['created_at'])
-        if order.get('completion_date') and isinstance(order['completion_date'], str):
-            order['completion_date'] = datetime.fromisoformat(order['completion_date'])
     
     return orders
 
-@api_router.get("/production-orders/{order_id}", response_model=ProductionOrder)
-async def get_production_order(order_id: str):
-    order = await db.production_orders.find_one({"id": order_id}, {"_id": 0})
+@api_router.get("/cutting-orders/{order_id}", response_model=CuttingOrder)
+async def get_cutting_order(order_id: str):
+    order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
-        raise HTTPException(status_code=404, detail="Production order not found")
+        raise HTTPException(status_code=404, detail="Cutting order not found")
     
-    if isinstance(order['start_date'], str):
-        order['start_date'] = datetime.fromisoformat(order['start_date'])
+    if isinstance(order['cutting_date'], str):
+        order['cutting_date'] = datetime.fromisoformat(order['cutting_date'])
     if isinstance(order['created_at'], str):
         order['created_at'] = datetime.fromisoformat(order['created_at'])
-    if order.get('completion_date') and isinstance(order['completion_date'], str):
-        order['completion_date'] = datetime.fromisoformat(order['completion_date'])
     
     return order
 
-@api_router.put("/production-orders/{order_id}", response_model=ProductionOrder)
-async def update_production_order(order_id: str, order_update: ProductionOrderUpdate):
-    update_data = {k: v for k, v in order_update.model_dump().items() if v is not None}
+@api_router.delete("/cutting-orders/{order_id}")
+async def delete_cutting_order(order_id: str):
+    order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Cutting order not found")
     
-    if not update_data:
-        raise HTTPException(status_code=400, detail="No fields to update")
-    
-    if 'completion_date' in update_data and update_data['completion_date']:
-        update_data['completion_date'] = update_data['completion_date'].isoformat()
-    
-    result = await db.production_orders.update_one(
-        {"id": order_id},
-        {"$set": update_data}
+    # Restore fabric lot quantities
+    await db.fabric_lots.update_one(
+        {"id": order['fabric_lot_id']},
+        {"$inc": {
+            "remaining_quantity": order['fabric_used'],
+            "remaining_rib_quantity": order['rib_used']
+        }}
     )
     
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Production order not found")
-    
-    return await get_production_order(order_id)
-
-@api_router.delete("/production-orders/{order_id}")
-async def delete_production_order(order_id: str):
-    result = await db.production_orders.delete_one({"id": order_id})
-    
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Production order not found")
-    
-    return {"message": "Production order deleted successfully"}
+    result = await db.cutting_orders.delete_one({"id": order_id})
+    return {"message": "Cutting order deleted successfully"}
 
 
 # Barcode Generation
-@api_router.get("/fabrics/{fabric_id}/barcode")
-async def get_fabric_barcode(fabric_id: str):
-    fabric = await db.fabrics.find_one({"id": fabric_id}, {"_id": 0})
-    if not fabric:
-        raise HTTPException(status_code=404, detail="Fabric not found")
+@api_router.get("/fabric-lots/{lot_id}/barcode")
+async def get_lot_barcode(lot_id: str):
+    lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
     
     # Generate barcode using Code128
     code128 = barcode.get_barcode_class('code128')
-    barcode_instance = code128(fabric['patch_number'], writer=ImageWriter())
+    barcode_instance = code128(lot['lot_number'], writer=ImageWriter())
     
     # Generate barcode image in memory
     buffer = io.BytesIO()
@@ -279,23 +265,30 @@ async def get_fabric_barcode(fabric_id: str):
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
-    total_fabrics = await db.fabrics.count_documents({})
-    total_orders = await db.production_orders.count_documents({})
-    active_orders = await db.production_orders.count_documents({"status": "In Progress"})
-    completed_orders = await db.production_orders.count_documents({"status": "Completed"})
-    pending_orders = await db.production_orders.count_documents({"status": "Pending"})
+    total_lots = await db.fabric_lots.count_documents({})
+    total_cutting_orders = await db.cutting_orders.count_documents({})
     
-    # Calculate total fabric quantity
-    fabrics = await db.fabrics.find({}, {"_id": 0, "quantity": 1}).to_list(1000)
-    total_fabric_quantity = sum(f.get('quantity', 0) for f in fabrics)
+    # Calculate total fabric in stock
+    lots = await db.fabric_lots.find({}, {"_id": 0, "remaining_quantity": 1, "remaining_rib_quantity": 1}).to_list(1000)
+    total_fabric_stock = sum(lot.get('remaining_quantity', 0) for lot in lots)
+    total_rib_stock = sum(lot.get('remaining_rib_quantity', 0) for lot in lots)
+    
+    # Calculate total production by category
+    orders = await db.cutting_orders.find({}, {"_id": 0, "category": 1, "total_quantity": 1, "total_fabric_cost": 1}).to_list(1000)
+    kids_qty = sum(o.get('total_quantity', 0) for o in orders if o.get('category') == 'Kids')
+    mens_qty = sum(o.get('total_quantity', 0) for o in orders if o.get('category') == 'Mens')
+    women_qty = sum(o.get('total_quantity', 0) for o in orders if o.get('category') == 'Women')
+    total_production_cost = sum(o.get('total_fabric_cost', 0) for o in orders)
     
     return {
-        "total_fabrics": total_fabrics,
-        "total_fabric_quantity": round(total_fabric_quantity, 2),
-        "total_orders": total_orders,
-        "active_orders": active_orders,
-        "completed_orders": completed_orders,
-        "pending_orders": pending_orders
+        "total_lots": total_lots,
+        "total_fabric_stock": round(total_fabric_stock, 2),
+        "total_rib_stock": round(total_rib_stock, 2),
+        "total_cutting_orders": total_cutting_orders,
+        "kids_production": kids_qty,
+        "mens_production": mens_qty,
+        "women_production": women_qty,
+        "total_production_cost": round(total_production_cost, 2)
     }
 
 
