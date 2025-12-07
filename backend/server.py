@@ -1246,7 +1246,7 @@ async def generate_bill_report():
     
     html_content += f"""
                 <tr class="total-row">
-                    <td colspan="5">TOTAL</td>
+                    <td colspan="6">TOTAL</td>
                     <td>₹{total_outsourcing_amount:.2f}</td>
                     <td>₹{total_outsourcing_paid:.2f}</td>
                     <td>₹{total_outsourcing_balance:.2f}</td>
