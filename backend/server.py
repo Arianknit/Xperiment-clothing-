@@ -1241,6 +1241,45 @@ async def generate_bill_report():
             </tbody>
         </table>
         
+        <h2 class="section-title">Shortage Debit Summary</h2>
+        <div style="background: #fee; padding: 20px; border-radius: 8px; border: 2px solid #fcc;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; color: #dc2626;">Total Shortage Debit</h3>
+                    <p style="margin: 5px 0 0 0; color: #64748b;">Amount to be recovered from units</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 32px; font-weight: bold; color: #dc2626;">₹{total_shortage_debit:.2f}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white;">
+            <h2 style="margin: 0 0 15px 0; color: white; text-align: center; font-size: 24px;">COMPREHENSIVE TOTAL BREAKDOWN</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Fabric Cost</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: bold;">₹{total_fabric_cost:.2f}</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Cutting Cost</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: bold;">₹{total_cutting_amount:.2f}</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Outsourcing Cost</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: bold;">₹{total_outsourcing_amount:.2f}</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Shortage Debit</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: bold;">(-) ₹{total_shortage_debit:.2f}</p>
+                </div>
+            </div>
+            <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 20px; text-align: center;">
+                <p style="margin: 0 0 10px 0; font-size: 18px; opacity: 0.9;">GRAND TOTAL</p>
+                <p style="margin: 0; font-size: 42px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">₹{comprehensive_total:.2f}</p>
+            </div>
+        </div>
+        
         <div style="margin-top: 50px; border-top: 2px solid #000; padding-top: 20px;">
             <div style="display: flex; justify-content: space-between;">
                 <div style="text-align: center; width: 45%;">
