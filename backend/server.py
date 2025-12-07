@@ -153,6 +153,13 @@ class OutsourcingOrderCreate(BaseModel):
     size_distribution: Dict[str, int]
     rate_per_pcs: float
 
+class OutsourcingOrderUpdate(BaseModel):
+    dc_date: Optional[datetime] = None
+    operation_type: Optional[str] = None
+    unit_name: Optional[str] = None
+    rate_per_pcs: Optional[float] = None
+    size_distribution: Optional[Dict[str, int]] = None
+
 class OutsourcingReceipt(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
