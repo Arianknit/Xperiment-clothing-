@@ -107,6 +107,7 @@ function App() {
     size_distribution: {}
   });
   const [outsourcingDialogOpen, setOutsourcingDialogOpen] = useState(false);
+  const [editingOutsourcingOrder, setEditingOutsourcingOrder] = useState(null);
   
   // Receipt form state
   const [receiptForm, setReceiptForm] = useState({
