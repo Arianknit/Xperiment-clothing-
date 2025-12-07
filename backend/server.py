@@ -62,6 +62,7 @@ class CuttingOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    cutting_lot_number: Optional[str] = ""
     cutting_date: datetime
     fabric_lot_id: str
     lot_number: str
@@ -81,6 +82,7 @@ class CuttingOrder(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CuttingOrderCreate(BaseModel):
+    cutting_lot_number: str
     cutting_date: datetime
     fabric_lot_id: str
     lot_number: str
@@ -92,6 +94,18 @@ class CuttingOrderCreate(BaseModel):
     rib_returned: float
     size_distribution: Dict[str, int]
     cutting_rate_per_pcs: float
+
+class CuttingOrderUpdate(BaseModel):
+    cutting_lot_number: Optional[str] = None
+    cutting_date: Optional[datetime] = None
+    category: Optional[str] = None
+    style_type: Optional[str] = None
+    fabric_taken: Optional[float] = None
+    fabric_returned: Optional[float] = None
+    rib_taken: Optional[float] = None
+    rib_returned: Optional[float] = None
+    cutting_rate_per_pcs: Optional[float] = None
+    size_distribution: Optional[Dict[str, int]] = None
 
 class OutsourcingOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
