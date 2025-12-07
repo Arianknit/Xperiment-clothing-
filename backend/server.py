@@ -102,6 +102,7 @@ class CuttingOrderCreate(BaseModel):
 
 class CuttingOrderUpdate(BaseModel):
     cutting_lot_number: Optional[str] = None
+    cutting_master_name: Optional[str] = None
     cutting_date: Optional[datetime] = None
     category: Optional[str] = None
     style_type: Optional[str] = None
@@ -111,6 +112,12 @@ class CuttingOrderUpdate(BaseModel):
     rib_returned: Optional[float] = None
     cutting_rate_per_pcs: Optional[float] = None
     size_distribution: Optional[Dict[str, int]] = None
+
+class PaymentRecord(BaseModel):
+    amount: float
+    payment_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    payment_method: Optional[str] = "Cash"
+    notes: Optional[str] = ""
 
 class OutsourcingOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
