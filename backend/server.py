@@ -135,6 +135,9 @@ class OutsourcingOrder(BaseModel):
     total_quantity: int
     rate_per_pcs: float
     total_amount: float
+    amount_paid: Optional[float] = 0.0
+    balance: Optional[float] = 0.0
+    payment_status: Optional[str] = "Unpaid"  # Unpaid, Partial, Paid
     status: str  # Sent, Received, Partial
     whatsapp_sent: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
