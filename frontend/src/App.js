@@ -1233,6 +1233,11 @@ function App() {
                             )}
                           </div>
                         </div>
+                        <div className="ml-4 flex gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => openEditOutsourcingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-outsourcing-order-${order.id}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
