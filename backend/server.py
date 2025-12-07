@@ -424,6 +424,13 @@ async def delete_cutting_order(order_id: str):
 async def create_outsourcing_order(order: OutsourcingOrderCreate):
     order_dict = order.model_dump()
     
+    # Get cutting order to retrieve cutting_lot_number
+    cutting_order = await db.cutting_orders.find_one({"id": order_dict['cutting_order_id']}, {"_id": 0})
+    if cutting_order:
+        order_dict['cutting_lot_number'] = cutting_order.get('cutting_lot_number', '')
+    else:
+        order_dict['cutting_lot_number'] = ''
+    
     # Generate DC number
     order_dict['dc_number'] = generate_dc_number()
     
