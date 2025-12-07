@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -75,6 +75,8 @@ class CuttingOrder(BaseModel):
     rib_used: float
     size_distribution: Dict[str, int]  # {"S": 10, "M": 20, ...}
     total_quantity: int
+    cutting_rate_per_pcs: float
+    total_cutting_amount: float
     total_fabric_cost: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -89,6 +91,68 @@ class CuttingOrderCreate(BaseModel):
     rib_taken: float
     rib_returned: float
     size_distribution: Dict[str, int]
+    cutting_rate_per_pcs: float
+
+class OutsourcingOrder(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    dc_number: str
+    dc_date: datetime
+    cutting_order_id: str
+    lot_number: str
+    category: str
+    style_type: str
+    operation_type: str  # Printing, Embroidery, Stone, Sequins, Sticker
+    unit_name: str
+    size_distribution: Dict[str, int]
+    total_quantity: int
+    rate_per_pcs: float
+    total_amount: float
+    status: str  # Sent, Received, Partial
+    whatsapp_sent: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class OutsourcingOrderCreate(BaseModel):
+    dc_date: datetime
+    cutting_order_id: str
+    lot_number: str
+    category: str
+    style_type: str
+    operation_type: str
+    unit_name: str
+    size_distribution: Dict[str, int]
+    rate_per_pcs: float
+
+class OutsourcingReceipt(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    outsourcing_order_id: str
+    dc_number: str
+    receipt_date: datetime
+    unit_name: str
+    operation_type: str
+    sent_distribution: Dict[str, int]
+    received_distribution: Dict[str, int]
+    shortage_distribution: Dict[str, int]
+    total_sent: int
+    total_received: int
+    total_shortage: int
+    rate_per_pcs: float
+    shortage_debit_amount: float
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class OutsourcingReceiptCreate(BaseModel):
+    outsourcing_order_id: str
+    receipt_date: datetime
+    received_distribution: Dict[str, int]
+
+
+# Helper function to generate DC number
+def generate_dc_number():
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    return f"DC-{timestamp}"
 
 
 # Fabric Lot Routes
@@ -161,6 +225,10 @@ async def create_cutting_order(order: CuttingOrderCreate):
     # Calculate total quantity from size distribution
     total_quantity = sum(order_dict['size_distribution'].values())
     order_dict['total_quantity'] = total_quantity
+    
+    # Calculate total cutting amount
+    total_cutting_amount = total_quantity * order_dict['cutting_rate_per_pcs']
+    order_dict['total_cutting_amount'] = round(total_cutting_amount, 2)
     
     # Get fabric lot to calculate cost
     fabric_lot = await db.fabric_lots.find_one({"id": order_dict['fabric_lot_id']}, {"_id": 0})
@@ -237,6 +305,376 @@ async def delete_cutting_order(order_id: str):
     return {"message": "Cutting order deleted successfully"}
 
 
+# Outsourcing Order Routes
+@api_router.post("/outsourcing-orders", response_model=OutsourcingOrder)
+async def create_outsourcing_order(order: OutsourcingOrderCreate):
+    order_dict = order.model_dump()
+    
+    # Generate DC number
+    order_dict['dc_number'] = generate_dc_number()
+    
+    # Calculate total quantity
+    total_quantity = sum(order_dict['size_distribution'].values())
+    order_dict['total_quantity'] = total_quantity
+    
+    # Calculate total amount
+    total_amount = total_quantity * order_dict['rate_per_pcs']
+    order_dict['total_amount'] = round(total_amount, 2)
+    
+    order_dict['status'] = 'Sent'
+    order_dict['whatsapp_sent'] = False
+    
+    order_obj = OutsourcingOrder(**order_dict)
+    
+    doc = order_obj.model_dump()
+    doc['dc_date'] = doc['dc_date'].isoformat()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.outsourcing_orders.insert_one(doc)
+    return order_obj
+
+@api_router.get("/outsourcing-orders", response_model=List[OutsourcingOrder])
+async def get_outsourcing_orders():
+    orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    for order in orders:
+        if isinstance(order['dc_date'], str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+        if isinstance(order['created_at'], str):
+            order['created_at'] = datetime.fromisoformat(order['created_at'])
+    
+    return orders
+
+@api_router.get("/outsourcing-orders/{order_id}", response_model=OutsourcingOrder)
+async def get_outsourcing_order(order_id: str):
+    order = await db.outsourcing_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    if isinstance(order['dc_date'], str):
+        order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    if isinstance(order['created_at'], str):
+        order['created_at'] = datetime.fromisoformat(order['created_at'])
+    
+    return order
+
+@api_router.delete("/outsourcing-orders/{order_id}")
+async def delete_outsourcing_order(order_id: str):
+    result = await db.outsourcing_orders.delete_one({"id": order_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    return {"message": "Outsourcing order deleted successfully"}
+
+
+# Outsourcing Receipt Routes
+@api_router.post("/outsourcing-receipts", response_model=OutsourcingReceipt)
+async def create_outsourcing_receipt(receipt: OutsourcingReceiptCreate):
+    receipt_dict = receipt.model_dump()
+    
+    # Get the outsourcing order
+    outsourcing_order = await db.outsourcing_orders.find_one({"id": receipt_dict['outsourcing_order_id']}, {"_id": 0})
+    if not outsourcing_order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    # Convert datetime fields if they're strings
+    if isinstance(outsourcing_order['dc_date'], str):
+        outsourcing_order['dc_date'] = datetime.fromisoformat(outsourcing_order['dc_date'])
+    
+    receipt_dict['dc_number'] = outsourcing_order['dc_number']
+    receipt_dict['unit_name'] = outsourcing_order['unit_name']
+    receipt_dict['operation_type'] = outsourcing_order['operation_type']
+    receipt_dict['sent_distribution'] = outsourcing_order['size_distribution']
+    receipt_dict['rate_per_pcs'] = outsourcing_order['rate_per_pcs']
+    
+    # Calculate shortage
+    shortage_distribution = {}
+    for size, sent_qty in outsourcing_order['size_distribution'].items():
+        received_qty = receipt_dict['received_distribution'].get(size, 0)
+        shortage = sent_qty - received_qty
+        if shortage > 0:
+            shortage_distribution[size] = shortage
+    
+    receipt_dict['shortage_distribution'] = shortage_distribution
+    
+    # Calculate totals
+    total_sent = sum(outsourcing_order['size_distribution'].values())
+    total_received = sum(receipt_dict['received_distribution'].values())
+    total_shortage = sum(shortage_distribution.values())
+    
+    receipt_dict['total_sent'] = total_sent
+    receipt_dict['total_received'] = total_received
+    receipt_dict['total_shortage'] = total_shortage
+    
+    # Calculate shortage debit amount
+    shortage_debit_amount = total_shortage * receipt_dict['rate_per_pcs']
+    receipt_dict['shortage_debit_amount'] = round(shortage_debit_amount, 2)
+    
+    receipt_obj = OutsourcingReceipt(**receipt_dict)
+    
+    doc = receipt_obj.model_dump()
+    doc['receipt_date'] = doc['receipt_date'].isoformat()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.outsourcing_receipts.insert_one(doc)
+    
+    # Update outsourcing order status
+    new_status = 'Received' if total_shortage == 0 else 'Partial'
+    await db.outsourcing_orders.update_one(
+        {"id": receipt_dict['outsourcing_order_id']},
+        {"$set": {"status": new_status}}
+    )
+    
+    return receipt_obj
+
+@api_router.get("/outsourcing-receipts", response_model=List[OutsourcingReceipt])
+async def get_outsourcing_receipts():
+    receipts = await db.outsourcing_receipts.find({}, {"_id": 0}).to_list(1000)
+    
+    for receipt in receipts:
+        if isinstance(receipt['receipt_date'], str):
+            receipt['receipt_date'] = datetime.fromisoformat(receipt['receipt_date'])
+        if isinstance(receipt['created_at'], str):
+            receipt['created_at'] = datetime.fromisoformat(receipt['created_at'])
+    
+    return receipts
+
+
+# Delivery Challan Print
+@api_router.get("/outsourcing-orders/{order_id}/dc", response_class=HTMLResponse)
+async def get_delivery_challan(order_id: str):
+    order = await db.outsourcing_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    if isinstance(order['dc_date'], str):
+        order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Generate HTML for DC
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Delivery Challan - {order['dc_number']}</title>
+        <style>
+            @media print {{
+                @page {{ margin: 1cm; }}
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                max-width: 800px;
+                margin: 0 auto;
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 3px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 28px;
+            }}
+            .info-section {{
+                margin: 20px 0;
+            }}
+            .info-row {{
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #ddd;
+            }}
+            .info-label {{
+                font-weight: bold;
+                width: 40%;
+            }}
+            .info-value {{
+                width: 60%;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }}
+            th, td {{
+                border: 1px solid #000;
+                padding: 10px;
+                text-align: left;
+            }}
+            th {{
+                background-color: #f0f0f0;
+                font-weight: bold;
+            }}
+            .total-row {{
+                font-weight: bold;
+                background-color: #f9f9f9;
+            }}
+            .footer {{
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px solid #000;
+            }}
+            .signature-section {{
+                display: flex;
+                justify-content: space-between;
+                margin-top: 60px;
+            }}
+            .signature-box {{
+                text-align: center;
+                width: 45%;
+            }}
+            .signature-line {{
+                border-top: 1px solid #000;
+                margin-top: 50px;
+                padding-top: 5px;
+            }}
+            .print-button {{
+                background-color: #4F46E5;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                margin: 10px 0;
+            }}
+            .print-button:hover {{
+                background-color: #4338CA;
+            }}
+        </style>
+    </head>
+    <body>
+        <button class="print-button no-print" onclick="window.print()">Print Delivery Challan</button>
+        
+        <div class="header">
+            <h1>DELIVERY CHALLAN</h1>
+            <p>Garment Manufacturing Pro</p>
+        </div>
+        
+        <div class="info-section">
+            <div class="info-row">
+                <div class="info-label">DC Number:</div>
+                <div class="info-value">{order['dc_number']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">DC Date:</div>
+                <div class="info-value">{order['dc_date'].strftime('%d-%m-%Y')}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Lot Number:</div>
+                <div class="info-value">{order['lot_number']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Unit Name:</div>
+                <div class="info-value">{order['unit_name']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Operation Type:</div>
+                <div class="info-value">{order['operation_type']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Category:</div>
+                <div class="info-value">{order['category']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Style Type:</div>
+                <div class="info-value">{order['style_type']}</div>
+            </div>
+        </div>
+        
+        <h3>Size-wise Quantity Details</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Size</th>
+                    <th>Quantity (Pieces)</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    # Add size distribution rows
+    for size, qty in order['size_distribution'].items():
+        if qty > 0:
+            html_content += f"""
+                <tr>
+                    <td>{size}</td>
+                    <td>{qty}</td>
+                </tr>
+            """
+    
+    html_content += f"""
+                <tr class="total-row">
+                    <td>TOTAL</td>
+                    <td>{order['total_quantity']}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="info-section">
+            <div class="info-row">
+                <div class="info-label">Rate per Piece:</div>
+                <div class="info-value">₹ {order['rate_per_pcs']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Total Amount:</div>
+                <div class="info-value">₹ {order['total_amount']}</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line">Sender's Signature</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">Receiver's Signature</div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
+
+
+# WhatsApp Message Simulation
+@api_router.post("/outsourcing-orders/{order_id}/send-whatsapp")
+async def send_whatsapp_message(order_id: str):
+    order = await db.outsourcing_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    # In production, integrate with WhatsApp Business API
+    # For now, just mark as sent
+    message = f"""
+    📦 *Delivery Challan*
+    
+    DC No: {order['dc_number']}
+    Lot: {order['lot_number']}
+    Operation: {order['operation_type']}
+    Total Qty: {order['total_quantity']} pcs
+    Amount: ₹{order['total_amount']}
+    
+    Please acknowledge receipt.
+    """
+    
+    await db.outsourcing_orders.update_one(
+        {"id": order_id},
+        {"$set": {"whatsapp_sent": True}}
+    )
+    
+    return {
+        "message": "WhatsApp message sent successfully",
+        "preview": message
+    }
+
+
 # Barcode Generation
 @api_router.get("/fabric-lots/{lot_id}/barcode")
 async def get_lot_barcode(lot_id: str):
@@ -267,6 +705,8 @@ async def get_lot_barcode(lot_id: str):
 async def get_dashboard_stats():
     total_lots = await db.fabric_lots.count_documents({})
     total_cutting_orders = await db.cutting_orders.count_documents({})
+    total_outsourcing_orders = await db.outsourcing_orders.count_documents({})
+    pending_outsourcing = await db.outsourcing_orders.count_documents({"status": "Sent"})
     
     # Calculate total fabric in stock
     lots = await db.fabric_lots.find({}, {"_id": 0, "remaining_quantity": 1, "remaining_rib_quantity": 1}).to_list(1000)
@@ -274,11 +714,20 @@ async def get_dashboard_stats():
     total_rib_stock = sum(lot.get('remaining_rib_quantity', 0) for lot in lots)
     
     # Calculate total production by category
-    orders = await db.cutting_orders.find({}, {"_id": 0, "category": 1, "total_quantity": 1, "total_fabric_cost": 1}).to_list(1000)
+    orders = await db.cutting_orders.find({}, {"_id": 0, "category": 1, "total_quantity": 1, "total_fabric_cost": 1, "total_cutting_amount": 1}).to_list(1000)
     kids_qty = sum(o.get('total_quantity', 0) for o in orders if o.get('category') == 'Kids')
     mens_qty = sum(o.get('total_quantity', 0) for o in orders if o.get('category') == 'Mens')
     women_qty = sum(o.get('total_quantity', 0) for o in orders if o.get('category') == 'Women')
     total_production_cost = sum(o.get('total_fabric_cost', 0) for o in orders)
+    total_cutting_cost = sum(o.get('total_cutting_amount', 0) for o in orders)
+    
+    # Calculate outsourcing costs and shortages
+    outsourcing_orders = await db.outsourcing_orders.find({}, {"_id": 0, "total_amount": 1}).to_list(1000)
+    total_outsourcing_cost = sum(o.get('total_amount', 0) for o in outsourcing_orders)
+    
+    receipts = await db.outsourcing_receipts.find({}, {"_id": 0, "shortage_debit_amount": 1, "total_shortage": 1}).to_list(1000)
+    total_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in receipts)
+    total_shortage_pcs = sum(r.get('total_shortage', 0) for r in receipts)
     
     return {
         "total_lots": total_lots,
@@ -288,7 +737,13 @@ async def get_dashboard_stats():
         "kids_production": kids_qty,
         "mens_production": mens_qty,
         "women_production": women_qty,
-        "total_production_cost": round(total_production_cost, 2)
+        "total_production_cost": round(total_production_cost, 2),
+        "total_cutting_cost": round(total_cutting_cost, 2),
+        "total_outsourcing_orders": total_outsourcing_orders,
+        "pending_outsourcing": pending_outsourcing,
+        "total_outsourcing_cost": round(total_outsourcing_cost, 2),
+        "total_shortage_debit": round(total_shortage_debit, 2),
+        "total_shortage_pcs": total_shortage_pcs
     }
 
 
