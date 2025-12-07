@@ -1,6 +1,26 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
+
+// Suppress ResizeObserver errors (harmless browser warnings)
+const debounce = (callback, delay) => {
+  let tid;
+  return function (...args) {
+    const ctx = self;
+    tid && clearTimeout(tid);
+    tid = setTimeout(() => {
+      callback.apply(ctx, args);
+    }, delay);
+  };
+};
+
+const _ = window.ResizeObserver;
+window.ResizeObserver = class ResizeObserver extends _ {
+  constructor(callback) {
+    callback = debounce(callback, 20);
+    super(callback);
+  }
+};
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
