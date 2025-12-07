@@ -942,6 +942,9 @@ async def generate_bill_report():
     # Get all outsourcing orders
     outsourcing_orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
     
+    # Calculate fabric costs
+    total_fabric_cost = sum(o.get('total_fabric_cost', 0) for o in cutting_orders)
+    
     # Calculate totals
     total_cutting_amount = sum(o.get('total_cutting_amount', 0) for o in cutting_orders)
     total_cutting_paid = sum(o.get('amount_paid', 0) for o in cutting_orders)
@@ -950,6 +953,13 @@ async def generate_bill_report():
     total_outsourcing_amount = sum(o.get('total_amount', 0) for o in outsourcing_orders)
     total_outsourcing_paid = sum(o.get('amount_paid', 0) for o in outsourcing_orders)
     total_outsourcing_balance = sum(o.get('balance', 0) for o in outsourcing_orders)
+    
+    # Calculate shortage debit
+    receipts = await db.outsourcing_receipts.find({}, {"_id": 0, "shortage_debit_amount": 1}).to_list(1000)
+    total_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in receipts)
+    
+    # Calculate comprehensive total
+    comprehensive_total = (total_fabric_cost + total_cutting_amount + total_outsourcing_amount) - total_shortage_debit
     
     # Generate HTML report
     html_content = f"""
