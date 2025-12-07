@@ -1132,12 +1132,9 @@ function App() {
                             <h3 className="text-xl font-bold text-slate-800">{order.dc_number}</h3>
                             {getStatusBadge(order.status)}
                             <Badge className="bg-purple-100 text-purple-800 border border-purple-200">{order.operation_type}</Badge>
+                            {getPaymentStatusBadge(order.payment_status || "Unpaid")}
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                              <p className="text-xs text-slate-500">Lot Number</p>
-                              <p className="font-semibold text-slate-800">{order.lot_number}</p>
-                            </div>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             <div>
                               <p className="text-xs text-slate-500">Unit Name</p>
                               <p className="font-semibold text-slate-800">{order.unit_name}</p>
@@ -1148,7 +1145,15 @@ function App() {
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Total Amount</p>
-                              <p className="font-bold text-orange-600">₹{order.total_amount}</p>
+                              <p className="font-bold text-indigo-600">₹{order.total_amount}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Paid</p>
+                              <p className="font-bold text-green-600">₹{order.amount_paid || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Balance</p>
+                              <p className="font-bold text-red-600">₹{order.balance || 0}</p>
                             </div>
                           </div>
                           <div className="flex gap-2 pt-2">
@@ -1183,6 +1188,18 @@ function App() {
                               >
                                 <PackageCheck className="h-4 w-4 mr-1" />
                                 Receive
+                              </Button>
+                            )}
+                            {(order.payment_status !== "Paid") && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openPaymentDialog(order, "outsourcing")}
+                                className="text-green-600 border-green-200 hover:bg-green-50"
+                                data-testid={`pay-outsourcing-${order.id}`}
+                              >
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                Pay
                               </Button>
                             )}
                           </div>
