@@ -428,6 +428,11 @@ async def create_outsourcing_order(order: OutsourcingOrderCreate):
     total_amount = total_quantity * order_dict['rate_per_pcs']
     order_dict['total_amount'] = round(total_amount, 2)
     
+    # Initialize payment fields
+    order_dict['amount_paid'] = 0.0
+    order_dict['balance'] = total_amount
+    order_dict['payment_status'] = "Unpaid"
+    
     order_dict['status'] = 'Sent'
     order_dict['whatsapp_sent'] = False
     
