@@ -259,6 +259,11 @@ async def create_cutting_order(order: CuttingOrderCreate):
     total_cutting_amount = total_quantity * order_dict['cutting_rate_per_pcs']
     order_dict['total_cutting_amount'] = round(total_cutting_amount, 2)
     
+    # Initialize payment fields
+    order_dict['amount_paid'] = 0.0
+    order_dict['balance'] = total_cutting_amount
+    order_dict['payment_status'] = "Unpaid"
+    
     # Get fabric lot to calculate cost
     fabric_lot = await db.fabric_lots.find_one({"id": order_dict['fabric_lot_id']}, {"_id": 0})
     if not fabric_lot:
