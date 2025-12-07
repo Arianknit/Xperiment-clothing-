@@ -477,6 +477,54 @@ async def get_outsourcing_order(order_id: str):
     
     return order
 
+@api_router.put("/outsourcing-orders/{order_id}", response_model=OutsourcingOrder)
+async def update_outsourcing_order(order_id: str, order_update: OutsourcingOrderUpdate):
+    # Get existing order
+    existing_order = await db.outsourcing_orders.find_one({"id": order_id}, {"_id": 0})
+    if not existing_order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    update_data = {k: v for k, v in order_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Recalculate totals if size distribution or rate changed
+    if 'size_distribution' in update_data:
+        total_quantity = sum(update_data['size_distribution'].values())
+        update_data['total_quantity'] = total_quantity
+        
+        rate = update_data.get('rate_per_pcs', existing_order.get('rate_per_pcs', 0))
+        total_amount = total_quantity * rate
+        update_data['total_amount'] = round(total_amount, 2)
+        
+        # Update balance if amount changed
+        amount_paid = existing_order.get('amount_paid', 0)
+        update_data['balance'] = round(total_amount - amount_paid, 2)
+    
+    if 'rate_per_pcs' in update_data and 'size_distribution' not in update_data:
+        total_quantity = update_data.get('total_quantity', existing_order.get('total_quantity', 0))
+        total_amount = total_quantity * update_data['rate_per_pcs']
+        update_data['total_amount'] = round(total_amount, 2)
+        
+        # Update balance
+        amount_paid = existing_order.get('amount_paid', 0)
+        update_data['balance'] = round(total_amount - amount_paid, 2)
+    
+    # Serialize datetime if present
+    if 'dc_date' in update_data and update_data['dc_date']:
+        update_data['dc_date'] = update_data['dc_date'].isoformat()
+    
+    result = await db.outsourcing_orders.update_one(
+        {"id": order_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    return await get_outsourcing_order(order_id)
+
 @api_router.delete("/outsourcing-orders/{order_id}")
 async def delete_outsourcing_order(order_id: str):
     result = await db.outsourcing_orders.delete_one({"id": order_id})
