@@ -289,6 +289,7 @@ function App() {
     setEditingCuttingOrder(order);
     setCuttingForm({
       cutting_lot_number: order.cutting_lot_number || "",
+      cutting_master_name: order.cutting_master_name || "",
       cutting_date: new Date(order.cutting_date).toISOString().split('T')[0],
       fabric_lot_id: order.fabric_lot_id,
       lot_number: order.lot_number,
@@ -302,6 +303,60 @@ function App() {
       size_distribution: order.size_distribution
     });
     setCuttingDialogOpen(true);
+  };
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const endpoint = paymentType === "cutting" 
+        ? `${API}/cutting-orders/${selectedPaymentOrder.id}/payment`
+        : `${API}/outsourcing-orders/${selectedPaymentOrder.id}/payment`;
+      
+      await axios.post(endpoint, {
+        amount: parseFloat(paymentForm.amount),
+        payment_method: paymentForm.payment_method,
+        notes: paymentForm.notes
+      });
+      
+      toast.success("Payment recorded successfully");
+      setPaymentDialogOpen(false);
+      setPaymentForm({ amount: "", payment_method: "Cash", notes: "" });
+      setSelectedPaymentOrder(null);
+      
+      if (paymentType === "cutting") {
+        fetchCuttingOrders();
+      } else {
+        fetchOutsourcingOrders();
+      }
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast.error("Failed to record payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openPaymentDialog = (order, type) => {
+    setSelectedPaymentOrder(order);
+    setPaymentType(type);
+    setPaymentForm({ amount: "", payment_method: "Cash", notes: "" });
+    setPaymentDialogOpen(true);
+  };
+
+  const handleGenerateBillReport = () => {
+    window.open(`${API}/reports/bills`, '_blank');
+  };
+
+  const getPaymentStatusBadge = (status) => {
+    const variants = {
+      "Paid": "bg-green-100 text-green-800 border-green-200",
+      "Partial": "bg-orange-100 text-orange-800 border-orange-200",
+      "Unpaid": "bg-red-100 text-red-800 border-red-200"
+    };
+    return <Badge className={`${variants[status]} border`} data-testid={`payment-status-${status.toLowerCase()}`}>{status}</Badge>;
   };
 
   const handleDeleteCuttingOrder = async (orderId) => {
