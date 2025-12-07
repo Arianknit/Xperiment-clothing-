@@ -511,6 +511,14 @@ function App() {
                 <p className="text-sm text-slate-500">Complete Production Management System</p>
               </div>
             </div>
+            <Button 
+              onClick={handleGenerateBillReport}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+              data-testid="generate-bill-report"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Bill Report
+            </Button>
           </div>
         </div>
       </header>
