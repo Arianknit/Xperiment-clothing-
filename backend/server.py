@@ -75,8 +75,8 @@ class CuttingOrder(BaseModel):
     rib_used: float
     size_distribution: Dict[str, int]  # {"S": 10, "M": 20, ...}
     total_quantity: int
-    cutting_rate_per_pcs: float
-    total_cutting_amount: float
+    cutting_rate_per_pcs: Optional[float] = 0.0
+    total_cutting_amount: Optional[float] = 0.0
     total_fabric_cost: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
