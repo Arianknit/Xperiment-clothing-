@@ -670,14 +670,34 @@ function App() {
                           <p className="text-sm text-slate-600">pieces produced</p>
                         </div>
                       </div>
-                      <div className="mt-6 grid grid-cols-2 gap-4">
-                        <div className="bg-slate-50 p-4 rounded-lg">
-                          <p className="text-sm text-slate-600">Total Production Cost</p>
-                          <p className="text-2xl font-bold text-slate-800">₹{stats.total_production_cost}</p>
+                      <div className="mt-6 space-y-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <p className="text-sm text-slate-600">Fabric Cost</p>
+                            <p className="text-xl font-bold text-blue-700">₹{stats.total_production_cost}</p>
+                          </div>
+                          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                            <p className="text-sm text-slate-600">Cutting Cost</p>
+                            <p className="text-xl font-bold text-green-700">₹{stats.total_cutting_cost}</p>
+                          </div>
+                          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <p className="text-sm text-slate-600">Outsourcing Cost</p>
+                            <p className="text-xl font-bold text-purple-700">₹{stats.total_outsourcing_cost}</p>
+                          </div>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-lg">
-                          <p className="text-sm text-slate-600">Total Outsourcing Cost</p>
-                          <p className="text-2xl font-bold text-slate-800">₹{stats.total_outsourcing_cost}</p>
+                        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-lg text-white">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm opacity-90">Comprehensive Total</p>
+                              <p className="text-xs opacity-75 mt-1">Fabric + Cutting + Outsourcing - Shortage Debit</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-4xl font-bold">\u20b9{stats.comprehensive_total}</p>
+                              {stats.total_shortage_debit > 0 && (
+                                <p className="text-sm opacity-90 mt-1">(-\u20b9{stats.total_shortage_debit} debit)</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
