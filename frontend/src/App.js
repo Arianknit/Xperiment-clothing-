@@ -816,7 +816,7 @@ function App() {
                 <h2 className="text-3xl font-bold text-slate-800">Cutting Operations</h2>
                 <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_lot_number: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {} }); }} data-testid="add-cutting-button">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_lot_number: "", cutting_master_name: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {} }); }} data-testid="add-cutting-button">
                       <Plus className="h-4 w-4 mr-2" />
                       New Cutting Order
                     </Button>
