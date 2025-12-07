@@ -1052,14 +1052,14 @@ function App() {
                 <h2 className="text-3xl font-bold text-slate-800">Outsourcing Operations</h2>
                 <Dialog open={outsourcingDialogOpen} onOpenChange={setOutsourcingDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" data-testid="add-outsourcing-button">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingOutsourcingOrder(null); setOutsourcingForm({ dc_date: new Date().toISOString().split('T')[0], cutting_order_id: "", lot_number: "", category: "Kids", style_type: "", operation_type: "Printing", unit_name: "", rate_per_pcs: "", size_distribution: {} }); }} data-testid="add-outsourcing-button">
                       <Plus className="h-4 w-4 mr-2" />
                       Send to Unit
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="outsourcing-dialog">
                     <DialogHeader>
-                      <DialogTitle>Create Outsourcing Order</DialogTitle>
+                      <DialogTitle>{editingOutsourcingOrder ? "Edit Outsourcing Order" : "Create Outsourcing Order"}</DialogTitle>
                       <DialogDescription>Send pieces to external unit</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleOutsourcingSubmit} className="space-y-4">
