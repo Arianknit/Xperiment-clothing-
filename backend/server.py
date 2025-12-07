@@ -178,10 +178,62 @@ class OutsourcingReceipt(BaseModel):
     total_shortage: int
     rate_per_pcs: float
     shortage_debit_amount: float
+    sent_to_ironing: Optional[bool] = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class OutsourcingReceiptCreate(BaseModel):
     outsourcing_order_id: str
+    receipt_date: datetime
+    received_distribution: Dict[str, int]
+
+class IroningOrder(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    dc_number: str
+    dc_date: datetime
+    receipt_id: str  # outsourcing_receipt_id
+    cutting_lot_number: str
+    category: str
+    style_type: str
+    unit_name: str
+    size_distribution: Dict[str, int]
+    total_quantity: int
+    rate_per_pcs: float
+    total_amount: float
+    amount_paid: Optional[float] = 0.0
+    balance: Optional[float] = 0.0
+    payment_status: Optional[str] = "Unpaid"
+    status: str  # Sent, Received
+    whatsapp_sent: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class IroningOrderCreate(BaseModel):
+    dc_date: datetime
+    receipt_id: str
+    unit_name: str
+    rate_per_pcs: float
+
+class IroningReceipt(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    ironing_order_id: str
+    dc_number: str
+    receipt_date: datetime
+    unit_name: str
+    sent_distribution: Dict[str, int]
+    received_distribution: Dict[str, int]
+    shortage_distribution: Dict[str, int]
+    total_sent: int
+    total_received: int
+    total_shortage: int
+    rate_per_pcs: float
+    shortage_debit_amount: float
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class IroningReceiptCreate(BaseModel):
+    ironing_order_id: str
     receipt_date: datetime
     received_distribution: Dict[str, int]
 
