@@ -1203,6 +1203,7 @@ async def generate_bill_report():
             <thead>
                 <tr>
                     <th>DC Number</th>
+                    <th>Cutting Lot</th>
                     <th>Unit Name</th>
                     <th>Operation</th>
                     <th>Date</th>
@@ -1231,6 +1232,7 @@ async def generate_bill_report():
         html_content += f"""
                 <tr>
                     <td>{order.get('dc_number', 'N/A')}</td>
+                    <td style="font-weight: bold; color: #4F46E5;">{order.get('cutting_lot_number', 'N/A')}</td>
                     <td>{order.get('unit_name', 'N/A')}</td>
                     <td>{order.get('operation_type', 'N/A')}</td>
                     <td>{dc_date.strftime('%d-%m-%Y')}</td>
