@@ -261,6 +261,7 @@ function App() {
       setCuttingDialogOpen(false);
       setCuttingForm({
         cutting_lot_number: "",
+        cutting_master_name: "",
         cutting_date: new Date().toISOString().split('T')[0],
         fabric_lot_id: "",
         lot_number: "",
