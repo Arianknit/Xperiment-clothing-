@@ -740,7 +740,11 @@ async def get_delivery_challan(order_id: str):
                 <div class="info-value">{order['dc_date'].strftime('%d-%m-%Y')}</div>
             </div>
             <div class="info-row">
-                <div class="info-label">Lot Number:</div>
+                <div class="info-label">Cutting Lot Number:</div>
+                <div class="info-value" style="font-weight: bold; color: #4F46E5;">{order.get('cutting_lot_number', 'N/A')}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Fabric Lot Number:</div>
                 <div class="info-value">{order['lot_number']}</div>
             </div>
             <div class="info-row">
