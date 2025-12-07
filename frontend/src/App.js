@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Package, TrendingUp, Scissors, Plus, Trash2, Factory, Barcode, Users } from "lucide-react";
+import { Package, TrendingUp, Scissors, Plus, Trash2, Factory, Barcode, Users, Send, Printer, PackageCheck, AlertCircle } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -21,10 +21,14 @@ const SIZE_CONFIG = {
   Women: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL']
 };
 
+const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker'];
+
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [fabricLots, setFabricLots] = useState([]);
   const [cuttingOrders, setCuttingOrders] = useState([]);
+  const [outsourcingOrders, setOutsourcingOrders] = useState([]);
+  const [outsourcingReceipts, setOutsourcingReceipts] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   
@@ -52,15 +56,42 @@ function App() {
     fabric_returned: "",
     rib_taken: "",
     rib_returned: "",
+    cutting_rate_per_pcs: "",
     size_distribution: {}
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
+  
+  // Outsourcing order form state
+  const [outsourcingForm, setOutsourcingForm] = useState({
+    dc_date: new Date().toISOString().split('T')[0],
+    cutting_order_id: "",
+    lot_number: "",
+    category: "Kids",
+    style_type: "",
+    operation_type: "Printing",
+    unit_name: "",
+    rate_per_pcs: "",
+    size_distribution: {}
+  });
+  const [outsourcingDialogOpen, setOutsourcingDialogOpen] = useState(false);
+  
+  // Receipt form state
+  const [receiptForm, setReceiptForm] = useState({
+    outsourcing_order_id: "",
+    receipt_date: new Date().toISOString().split('T')[0],
+    received_distribution: {}
+  });
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [selectedOutsourcingOrder, setSelectedOutsourcingOrder] = useState(null);
+  
   const [barcodeView, setBarcodeView] = useState(null);
 
   useEffect(() => {
     fetchDashboardStats();
     fetchFabricLots();
     fetchCuttingOrders();
+    fetchOutsourcingOrders();
+    fetchOutsourcingReceipts();
   }, []);
 
   const fetchDashboardStats = async () => {
@@ -90,6 +121,26 @@ function App() {
     } catch (error) {
       console.error("Error fetching cutting orders:", error);
       toast.error("Failed to fetch cutting orders");
+    }
+  };
+
+  const fetchOutsourcingOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/outsourcing-orders`);
+      setOutsourcingOrders(response.data);
+    } catch (error) {
+      console.error("Error fetching outsourcing orders:", error);
+      toast.error("Failed to fetch outsourcing orders");
+    }
+  };
+
+  const fetchOutsourcingReceipts = async () => {
+    try {
+      const response = await axios.get(`${API}/outsourcing-receipts`);
+      setOutsourcingReceipts(response.data);
+    } catch (error) {
+      console.error("Error fetching receipts:", error);
+      toast.error("Failed to fetch receipts");
     }
   };
 
@@ -153,7 +204,8 @@ function App() {
         fabric_taken: parseFloat(cuttingForm.fabric_taken),
         fabric_returned: parseFloat(cuttingForm.fabric_returned),
         rib_taken: parseFloat(cuttingForm.rib_taken),
-        rib_returned: parseFloat(cuttingForm.rib_returned)
+        rib_returned: parseFloat(cuttingForm.rib_returned),
+        cutting_rate_per_pcs: parseFloat(cuttingForm.cutting_rate_per_pcs)
       });
       toast.success("Cutting order created successfully");
       
@@ -168,6 +220,7 @@ function App() {
         fabric_returned: "",
         rib_taken: "",
         rib_returned: "",
+        cutting_rate_per_pcs: "",
         size_distribution: {}
       });
       fetchCuttingOrders();
@@ -196,18 +249,107 @@ function App() {
     }
   };
 
-  const handleSizeChange = (size, value) => {
-    setCuttingForm({
-      ...cuttingForm,
+  const handleOutsourcingSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/outsourcing-orders`, {
+        ...outsourcingForm,
+        dc_date: new Date(outsourcingForm.dc_date).toISOString(),
+        rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs)
+      });
+      toast.success("Outsourcing order created successfully");
+      
+      setOutsourcingDialogOpen(false);
+      setOutsourcingForm({
+        dc_date: new Date().toISOString().split('T')[0],
+        cutting_order_id: "",
+        lot_number: "",
+        category: "Kids",
+        style_type: "",
+        operation_type: "Printing",
+        unit_name: "",
+        rate_per_pcs: "",
+        size_distribution: {}
+      });
+      fetchOutsourcingOrders();
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error saving outsourcing order:", error);
+      toast.error("Failed to save outsourcing order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReceiptSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/outsourcing-receipts`, {
+        ...receiptForm,
+        receipt_date: new Date(receiptForm.receipt_date).toISOString()
+      });
+      toast.success("Receipt recorded successfully");
+      
+      setReceiptDialogOpen(false);
+      setReceiptForm({
+        outsourcing_order_id: "",
+        receipt_date: new Date().toISOString().split('T')[0],
+        received_distribution: {}
+      });
+      setSelectedOutsourcingOrder(null);
+      fetchOutsourcingOrders();
+      fetchOutsourcingReceipts();
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error saving receipt:", error);
+      toast.error("Failed to save receipt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSizeChange = (size, value, formSetter, currentForm) => {
+    formSetter({
+      ...currentForm,
       size_distribution: {
-        ...cuttingForm.size_distribution,
+        ...currentForm.size_distribution,
         [size]: parseInt(value) || 0
       }
     });
   };
 
-  const getTotalQty = () => {
-    return Object.values(cuttingForm.size_distribution).reduce((sum, val) => sum + (val || 0), 0);
+  const getTotalQty = (sizeDistribution) => {
+    return Object.values(sizeDistribution).reduce((sum, val) => sum + (val || 0), 0);
+  };
+
+  const handlePrintDC = (orderId) => {
+    window.open(`${API}/outsourcing-orders/${orderId}/dc`, '_blank');
+  };
+
+  const handleSendWhatsApp = async (orderId) => {
+    try {
+      const response = await axios.post(`${API}/outsourcing-orders/${orderId}/send-whatsapp`);
+      toast.success("WhatsApp message sent!");
+      toast.info(response.data.preview, { duration: 5000 });
+      fetchOutsourcingOrders();
+    } catch (error) {
+      console.error("Error sending WhatsApp:", error);
+      toast.error("Failed to send WhatsApp message");
+    }
+  };
+
+  const openReceiptDialog = (order) => {
+    setSelectedOutsourcingOrder(order);
+    setReceiptForm({
+      outsourcing_order_id: order.id,
+      receipt_date: new Date().toISOString().split('T')[0],
+      received_distribution: {}
+    });
+    setReceiptDialogOpen(true);
   };
 
   const getCategoryBadge = (category) => {
@@ -217,6 +359,15 @@ function App() {
       "Women": "bg-pink-100 text-pink-800 border-pink-200"
     };
     return <Badge className={`${variants[category]} border`} data-testid={`category-badge-${category.toLowerCase()}`}>{category}</Badge>;
+  };
+
+  const getStatusBadge = (status) => {
+    const variants = {
+      "Sent": "bg-yellow-100 text-yellow-800 border-yellow-200",
+      "Received": "bg-green-100 text-green-800 border-green-200",
+      "Partial": "bg-orange-100 text-orange-800 border-orange-200"
+    };
+    return <Badge className={`${variants[status]} border`} data-testid={`status-badge-${status.toLowerCase()}`}>{status}</Badge>;
   };
 
   return (
@@ -241,77 +392,86 @@ function App() {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
+          <TabsList className="grid w-full grid-cols-5 max-w-4xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-dashboard">
               <TrendingUp className="h-4 w-4 mr-2" />
               Dashboard
             </TabsTrigger>
             <TabsTrigger value="fabric-lots" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-fabric-lots">
               <Package className="h-4 w-4 mr-2" />
-              Fabric Lots
+              Fabric
             </TabsTrigger>
             <TabsTrigger value="cutting" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-cutting">
               <Scissors className="h-4 w-4 mr-2" />
               Cutting
+            </TabsTrigger>
+            <TabsTrigger value="outsourcing" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-outsourcing">
+              <Send className="h-4 w-4 mr-2" />
+              Outsourcing
+            </TabsTrigger>
+            <TabsTrigger value="receipts" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-receipts">
+              <PackageCheck className="h-4 w-4 mr-2" />
+              Receipts
             </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" data-testid="dashboard-content">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-slate-800">Dashboard Overview</h2>
-              </div>
+              <h2 className="text-3xl font-bold text-slate-800">Dashboard Overview</h2>
 
               {stats && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 shadow-lg hover:shadow-xl transition-shadow" data-testid="stat-card-lots">
+                    <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 shadow-lg" data-testid="stat-card-lots">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-slate-700 flex items-center gap-2">
-                          <Package className="h-5 w-5 text-indigo-600" />
-                          Total Fabric Lots
+                        <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
+                          <Package className="h-4 w-4 text-indigo-600" />
+                          Fabric Lots
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-4xl font-bold text-indigo-600" data-testid="total-lots-count">{stats.total_lots}</div>
+                        <div className="text-3xl font-bold text-indigo-600">{stats.total_lots}</div>
+                        <p className="text-xs text-slate-600 mt-1">{stats.total_fabric_stock} kg stock</p>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg hover:shadow-xl transition-shadow" data-testid="stat-card-fabric">
+                    <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 shadow-lg" data-testid="stat-card-cutting">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-slate-700 flex items-center gap-2">
-                          <Package className="h-5 w-5 text-green-600" />
-                          Fabric Stock
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold text-green-600" data-testid="fabric-stock">{stats.total_fabric_stock} kg</div>
-                        <p className="text-sm text-slate-600 mt-1">Rib: {stats.total_rib_stock} kg</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 shadow-lg hover:shadow-xl transition-shadow" data-testid="stat-card-orders">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-slate-700 flex items-center gap-2">
-                          <Scissors className="h-5 w-5 text-blue-600" />
+                        <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
+                          <Scissors className="h-4 w-4 text-blue-600" />
                           Cutting Orders
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-4xl font-bold text-blue-600" data-testid="cutting-orders-count">{stats.total_cutting_orders}</div>
+                        <div className="text-3xl font-bold text-blue-600">{stats.total_cutting_orders}</div>
+                        <p className="text-xs text-slate-600 mt-1">₹{stats.total_cutting_cost} cutting cost</p>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 shadow-lg hover:shadow-xl transition-shadow" data-testid="stat-card-cost">
+                    <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 shadow-lg" data-testid="stat-card-outsourcing">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-slate-700 flex items-center gap-2">
-                          <TrendingUp className="h-5 w-5 text-orange-600" />
-                          Production Cost
+                        <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
+                          <Send className="h-4 w-4 text-orange-600" />
+                          Outsourcing
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-3xl font-bold text-orange-600" data-testid="production-cost">₹{stats.total_production_cost}</div>
+                        <div className="text-3xl font-bold text-orange-600">{stats.total_outsourcing_orders}</div>
+                        <p className="text-xs text-slate-600 mt-1">{stats.pending_outsourcing} pending</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200 shadow-lg" data-testid="stat-card-shortage">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-red-600" />
+                          Shortage
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-red-600">{stats.total_shortage_pcs}</div>
+                        <p className="text-xs text-slate-600 mt-1">₹{stats.total_shortage_debit} debit</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -320,7 +480,7 @@ function App() {
                     <CardHeader>
                       <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        Production Summary by Category
+                        Production Summary
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -329,22 +489,32 @@ function App() {
                           <div className="flex items-center gap-2 mb-2">
                             {getCategoryBadge('Kids')}
                           </div>
-                          <div className="text-3xl font-bold text-purple-600" data-testid="kids-production">{stats.kids_production}</div>
+                          <div className="text-3xl font-bold text-purple-600">{stats.kids_production}</div>
                           <p className="text-sm text-slate-600">pieces produced</p>
                         </div>
                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                           <div className="flex items-center gap-2 mb-2">
                             {getCategoryBadge('Mens')}
                           </div>
-                          <div className="text-3xl font-bold text-blue-600" data-testid="mens-production">{stats.mens_production}</div>
+                          <div className="text-3xl font-bold text-blue-600">{stats.mens_production}</div>
                           <p className="text-sm text-slate-600">pieces produced</p>
                         </div>
                         <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                           <div className="flex items-center gap-2 mb-2">
                             {getCategoryBadge('Women')}
                           </div>
-                          <div className="text-3xl font-bold text-pink-600" data-testid="women-production">{stats.women_production}</div>
+                          <div className="text-3xl font-bold text-pink-600">{stats.women_production}</div>
                           <p className="text-sm text-slate-600">pieces produced</p>
+                        </div>
+                      </div>
+                      <div className="mt-6 grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 p-4 rounded-lg">
+                          <p className="text-sm text-slate-600">Total Production Cost</p>
+                          <p className="text-2xl font-bold text-slate-800">₹{stats.total_production_cost}</p>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-lg">
+                          <p className="text-sm text-slate-600">Total Outsourcing Cost</p>
+                          <p className="text-2xl font-bold text-slate-800">₹{stats.total_outsourcing_cost}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -443,7 +613,7 @@ function App() {
                               data-testid={`view-barcode-${lot.id}`}
                             >
                               <Barcode className="h-4 w-4 mr-1" />
-                              View Barcode
+                              Barcode
                             </Button>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -460,18 +630,18 @@ function App() {
                               <p className="font-semibold text-slate-800">{lot.supplier_name}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Rate per kg</p>
-                              <p className="font-semibold text-indigo-600">₹{lot.rate_per_kg}</p>
+                              <p className="text-xs text-slate-500">Rate</p>
+                              <p className="font-semibold text-indigo-600">₹{lot.rate_per_kg}/kg</p>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t">
                             <div>
                               <p className="text-xs text-slate-500">Original Fabric</p>
-                              <p className="font-bold text-green-600" data-testid={`lot-fabric-qty-${lot.id}`}>{lot.quantity} kg</p>
+                              <p className="font-bold text-green-600">{lot.quantity} kg</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Remaining Fabric</p>
-                              <p className="font-bold text-blue-600" data-testid={`lot-remaining-fabric-${lot.id}`}>{lot.remaining_quantity} kg</p>
+                              <p className="text-xs text-slate-500">Remaining</p>
+                              <p className="font-bold text-blue-600">{lot.remaining_quantity} kg</p>
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Original Rib</p>
@@ -479,12 +649,8 @@ function App() {
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Remaining Rib</p>
-                              <p className="font-bold text-blue-600" data-testid={`lot-remaining-rib-${lot.id}`}>{lot.remaining_rib_quantity} kg</p>
+                              <p className="font-bold text-blue-600">{lot.remaining_rib_quantity} kg</p>
                             </div>
-                          </div>
-                          <div className="bg-indigo-50 p-3 rounded-lg">
-                            <p className="text-xs text-slate-500">Total Amount</p>
-                            <p className="text-2xl font-bold text-indigo-600">₹{lot.total_amount}</p>
                           </div>
                         </div>
                         <div className="ml-4">
@@ -502,8 +668,7 @@ function App() {
                 <Card className="shadow-lg">
                   <CardContent className="flex flex-col items-center justify-center py-16">
                     <Package className="h-16 w-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 text-lg" data-testid="empty-lots-message">No fabric lots in inventory</p>
-                    <p className="text-slate-400 text-sm">Click "Add Fabric Lot" to get started</p>
+                    <p className="text-slate-500 text-lg">No fabric lots in inventory</p>
                   </CardContent>
                 </Card>
               )}
@@ -545,7 +710,7 @@ function App() {
                             <SelectContent>
                               {fabricLots.map((lot) => (
                                 <SelectItem key={lot.id} value={lot.id}>
-                                  {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg available)
+                                  {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg)
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -568,40 +733,38 @@ function App() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="style-type">Style Type</Label>
-                          <Input id="style-type" value={cuttingForm.style_type} onChange={(e) => setCuttingForm({...cuttingForm, style_type: e.target.value})} placeholder="T-Shirt, Pants, etc." required data-testid="style-type-input" />
+                          <Input id="style-type" value={cuttingForm.style_type} onChange={(e) => setCuttingForm({...cuttingForm, style_type: e.target.value})} placeholder="T-Shirt" required data-testid="style-type-input" />
                         </div>
                       </div>
                       <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
                         <h4 className="font-semibold text-slate-700">Fabric Details</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="fabric-taken">Fabric Taken (kg)</Label>
-                            <Input id="fabric-taken" type="number" step="0.01" value={cuttingForm.fabric_taken} onChange={(e) => setCuttingForm({...cuttingForm, fabric_taken: e.target.value})} placeholder="10" required data-testid="fabric-taken-input" />
+                            <Label htmlFor="fabric-taken">Taken (kg)</Label>
+                            <Input id="fabric-taken" type="number" step="0.01" value={cuttingForm.fabric_taken} onChange={(e) => setCuttingForm({...cuttingForm, fabric_taken: e.target.value})} required data-testid="fabric-taken-input" />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="fabric-returned">Fabric Returned (kg)</Label>
-                            <Input id="fabric-returned" type="number" step="0.01" value={cuttingForm.fabric_returned} onChange={(e) => setCuttingForm({...cuttingForm, fabric_returned: e.target.value})} placeholder="1" required data-testid="fabric-returned-input" />
+                            <Label htmlFor="fabric-returned">Returned (kg)</Label>
+                            <Input id="fabric-returned" type="number" step="0.01" value={cuttingForm.fabric_returned} onChange={(e) => setCuttingForm({...cuttingForm, fabric_returned: e.target.value})} required data-testid="fabric-returned-input" />
                           </div>
                         </div>
-                        {cuttingForm.fabric_taken && cuttingForm.fabric_returned && (
-                          <p className="text-sm text-indigo-600 font-semibold">Fabric Used: {(parseFloat(cuttingForm.fabric_taken) - parseFloat(cuttingForm.fabric_returned)).toFixed(2)} kg</p>
-                        )}
                       </div>
                       <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
                         <h4 className="font-semibold text-slate-700">Rib Details</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="rib-taken">Rib Taken (kg)</Label>
-                            <Input id="rib-taken" type="number" step="0.01" value={cuttingForm.rib_taken} onChange={(e) => setCuttingForm({...cuttingForm, rib_taken: e.target.value})} placeholder="2" required data-testid="rib-taken-input" />
+                            <Label htmlFor="rib-taken">Taken (kg)</Label>
+                            <Input id="rib-taken" type="number" step="0.01" value={cuttingForm.rib_taken} onChange={(e) => setCuttingForm({...cuttingForm, rib_taken: e.target.value})} required data-testid="rib-taken-input" />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="rib-returned">Rib Returned (kg)</Label>
-                            <Input id="rib-returned" type="number" step="0.01" value={cuttingForm.rib_returned} onChange={(e) => setCuttingForm({...cuttingForm, rib_returned: e.target.value})} placeholder="0.2" required data-testid="rib-returned-input" />
+                            <Label htmlFor="rib-returned">Returned (kg)</Label>
+                            <Input id="rib-returned" type="number" step="0.01" value={cuttingForm.rib_returned} onChange={(e) => setCuttingForm({...cuttingForm, rib_returned: e.target.value})} required data-testid="rib-returned-input" />
                           </div>
                         </div>
-                        {cuttingForm.rib_taken && cuttingForm.rib_returned && (
-                          <p className="text-sm text-indigo-600 font-semibold">Rib Used: {(parseFloat(cuttingForm.rib_taken) - parseFloat(cuttingForm.rib_returned)).toFixed(2)} kg</p>
-                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cutting-rate">Cutting Rate per Piece (₹)</Label>
+                        <Input id="cutting-rate" type="number" step="0.01" value={cuttingForm.cutting_rate_per_pcs} onChange={(e) => setCuttingForm({...cuttingForm, cutting_rate_per_pcs: e.target.value})} placeholder="10" required data-testid="cutting-rate-input" />
                       </div>
                       <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
                         <h4 className="font-semibold text-slate-700">Size Distribution</h4>
@@ -613,7 +776,7 @@ function App() {
                                 id={`size-${size}`}
                                 type="number" 
                                 value={cuttingForm.size_distribution[size] || ''} 
-                                onChange={(e) => handleSizeChange(size, e.target.value)}
+                                onChange={(e) => handleSizeChange(size, e.target.value, setCuttingForm, cuttingForm)}
                                 placeholder="0"
                                 className="h-8"
                                 data-testid={`size-input-${size}`}
@@ -622,13 +785,15 @@ function App() {
                           ))}
                         </div>
                         <div className="pt-2 border-t border-indigo-200">
-                          <p className="text-sm text-slate-600">Total Quantity:</p>
-                          <p className="text-2xl font-bold text-indigo-600" data-testid="total-qty-display">{getTotalQty()} pieces</p>
+                          <p className="text-sm text-slate-600">Total: {getTotalQty(cuttingForm.size_distribution)} pcs</p>
+                          {cuttingForm.cutting_rate_per_pcs && (
+                            <p className="text-lg font-bold text-indigo-600">Cutting Amount: ₹{(getTotalQty(cuttingForm.size_distribution) * parseFloat(cuttingForm.cutting_rate_per_pcs || 0)).toFixed(2)}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setCuttingDialogOpen(false)} data-testid="cutting-cancel-button">Cancel</Button>
-                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || getTotalQty() === 0} data-testid="cutting-submit-button">
+                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || getTotalQty(cuttingForm.size_distribution) === 0} data-testid="cutting-submit-button">
                           {loading ? "Saving..." : "Create Order"}
                         </Button>
                       </div>
@@ -646,37 +811,28 @@ function App() {
                           <div className="flex items-center gap-3">
                             <h3 className="text-xl font-bold text-slate-800">{order.lot_number}</h3>
                             {getCategoryBadge(order.category)}
-                            <Badge className="bg-slate-100 text-slate-700 border border-slate-200">{order.style_type}</Badge>
+                            <Badge className="bg-slate-100 text-slate-700 border">{order.style_type}</Badge>
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             <div>
                               <p className="text-xs text-slate-500">Fabric Used</p>
-                              <p className="font-bold text-indigo-600" data-testid={`order-fabric-used-${order.id}`}>{order.fabric_used} kg</p>
+                              <p className="font-bold text-indigo-600">{order.fabric_used} kg</p>
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Rib Used</p>
                               <p className="font-bold text-purple-600">{order.rib_used} kg</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Total Quantity</p>
-                              <p className="font-bold text-green-600" data-testid={`order-total-qty-${order.id}`}>{order.total_quantity} pcs</p>
+                              <p className="text-xs text-slate-500">Total Qty</p>
+                              <p className="font-bold text-green-600">{order.total_quantity} pcs</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Total Cost</p>
-                              <p className="font-bold text-orange-600" data-testid={`order-total-cost-${order.id}`}>₹{order.total_fabric_cost}</p>
+                              <p className="text-xs text-slate-500">Cutting Rate</p>
+                              <p className="font-bold text-blue-600">₹{order.cutting_rate_per_pcs}</p>
                             </div>
-                          </div>
-                          <div className="bg-slate-50 p-3 rounded-lg">
-                            <p className="text-xs text-slate-500 mb-2">Size Distribution</p>
-                            <div className="flex flex-wrap gap-2">
-                              {Object.entries(order.size_distribution).map(([size, qty]) => (
-                                qty > 0 && (
-                                  <div key={size} className="bg-white px-3 py-1 rounded border border-slate-200">
-                                    <span className="text-xs font-semibold text-slate-700">{size}:</span>
-                                    <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
-                                  </div>
-                                )
-                              ))}
+                            <div>
+                              <p className="text-xs text-slate-500">Cutting Amt</p>
+                              <p className="font-bold text-orange-600">₹{order.total_cutting_amount}</p>
                             </div>
                           </div>
                         </div>
@@ -690,13 +846,254 @@ function App() {
                   </Card>
                 ))}
               </div>
+            </div>
+          </TabsContent>
 
-              {cuttingOrders.length === 0 && (
+          {/* Outsourcing Tab */}
+          <TabsContent value="outsourcing" data-testid="outsourcing-content">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-slate-800">Outsourcing Operations</h2>
+                <Dialog open={outsourcingDialogOpen} onOpenChange={setOutsourcingDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" data-testid="add-outsourcing-button">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Send to Unit
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="outsourcing-dialog">
+                    <DialogHeader>
+                      <DialogTitle>Create Outsourcing Order</DialogTitle>
+                      <DialogDescription>Send pieces to external unit</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleOutsourcingSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="dc-date">DC Date</Label>
+                          <Input id="dc-date" type="date" value={outsourcingForm.dc_date} onChange={(e) => setOutsourcingForm({...outsourcingForm, dc_date: e.target.value})} required data-testid="dc-date-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cutting-order">Select Cutting Order</Label>
+                          <Select value={outsourcingForm.cutting_order_id} onValueChange={(value) => {
+                            const selectedOrder = cuttingOrders.find(o => o.id === value);
+                            if (selectedOrder) {
+                              setOutsourcingForm({
+                                ...outsourcingForm,
+                                cutting_order_id: value,
+                                lot_number: selectedOrder.lot_number,
+                                category: selectedOrder.category,
+                                style_type: selectedOrder.style_type,
+                                size_distribution: selectedOrder.size_distribution
+                              });
+                            }
+                          }} required>
+                            <SelectTrigger id="cutting-order" data-testid="cutting-order-select">
+                              <SelectValue placeholder="Choose order" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cuttingOrders.map((order) => (
+                                <SelectItem key={order.id} value={order.id}>
+                                  {order.lot_number} - {order.style_type} ({order.total_quantity} pcs)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="operation-type">Operation Type</Label>
+                          <Select value={outsourcingForm.operation_type} onValueChange={(value) => setOutsourcingForm({...outsourcingForm, operation_type: value})} required>
+                            <SelectTrigger id="operation-type" data-testid="operation-type-select">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {OPERATION_TYPES.map((type) => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="unit-name">Unit Name</Label>
+                          <Input id="unit-name" value={outsourcingForm.unit_name} onChange={(e) => setOutsourcingForm({...outsourcingForm, unit_name: e.target.value})} placeholder="Unit Name" required data-testid="unit-name-input" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="outsourcing-rate">Rate per Piece (₹)</Label>
+                        <Input id="outsourcing-rate" type="number" step="0.01" value={outsourcingForm.rate_per_pcs} onChange={(e) => setOutsourcingForm({...outsourcingForm, rate_per_pcs: e.target.value})} placeholder="15" required data-testid="outsourcing-rate-input" />
+                      </div>
+                      {outsourcingForm.cutting_order_id && (
+                        <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                          <h4 className="font-semibold text-slate-700">Size Distribution</h4>
+                          <div className="grid grid-cols-4 gap-2">
+                            {Object.entries(outsourcingForm.size_distribution).map(([size, qty]) => (
+                              qty > 0 && (
+                                <div key={size} className="bg-white px-3 py-2 rounded border">
+                                  <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                  <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                          <div className="pt-2 border-t border-indigo-200">
+                            <p className="text-sm text-slate-600">Total: {getTotalQty(outsourcingForm.size_distribution)} pcs</p>
+                            {outsourcingForm.rate_per_pcs && (
+                              <p className="text-lg font-bold text-indigo-600">Total Amount: ₹{(getTotalQty(outsourcingForm.size_distribution) * parseFloat(outsourcingForm.rate_per_pcs || 0)).toFixed(2)}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setOutsourcingDialogOpen(false)} data-testid="outsourcing-cancel-button">Cancel</Button>
+                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || !outsourcingForm.cutting_order_id} data-testid="outsourcing-submit-button">
+                          {loading ? "Saving..." : "Create DC"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="space-y-4">
+                {outsourcingOrders.map((order) => (
+                  <Card key={order.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`outsourcing-order-card-${order.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-bold text-slate-800">{order.dc_number}</h3>
+                            {getStatusBadge(order.status)}
+                            <Badge className="bg-purple-100 text-purple-800 border border-purple-200">{order.operation_type}</Badge>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                              <p className="text-xs text-slate-500">Lot Number</p>
+                              <p className="font-semibold text-slate-800">{order.lot_number}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Unit Name</p>
+                              <p className="font-semibold text-slate-800">{order.unit_name}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Total Qty</p>
+                              <p className="font-bold text-green-600">{order.total_quantity} pcs</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Total Amount</p>
+                              <p className="font-bold text-orange-600">₹{order.total_amount}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handlePrintDC(order.id)}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              data-testid={`print-dc-${order.id}`}
+                            >
+                              <Printer className="h-4 w-4 mr-1" />
+                              Print DC
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleSendWhatsApp(order.id)}
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              data-testid={`whatsapp-${order.id}`}
+                              disabled={order.whatsapp_sent}
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              {order.whatsapp_sent ? "Sent" : "WhatsApp"}
+                            </Button>
+                            {order.status === 'Sent' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openReceiptDialog(order)}
+                                className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                data-testid={`receive-${order.id}`}
+                              >
+                                <PackageCheck className="h-4 w-4 mr-1" />
+                                Receive
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Receipts Tab */}
+          <TabsContent value="receipts" data-testid="receipts-content">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold text-slate-800">Outsourcing Receipts</h2>
+
+              <div className="space-y-4">
+                {outsourcingReceipts.map((receipt) => (
+                  <Card key={receipt.id} className="shadow-lg" data-testid={`receipt-card-${receipt.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-xl font-bold text-slate-800">{receipt.dc_number}</h3>
+                          <Badge className="bg-purple-100 text-purple-800 border">{receipt.operation_type}</Badge>
+                          {receipt.total_shortage > 0 && (
+                            <Badge className="bg-red-100 text-red-800 border border-red-200 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Shortage
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          <div>
+                            <p className="text-xs text-slate-500">Unit</p>
+                            <p className="font-semibold text-slate-800">{receipt.unit_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Sent</p>
+                            <p className="font-bold text-blue-600">{receipt.total_sent} pcs</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Received</p>
+                            <p className="font-bold text-green-600">{receipt.total_received} pcs</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Shortage</p>
+                            <p className="font-bold text-red-600">{receipt.total_shortage} pcs</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Debit Amount</p>
+                            <p className="font-bold text-red-600">₹{receipt.shortage_debit_amount}</p>
+                          </div>
+                        </div>
+                        {receipt.total_shortage > 0 && (
+                          <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                            <p className="text-xs text-slate-600 mb-2">Shortage Details:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(receipt.shortage_distribution).map(([size, qty]) => (
+                                <div key={size} className="bg-white px-3 py-1 rounded border border-red-200">
+                                  <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                  <span className="text-sm font-bold text-red-600 ml-1">{qty}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {outsourcingReceipts.length === 0 && (
                 <Card className="shadow-lg">
                   <CardContent className="flex flex-col items-center justify-center py-16">
-                    <Scissors className="h-16 w-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 text-lg" data-testid="empty-cutting-message">No cutting orders</p>
-                    <p className="text-slate-400 text-sm">Click "New Cutting Order" to create one</p>
+                    <PackageCheck className="h-16 w-16 text-slate-300 mb-4" />
+                    <p className="text-slate-500 text-lg">No receipts recorded yet</p>
                   </CardContent>
                 </Card>
               )}
@@ -704,6 +1101,80 @@ function App() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Receipt Dialog */}
+      <Dialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="receipt-dialog">
+          <DialogHeader>
+            <DialogTitle>Record Receipt</DialogTitle>
+            <DialogDescription>
+              {selectedOutsourcingOrder && `DC: ${selectedOutsourcingOrder.dc_number} - ${selectedOutsourcingOrder.unit_name}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOutsourcingOrder && (
+            <form onSubmit={handleReceiptSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="receipt-date">Receipt Date</Label>
+                <Input id="receipt-date" type="date" value={receiptForm.receipt_date} onChange={(e) => setReceiptForm({...receiptForm, receipt_date: e.target.value})} required data-testid="receipt-date-input" />
+              </div>
+              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                <h4 className="font-semibold text-slate-700">Sent Quantities</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(selectedOutsourcingOrder.size_distribution).map(([size, qty]) => (
+                    qty > 0 && (
+                      <div key={size} className="bg-white px-3 py-2 rounded border">
+                        <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                        <span className="text-sm font-bold text-blue-600 ml-1">{qty}</span>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <h4 className="font-semibold text-slate-700">Enter Received Quantities</h4>
+                <div className="grid grid-cols-4 gap-3">
+                  {Object.entries(selectedOutsourcingOrder.size_distribution).map(([size, sentQty]) => (
+                    sentQty > 0 && (
+                      <div key={size} className="space-y-1">
+                        <Label htmlFor={`received-${size}`} className="text-xs">{size} (Sent: {sentQty})</Label>
+                        <Input 
+                          id={`received-${size}`}
+                          type="number" 
+                          value={receiptForm.received_distribution[size] || ''} 
+                          onChange={(e) => setReceiptForm({
+                            ...receiptForm,
+                            received_distribution: {
+                              ...receiptForm.received_distribution,
+                              [size]: parseInt(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="0"
+                          max={sentQty}
+                          className="h-8"
+                          data-testid={`received-input-${size}`}
+                        />
+                      </div>
+                    )
+                  ))}
+                </div>
+                <div className="pt-2 border-t border-indigo-200">
+                  <p className="text-sm text-slate-600">Total Received: {getTotalQty(receiptForm.received_distribution)} pcs</p>
+                  <p className="text-sm text-slate-600">Total Sent: {selectedOutsourcingOrder.total_quantity} pcs</p>
+                  {getTotalQty(receiptForm.received_distribution) < selectedOutsourcingOrder.total_quantity && (
+                    <p className="text-lg font-bold text-red-600">Shortage: {selectedOutsourcingOrder.total_quantity - getTotalQty(receiptForm.received_distribution)} pcs</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setReceiptDialogOpen(false)} data-testid="receipt-cancel-button">Cancel</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading} data-testid="receipt-submit-button">
+                  {loading ? "Saving..." : "Record Receipt"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Barcode View Dialog */}
       <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
@@ -732,10 +1203,6 @@ function App() {
                 <div className="flex justify-between">
                   <span className="text-sm text-slate-600">Fabric Type:</span>
                   <span className="font-semibold text-slate-800">{barcodeView.fabric_type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">Supplier:</span>
-                  <span className="text-slate-800">{barcodeView.supplier_name}</span>
                 </div>
               </div>
               <div className="flex justify-end gap-3">
