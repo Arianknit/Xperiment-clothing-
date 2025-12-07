@@ -47,6 +47,7 @@ function App() {
   
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
+    cutting_lot_number: "",
     cutting_date: new Date().toISOString().split('T')[0],
     fabric_lot_id: "",
     lot_number: "",
@@ -60,6 +61,7 @@ function App() {
     size_distribution: {}
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
+  const [editingCuttingOrder, setEditingCuttingOrder] = useState(null);
   
   // Outsourcing order form state
   const [outsourcingForm, setOutsourcingForm] = useState({
