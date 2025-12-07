@@ -721,17 +721,21 @@ function App() {
                 <h2 className="text-3xl font-bold text-slate-800">Cutting Operations</h2>
                 <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" data-testid="add-cutting-button">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_lot_number: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {} }); }} data-testid="add-cutting-button">
                       <Plus className="h-4 w-4 mr-2" />
                       New Cutting Order
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="cutting-dialog">
                     <DialogHeader>
-                      <DialogTitle>Create Cutting Order</DialogTitle>
+                      <DialogTitle>{editingCuttingOrder ? "Edit Cutting Order" : "Create Cutting Order"}</DialogTitle>
                       <DialogDescription>Enter cutting operation details</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleCuttingSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cutting-lot-number">Cutting Lot Number</Label>
+                        <Input id="cutting-lot-number" value={cuttingForm.cutting_lot_number} onChange={(e) => setCuttingForm({...cuttingForm, cutting_lot_number: e.target.value})} placeholder="CUT-001" required data-testid="cutting-lot-number-input" />
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="cutting-date">Cutting Date</Label>
@@ -742,7 +746,7 @@ function App() {
                           <Select value={cuttingForm.fabric_lot_id} onValueChange={(value) => {
                             const selectedLot = fabricLots.find(l => l.id === value);
                             setCuttingForm({...cuttingForm, fabric_lot_id: value, lot_number: selectedLot ? selectedLot.lot_number : ""});
-                          }} required>
+                          }} required disabled={!!editingCuttingOrder}>
                             <SelectTrigger id="fabric-lot" data-testid="fabric-lot-select">
                               <SelectValue placeholder="Choose lot" />
                             </SelectTrigger>
