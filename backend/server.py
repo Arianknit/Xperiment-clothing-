@@ -300,6 +300,79 @@ async def get_cutting_order(order_id: str):
     
     return order
 
+@api_router.put("/cutting-orders/{order_id}", response_model=CuttingOrder)
+async def update_cutting_order(order_id: str, order_update: CuttingOrderUpdate):
+    # Get existing order
+    existing_order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
+    if not existing_order:
+        raise HTTPException(status_code=404, detail="Cutting order not found")
+    
+    update_data = {k: v for k, v in order_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # If fabric/rib quantities changed, recalculate
+    if 'fabric_taken' in update_data or 'fabric_returned' in update_data:
+        fabric_taken = update_data.get('fabric_taken', existing_order['fabric_taken'])
+        fabric_returned = update_data.get('fabric_returned', existing_order['fabric_returned'])
+        fabric_used = fabric_taken - fabric_returned
+        update_data['fabric_used'] = round(fabric_used, 2)
+        
+        # Update fabric lot quantities
+        old_fabric_used = existing_order['fabric_used']
+        fabric_diff = fabric_used - old_fabric_used
+        
+        await db.fabric_lots.update_one(
+            {"id": existing_order['fabric_lot_id']},
+            {"$inc": {"remaining_quantity": -fabric_diff}}
+        )
+    
+    if 'rib_taken' in update_data or 'rib_returned' in update_data:
+        rib_taken = update_data.get('rib_taken', existing_order['rib_taken'])
+        rib_returned = update_data.get('rib_returned', existing_order['rib_returned'])
+        rib_used = rib_taken - rib_returned
+        update_data['rib_used'] = round(rib_used, 2)
+        
+        # Update rib lot quantities
+        old_rib_used = existing_order['rib_used']
+        rib_diff = rib_used - old_rib_used
+        
+        await db.fabric_lots.update_one(
+            {"id": existing_order['fabric_lot_id']},
+            {"$inc": {"remaining_rib_quantity": -rib_diff}}
+        )
+    
+    # Recalculate totals if size distribution or rate changed
+    if 'size_distribution' in update_data:
+        total_quantity = sum(update_data['size_distribution'].values())
+        update_data['total_quantity'] = total_quantity
+        
+        cutting_rate = update_data.get('cutting_rate_per_pcs', existing_order.get('cutting_rate_per_pcs', 0))
+        update_data['total_cutting_amount'] = round(total_quantity * cutting_rate, 2)
+        
+        fabric_lot = await db.fabric_lots.find_one({"id": existing_order['fabric_lot_id']}, {"_id": 0})
+        fabric_used = update_data.get('fabric_used', existing_order['fabric_used'])
+        update_data['total_fabric_cost'] = round(fabric_used * fabric_lot['rate_per_kg'], 2)
+    
+    if 'cutting_rate_per_pcs' in update_data:
+        total_quantity = update_data.get('total_quantity', existing_order['total_quantity'])
+        update_data['total_cutting_amount'] = round(total_quantity * update_data['cutting_rate_per_pcs'], 2)
+    
+    # Serialize datetime if present
+    if 'cutting_date' in update_data and update_data['cutting_date']:
+        update_data['cutting_date'] = update_data['cutting_date'].isoformat()
+    
+    result = await db.cutting_orders.update_one(
+        {"id": order_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Cutting order not found")
+    
+    return await get_cutting_order(order_id)
+
 @api_router.delete("/cutting-orders/{order_id}")
 async def delete_cutting_order(order_id: str):
     order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
