@@ -1183,6 +1183,11 @@ function App() {
                             <Badge className="bg-purple-100 text-purple-800 border border-purple-200">{order.operation_type}</Badge>
                             {getPaymentStatusBadge(order.payment_status || "Unpaid")}
                           </div>
+                          {order.cutting_lot_number && (
+                            <div className="text-sm text-slate-600 bg-indigo-50 px-3 py-1 rounded inline-block">
+                              <span className="font-semibold">Cutting Lot:</span> {order.cutting_lot_number}
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             <div>
                               <p className="text-xs text-slate-500">Unit Name</p>
