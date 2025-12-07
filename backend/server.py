@@ -87,6 +87,7 @@ class CuttingOrder(BaseModel):
 
 class CuttingOrderCreate(BaseModel):
     cutting_lot_number: str
+    cutting_master_name: str
     cutting_date: datetime
     fabric_lot_id: str
     lot_number: str
