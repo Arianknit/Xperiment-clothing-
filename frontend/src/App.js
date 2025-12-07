@@ -1082,7 +1082,7 @@ function App() {
                                 size_distribution: selectedOrder.size_distribution
                               });
                             }
-                          }} required>
+                          }} required disabled={!!editingOutsourcingOrder}>
                             <SelectTrigger id="cutting-order" data-testid="cutting-order-select">
                               <SelectValue placeholder="Choose order" />
                             </SelectTrigger>
