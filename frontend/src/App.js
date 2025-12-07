@@ -1360,6 +1360,80 @@ function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]" data-testid="payment-dialog">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              {selectedPaymentOrder && `${paymentType === "cutting" ? selectedPaymentOrder.cutting_lot_number : selectedPaymentOrder.dc_number} - Balance: ₹${selectedPaymentOrder.balance || 0}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedPaymentOrder && (
+            <form onSubmit={handlePaymentSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="payment-amount">Payment Amount (₹)</Label>
+                <Input 
+                  id="payment-amount" 
+                  type="number" 
+                  step="0.01" 
+                  value={paymentForm.amount} 
+                  onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})} 
+                  placeholder="Enter amount" 
+                  max={selectedPaymentOrder.balance || 0}
+                  required 
+                  data-testid="payment-amount-input" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-method">Payment Method</Label>
+                <Select value={paymentForm.payment_method} onValueChange={(value) => setPaymentForm({...paymentForm, payment_method: value})}>
+                  <SelectTrigger id="payment-method" data-testid="payment-method-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="UPI">UPI</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-notes">Notes (Optional)</Label>
+                <Input 
+                  id="payment-notes" 
+                  value={paymentForm.notes} 
+                  onChange={(e) => setPaymentForm({...paymentForm, notes: e.target.value})} 
+                  placeholder="Payment notes" 
+                  data-testid="payment-notes-input" 
+                />
+              </div>
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-slate-600">Total Amount:</span>
+                  <span className="font-bold">₹{paymentType === "cutting" ? selectedPaymentOrder.total_cutting_amount : selectedPaymentOrder.total_amount}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-slate-600">Already Paid:</span>
+                  <span className="font-bold text-green-600">₹{selectedPaymentOrder.amount_paid || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Current Balance:</span>
+                  <span className="font-bold text-red-600">₹{selectedPaymentOrder.balance || 0}</span>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setPaymentDialogOpen(false)} data-testid="payment-cancel-button">Cancel</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading} data-testid="payment-submit-button">
+                  {loading ? "Recording..." : "Record Payment"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Barcode View Dialog */}
       <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
         <DialogContent className="sm:max-w-[500px]" data-testid="barcode-dialog">
