@@ -381,12 +381,23 @@ function App() {
     setLoading(true);
     
     try {
-      await axios.post(`${API}/outsourcing-orders`, {
-        ...outsourcingForm,
-        dc_date: new Date(outsourcingForm.dc_date).toISOString(),
-        rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs)
-      });
-      toast.success("Outsourcing order created successfully");
+      if (editingOutsourcingOrder) {
+        await axios.put(`${API}/outsourcing-orders/${editingOutsourcingOrder.id}`, {
+          dc_date: new Date(outsourcingForm.dc_date).toISOString(),
+          operation_type: outsourcingForm.operation_type,
+          unit_name: outsourcingForm.unit_name,
+          rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs),
+          size_distribution: outsourcingForm.size_distribution
+        });
+        toast.success("Outsourcing order updated successfully");
+      } else {
+        await axios.post(`${API}/outsourcing-orders`, {
+          ...outsourcingForm,
+          dc_date: new Date(outsourcingForm.dc_date).toISOString(),
+          rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs)
+        });
+        toast.success("Outsourcing order created successfully");
+      }
       
       setOutsourcingDialogOpen(false);
       setOutsourcingForm({
@@ -400,6 +411,7 @@ function App() {
         rate_per_pcs: "",
         size_distribution: {}
       });
+      setEditingOutsourcingOrder(null);
       fetchOutsourcingOrders();
       fetchDashboardStats();
     } catch (error) {
@@ -408,6 +420,22 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openEditOutsourcingOrder = (order) => {
+    setEditingOutsourcingOrder(order);
+    setOutsourcingForm({
+      dc_date: new Date(order.dc_date).toISOString().split('T')[0],
+      cutting_order_id: order.cutting_order_id,
+      lot_number: order.lot_number,
+      category: order.category,
+      style_type: order.style_type,
+      operation_type: order.operation_type,
+      unit_name: order.unit_name,
+      rate_per_pcs: order.rate_per_pcs.toString(),
+      size_distribution: order.size_distribution
+    });
+    setOutsourcingDialogOpen(true);
   };
 
   const handleReceiptSubmit = async (e) => {
