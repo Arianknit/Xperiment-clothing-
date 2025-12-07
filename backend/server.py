@@ -1094,28 +1094,38 @@ async def generate_bill_report():
             <h2 style="margin-top:0;">Overall Summary</h2>
             <div class="summary-grid">
                 <div class="summary-item">
+                    <h3>Fabric Cost</h3>
+                    <p>₹{total_fabric_cost:.2f}</p>
+                </div>
+                <div class="summary-item">
                     <h3>Total Cutting Amount</h3>
                     <p>₹{total_cutting_amount:.2f}</p>
-                </div>
-                <div class="summary-item">
-                    <h3>Cutting Paid</h3>
-                    <p style="color: #10b981;">₹{total_cutting_paid:.2f}</p>
-                </div>
-                <div class="summary-item">
-                    <h3>Cutting Balance</h3>
-                    <p style="color: #ef4444;">₹{total_cutting_balance:.2f}</p>
                 </div>
                 <div class="summary-item">
                     <h3>Total Outsourcing Amount</h3>
                     <p>₹{total_outsourcing_amount:.2f}</p>
                 </div>
                 <div class="summary-item">
-                    <h3>Outsourcing Paid</h3>
-                    <p style="color: #10b981;">₹{total_outsourcing_paid:.2f}</p>
+                    <h3>Shortage Debit</h3>
+                    <p style="color: #ef4444;">(-) ₹{total_shortage_debit:.2f}</p>
                 </div>
-                <div class="summary-item">
-                    <h3>Outsourcing Balance</h3>
-                    <p style="color: #ef4444;">₹{total_outsourcing_balance:.2f}</p>
+                <div class="summary-item" style="grid-column: span 2; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 style="color: white;">COMPREHENSIVE TOTAL</h3>
+                    <p style="color: white; font-size: 28px;">₹{comprehensive_total:.2f}</p>
+                    <p style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Fabric + Cutting + Outsourcing - Shortage Debit</p>
+                </div>
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                <h3 style="margin: 0 0 10px 0; color: #1e40af;">Payment Summary</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <div>
+                        <p style="margin: 5px 0; color: #64748b;">Cutting Paid: <strong style="color: #10b981;">₹{total_cutting_paid:.2f}</strong></p>
+                        <p style="margin: 5px 0; color: #64748b;">Cutting Balance: <strong style="color: #ef4444;">₹{total_cutting_balance:.2f}</strong></p>
+                    </div>
+                    <div>
+                        <p style="margin: 5px 0; color: #64748b;">Outsourcing Paid: <strong style="color: #10b981;">₹{total_outsourcing_paid:.2f}</strong></p>
+                        <p style="margin: 5px 0; color: #64748b;">Outsourcing Balance: <strong style="color: #ef4444;">₹{total_outsourcing_balance:.2f}</strong></p>
+                    </div>
                 </div>
             </div>
         </div>
