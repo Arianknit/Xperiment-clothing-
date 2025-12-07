@@ -68,6 +68,7 @@ function App() {
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
     cutting_lot_number: "",
+    cutting_master_name: "",
     cutting_date: new Date().toISOString().split('T')[0],
     fabric_lot_id: "",
     lot_number: "",
@@ -82,6 +83,16 @@ function App() {
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
   const [editingCuttingOrder, setEditingCuttingOrder] = useState(null);
+  
+  // Payment form state
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: "",
+    payment_method: "Cash",
+    notes: ""
+  });
+  const [selectedPaymentOrder, setSelectedPaymentOrder] = useState(null);
+  const [paymentType, setPaymentType] = useState(""); // "cutting" or "outsourcing"
   
   // Outsourcing order form state
   const [outsourcingForm, setOutsourcingForm] = useState({
