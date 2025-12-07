@@ -1143,7 +1143,7 @@ function App() {
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setOutsourcingDialogOpen(false)} data-testid="outsourcing-cancel-button">Cancel</Button>
                         <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || !outsourcingForm.cutting_order_id} data-testid="outsourcing-submit-button">
-                          {loading ? "Saving..." : "Create DC"}
+                          {loading ? "Saving..." : editingOutsourcingOrder ? "Update Order" : "Create DC"}
                         </Button>
                       </div>
                     </form>
