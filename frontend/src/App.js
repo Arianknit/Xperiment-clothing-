@@ -200,19 +200,36 @@ function App() {
     setLoading(true);
     
     try {
-      await axios.post(`${API}/cutting-orders`, {
-        ...cuttingForm,
-        cutting_date: new Date(cuttingForm.cutting_date).toISOString(),
-        fabric_taken: parseFloat(cuttingForm.fabric_taken),
-        fabric_returned: parseFloat(cuttingForm.fabric_returned),
-        rib_taken: parseFloat(cuttingForm.rib_taken),
-        rib_returned: parseFloat(cuttingForm.rib_returned),
-        cutting_rate_per_pcs: parseFloat(cuttingForm.cutting_rate_per_pcs)
-      });
-      toast.success("Cutting order created successfully");
+      if (editingCuttingOrder) {
+        await axios.put(`${API}/cutting-orders/${editingCuttingOrder.id}`, {
+          cutting_lot_number: cuttingForm.cutting_lot_number,
+          cutting_date: new Date(cuttingForm.cutting_date).toISOString(),
+          category: cuttingForm.category,
+          style_type: cuttingForm.style_type,
+          fabric_taken: parseFloat(cuttingForm.fabric_taken),
+          fabric_returned: parseFloat(cuttingForm.fabric_returned),
+          rib_taken: parseFloat(cuttingForm.rib_taken),
+          rib_returned: parseFloat(cuttingForm.rib_returned),
+          cutting_rate_per_pcs: parseFloat(cuttingForm.cutting_rate_per_pcs),
+          size_distribution: cuttingForm.size_distribution
+        });
+        toast.success("Cutting order updated successfully");
+      } else {
+        await axios.post(`${API}/cutting-orders`, {
+          ...cuttingForm,
+          cutting_date: new Date(cuttingForm.cutting_date).toISOString(),
+          fabric_taken: parseFloat(cuttingForm.fabric_taken),
+          fabric_returned: parseFloat(cuttingForm.fabric_returned),
+          rib_taken: parseFloat(cuttingForm.rib_taken),
+          rib_returned: parseFloat(cuttingForm.rib_returned),
+          cutting_rate_per_pcs: parseFloat(cuttingForm.cutting_rate_per_pcs)
+        });
+        toast.success("Cutting order created successfully");
+      }
       
       setCuttingDialogOpen(false);
       setCuttingForm({
+        cutting_lot_number: "",
         cutting_date: new Date().toISOString().split('T')[0],
         fabric_lot_id: "",
         lot_number: "",
@@ -225,6 +242,7 @@ function App() {
         cutting_rate_per_pcs: "",
         size_distribution: {}
       });
+      setEditingCuttingOrder(null);
       fetchCuttingOrders();
       fetchFabricLots();
       fetchDashboardStats();
@@ -234,6 +252,25 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openEditCuttingOrder = (order) => {
+    setEditingCuttingOrder(order);
+    setCuttingForm({
+      cutting_lot_number: order.cutting_lot_number || "",
+      cutting_date: new Date(order.cutting_date).toISOString().split('T')[0],
+      fabric_lot_id: order.fabric_lot_id,
+      lot_number: order.lot_number,
+      category: order.category,
+      style_type: order.style_type,
+      fabric_taken: order.fabric_taken.toString(),
+      fabric_returned: order.fabric_returned.toString(),
+      rib_taken: order.rib_taken.toString(),
+      rib_returned: order.rib_returned.toString(),
+      cutting_rate_per_pcs: (order.cutting_rate_per_pcs || 0).toString(),
+      size_distribution: order.size_distribution
+    });
+    setCuttingDialogOpen(true);
   };
 
   const handleDeleteCuttingOrder = async (orderId) => {
