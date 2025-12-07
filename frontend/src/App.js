@@ -948,28 +948,48 @@ function App() {
                             <h3 className="text-xl font-bold text-slate-800">{order.cutting_lot_number || order.lot_number}</h3>
                             {getCategoryBadge(order.category)}
                             <Badge className="bg-slate-100 text-slate-700 border">{order.style_type}</Badge>
+                            {getPaymentStatusBadge(order.payment_status || "Unpaid")}
                           </div>
+                          {order.cutting_master_name && (
+                            <div className="text-sm text-slate-600">
+                              <span className="font-semibold">Master:</span> {order.cutting_master_name}
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            <div>
-                              <p className="text-xs text-slate-500">Fabric Used</p>
-                              <p className="font-bold text-indigo-600">{order.fabric_used} kg</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-500">Rib Used</p>
-                              <p className="font-bold text-purple-600">{order.rib_used} kg</p>
-                            </div>
                             <div>
                               <p className="text-xs text-slate-500">Total Qty</p>
                               <p className="font-bold text-green-600">{order.total_quantity} pcs</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Cutting Rate</p>
-                              <p className="font-bold text-blue-600">₹{order.cutting_rate_per_pcs || 0}</p>
+                              <p className="text-xs text-slate-500">Total Amount</p>
+                              <p className="font-bold text-indigo-600">₹{order.total_cutting_amount || 0}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500">Cutting Amt</p>
-                              <p className="font-bold text-orange-600">₹{order.total_cutting_amount || 0}</p>
+                              <p className="text-xs text-slate-500">Paid</p>
+                              <p className="font-bold text-green-600">₹{order.amount_paid || 0}</p>
                             </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Balance</p>
+                              <p className="font-bold text-red-600">₹{order.balance || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Fabric Used</p>
+                              <p className="font-bold text-purple-600">{order.fabric_used} kg</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            {(order.payment_status !== "Paid") && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openPaymentDialog(order, "cutting")}
+                                className="text-green-600 border-green-200 hover:bg-green-50"
+                                data-testid={`pay-cutting-${order.id}`}
+                              >
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                Add Payment
+                              </Button>
+                            )}
                           </div>
                         </div>
                         <div className="ml-4 flex gap-1">
