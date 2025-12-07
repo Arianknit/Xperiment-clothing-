@@ -1138,7 +1138,8 @@ async def generate_bill_report():
                     <th>Cutting Master</th>
                     <th>Date</th>
                     <th>Quantity</th>
-                    <th>Total Amount</th>
+                    <th>Fabric Cost</th>
+                    <th>Cutting Amount</th>
                     <th>Paid</th>
                     <th>Balance</th>
                     <th>Status</th>
@@ -1165,6 +1166,7 @@ async def generate_bill_report():
                     <td>{order.get('cutting_master_name', 'N/A')}</td>
                     <td>{cutting_date.strftime('%d-%m-%Y')}</td>
                     <td>{order.get('total_quantity', 0)} pcs</td>
+                    <td>₹{order.get('total_fabric_cost', 0):.2f}</td>
                     <td>₹{order.get('total_cutting_amount', 0):.2f}</td>
                     <td>₹{order.get('amount_paid', 0):.2f}</td>
                     <td>₹{order.get('balance', 0):.2f}</td>
@@ -1175,6 +1177,7 @@ async def generate_bill_report():
     html_content += f"""
                 <tr class="total-row">
                     <td colspan="4">TOTAL</td>
+                    <td>₹{total_fabric_cost:.2f}</td>
                     <td>₹{total_cutting_amount:.2f}</td>
                     <td>₹{total_cutting_paid:.2f}</td>
                     <td>₹{total_cutting_balance:.2f}</td>
