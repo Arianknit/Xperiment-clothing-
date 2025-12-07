@@ -63,6 +63,7 @@ class CuttingOrder(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     cutting_lot_number: Optional[str] = ""
+    cutting_master_name: Optional[str] = ""
     cutting_date: datetime
     fabric_lot_id: str
     lot_number: str
@@ -78,6 +79,9 @@ class CuttingOrder(BaseModel):
     total_quantity: int
     cutting_rate_per_pcs: Optional[float] = 0.0
     total_cutting_amount: Optional[float] = 0.0
+    amount_paid: Optional[float] = 0.0
+    balance: Optional[float] = 0.0
+    payment_status: Optional[str] = "Unpaid"  # Unpaid, Partial, Paid
     total_fabric_cost: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
