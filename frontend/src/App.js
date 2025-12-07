@@ -852,7 +852,7 @@ function App() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-3">
                           <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-bold text-slate-800">{order.lot_number}</h3>
+                            <h3 className="text-xl font-bold text-slate-800">{order.cutting_lot_number || order.lot_number}</h3>
                             {getCategoryBadge(order.category)}
                             <Badge className="bg-slate-100 text-slate-700 border">{order.style_type}</Badge>
                           </div>
@@ -871,15 +871,18 @@ function App() {
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Cutting Rate</p>
-                              <p className="font-bold text-blue-600">₹{order.cutting_rate_per_pcs}</p>
+                              <p className="font-bold text-blue-600">₹{order.cutting_rate_per_pcs || 0}</p>
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Cutting Amt</p>
-                              <p className="font-bold text-orange-600">₹{order.total_cutting_amount}</p>
+                              <p className="font-bold text-orange-600">₹{order.total_cutting_amount || 0}</p>
                             </div>
                           </div>
                         </div>
-                        <div className="ml-4">
+                        <div className="ml-4 flex gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => openEditCuttingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-cutting-order-${order.id}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => handleDeleteCuttingOrder(order.id)} className="h-8 w-8 text-red-600 hover:bg-red-50" data-testid={`delete-cutting-order-${order.id}`}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
