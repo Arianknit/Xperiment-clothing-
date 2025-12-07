@@ -812,6 +812,378 @@ async def get_lot_barcode(lot_id: str):
     return StreamingResponse(buffer, media_type="image/png")
 
 
+# Payment Routes for Cutting Orders
+@api_router.post("/cutting-orders/{order_id}/payment")
+async def add_cutting_payment(order_id: str, payment: PaymentRecord):
+    order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Cutting order not found")
+    
+    # Update payment details
+    new_amount_paid = order.get('amount_paid', 0) + payment.amount
+    total_amount = order.get('total_cutting_amount', 0)
+    new_balance = total_amount - new_amount_paid
+    
+    # Determine payment status
+    if new_balance <= 0:
+        payment_status = "Paid"
+        new_balance = 0
+    elif new_amount_paid > 0:
+        payment_status = "Partial"
+    else:
+        payment_status = "Unpaid"
+    
+    await db.cutting_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "amount_paid": round(new_amount_paid, 2),
+            "balance": round(new_balance, 2),
+            "payment_status": payment_status
+        }}
+    )
+    
+    return {"message": "Payment recorded successfully", "balance": round(new_balance, 2)}
+
+
+# Payment Routes for Outsourcing Orders
+@api_router.post("/outsourcing-orders/{order_id}/payment")
+async def add_outsourcing_payment(order_id: str, payment: PaymentRecord):
+    order = await db.outsourcing_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    # Update payment details
+    new_amount_paid = order.get('amount_paid', 0) + payment.amount
+    total_amount = order.get('total_amount', 0)
+    new_balance = total_amount - new_amount_paid
+    
+    # Determine payment status
+    if new_balance <= 0:
+        payment_status = "Paid"
+        new_balance = 0
+    elif new_amount_paid > 0:
+        payment_status = "Partial"
+    else:
+        payment_status = "Unpaid"
+    
+    await db.outsourcing_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "amount_paid": round(new_amount_paid, 2),
+            "balance": round(new_balance, 2),
+            "payment_status": payment_status
+        }}
+    )
+    
+    return {"message": "Payment recorded successfully", "balance": round(new_balance, 2)}
+
+
+# Bill Report Generation
+@api_router.get("/reports/bills", response_class=HTMLResponse)
+async def generate_bill_report():
+    # Get all cutting orders
+    cutting_orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get all outsourcing orders
+    outsourcing_orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Calculate totals
+    total_cutting_amount = sum(o.get('total_cutting_amount', 0) for o in cutting_orders)
+    total_cutting_paid = sum(o.get('amount_paid', 0) for o in cutting_orders)
+    total_cutting_balance = sum(o.get('balance', 0) for o in cutting_orders)
+    
+    total_outsourcing_amount = sum(o.get('total_amount', 0) for o in outsourcing_orders)
+    total_outsourcing_paid = sum(o.get('amount_paid', 0) for o in outsourcing_orders)
+    total_outsourcing_balance = sum(o.get('balance', 0) for o in outsourcing_orders)
+    
+    # Generate HTML report
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Bill Report - All Operations</title>
+        <style>
+            @media print {{
+                @page {{ margin: 1cm; }}
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                max-width: 1200px;
+                margin: 0 auto;
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 3px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }}
+            .header h1 {{
+                margin: 0;
+                font-size: 28px;
+            }}
+            .summary {{
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 30px;
+            }}
+            .summary-grid {{
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }}
+            .summary-item {{
+                background: white;
+                padding: 10px;
+                border-radius: 5px;
+                border-left: 4px solid #4F46E5;
+            }}
+            .summary-item h3 {{
+                margin: 0 0 5px 0;
+                font-size: 14px;
+                color: #666;
+            }}
+            .summary-item p {{
+                margin: 0;
+                font-size: 20px;
+                font-weight: bold;
+                color: #333;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+            th, td {{
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }}
+            th {{
+                background-color: #4F46E5;
+                color: white;
+                font-weight: bold;
+            }}
+            tr:nth-child(even) {{
+                background-color: #f9f9f9;
+            }}
+            .section-title {{
+                margin-top: 40px;
+                margin-bottom: 10px;
+                font-size: 22px;
+                color: #4F46E5;
+                border-bottom: 2px solid #4F46E5;
+                padding-bottom: 5px;
+            }}
+            .status-badge {{
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+            }}
+            .status-paid {{
+                background: #10b981;
+                color: white;
+            }}
+            .status-partial {{
+                background: #f59e0b;
+                color: white;
+            }}
+            .status-unpaid {{
+                background: #ef4444;
+                color: white;
+            }}
+            .print-button {{
+                background-color: #4F46E5;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                margin: 10px 0;
+            }}
+            .print-button:hover {{
+                background-color: #4338CA;
+            }}
+            .total-row {{
+                background-color: #e0e7ff !important;
+                font-weight: bold;
+            }}
+        </style>
+    </head>
+    <body>
+        <button class="print-button no-print" onclick="window.print()">Print Report</button>
+        
+        <div class="header">
+            <h1>BILL REPORT - ALL OPERATIONS</h1>
+            <p>Garment Manufacturing Pro</p>
+            <p>Generated on: {datetime.now(timezone.utc).strftime('%d-%m-%Y %H:%M')}</p>
+        </div>
+        
+        <div class="summary">
+            <h2 style="margin-top:0;">Overall Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h3>Total Cutting Amount</h3>
+                    <p>₹{total_cutting_amount:.2f}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Cutting Paid</h3>
+                    <p style="color: #10b981;">₹{total_cutting_paid:.2f}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Cutting Balance</h3>
+                    <p style="color: #ef4444;">₹{total_cutting_balance:.2f}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Total Outsourcing Amount</h3>
+                    <p>₹{total_outsourcing_amount:.2f}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Outsourcing Paid</h3>
+                    <p style="color: #10b981;">₹{total_outsourcing_paid:.2f}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Outsourcing Balance</h3>
+                    <p style="color: #ef4444;">₹{total_outsourcing_balance:.2f}</p>
+                </div>
+            </div>
+        </div>
+        
+        <h2 class="section-title">Cutting Operations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Lot Number</th>
+                    <th>Cutting Master</th>
+                    <th>Date</th>
+                    <th>Quantity</th>
+                    <th>Total Amount</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    # Add cutting orders
+    for order in cutting_orders:
+        cutting_date = order.get('cutting_date')
+        if isinstance(cutting_date, str):
+            cutting_date = datetime.fromisoformat(cutting_date)
+        
+        status_class = {
+            'Paid': 'status-paid',
+            'Partial': 'status-partial',
+            'Unpaid': 'status-unpaid'
+        }.get(order.get('payment_status', 'Unpaid'), 'status-unpaid')
+        
+        html_content += f"""
+                <tr>
+                    <td>{order.get('cutting_lot_number', 'N/A')}</td>
+                    <td>{order.get('cutting_master_name', 'N/A')}</td>
+                    <td>{cutting_date.strftime('%d-%m-%Y')}</td>
+                    <td>{order.get('total_quantity', 0)} pcs</td>
+                    <td>₹{order.get('total_cutting_amount', 0):.2f}</td>
+                    <td>₹{order.get('amount_paid', 0):.2f}</td>
+                    <td>₹{order.get('balance', 0):.2f}</td>
+                    <td><span class="status-badge {status_class}">{order.get('payment_status', 'Unpaid')}</span></td>
+                </tr>
+        """
+    
+    html_content += f"""
+                <tr class="total-row">
+                    <td colspan="4">TOTAL</td>
+                    <td>₹{total_cutting_amount:.2f}</td>
+                    <td>₹{total_cutting_paid:.2f}</td>
+                    <td>₹{total_cutting_balance:.2f}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2 class="section-title">Outsourcing Operations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>DC Number</th>
+                    <th>Unit Name</th>
+                    <th>Operation</th>
+                    <th>Date</th>
+                    <th>Quantity</th>
+                    <th>Total Amount</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    # Add outsourcing orders
+    for order in outsourcing_orders:
+        dc_date = order.get('dc_date')
+        if isinstance(dc_date, str):
+            dc_date = datetime.fromisoformat(dc_date)
+        
+        status_class = {
+            'Paid': 'status-paid',
+            'Partial': 'status-partial',
+            'Unpaid': 'status-unpaid'
+        }.get(order.get('payment_status', 'Unpaid'), 'status-unpaid')
+        
+        html_content += f"""
+                <tr>
+                    <td>{order.get('dc_number', 'N/A')}</td>
+                    <td>{order.get('unit_name', 'N/A')}</td>
+                    <td>{order.get('operation_type', 'N/A')}</td>
+                    <td>{dc_date.strftime('%d-%m-%Y')}</td>
+                    <td>{order.get('total_quantity', 0)} pcs</td>
+                    <td>₹{order.get('total_amount', 0):.2f}</td>
+                    <td>₹{order.get('amount_paid', 0):.2f}</td>
+                    <td>₹{order.get('balance', 0):.2f}</td>
+                    <td><span class="status-badge {status_class}">{order.get('payment_status', 'Unpaid')}</span></td>
+                </tr>
+        """
+    
+    html_content += f"""
+                <tr class="total-row">
+                    <td colspan="5">TOTAL</td>
+                    <td>₹{total_outsourcing_amount:.2f}</td>
+                    <td>₹{total_outsourcing_paid:.2f}</td>
+                    <td>₹{total_outsourcing_balance:.2f}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 50px; border-top: 2px solid #000; padding-top: 20px;">
+            <div style="display: flex; justify-content: space-between;">
+                <div style="text-align: center; width: 45%;">
+                    <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px;">
+                        Prepared By
+                    </div>
+                </div>
+                <div style="text-align: center; width: 45%;">
+                    <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px;">
+                        Authorized Signature
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
+
+
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
