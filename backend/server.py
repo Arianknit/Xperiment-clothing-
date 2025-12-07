@@ -1268,6 +1268,10 @@ async def get_dashboard_stats():
     total_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in receipts)
     total_shortage_pcs = sum(r.get('total_shortage', 0) for r in receipts)
     
+    # Calculate comprehensive total amount
+    # Total Amount = Fabric Cost + Cutting Cost + Outsourcing Cost - Shortage Debit
+    comprehensive_total = (total_production_cost + total_cutting_cost + total_outsourcing_cost) - total_shortage_debit
+    
     return {
         "total_lots": total_lots,
         "total_fabric_stock": round(total_fabric_stock, 2),
@@ -1282,7 +1286,8 @@ async def get_dashboard_stats():
         "pending_outsourcing": pending_outsourcing,
         "total_outsourcing_cost": round(total_outsourcing_cost, 2),
         "total_shortage_debit": round(total_shortage_debit, 2),
-        "total_shortage_pcs": total_shortage_pcs
+        "total_shortage_pcs": total_shortage_pcs,
+        "comprehensive_total": round(comprehensive_total, 2)
     }
 
 
