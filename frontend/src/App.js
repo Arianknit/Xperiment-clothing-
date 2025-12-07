@@ -41,7 +41,7 @@ const SIZE_CONFIG = {
   Women: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL']
 };
 
-const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker'];
+const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker', 'Stitching'];
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
