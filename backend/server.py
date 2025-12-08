@@ -266,6 +266,16 @@ def generate_dc_number():
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     return f"DC-{timestamp}"
 
+# Helper function to generate fabric lot number
+async def generate_fabric_lot_number():
+    count = await db.fabric_lots.count_documents({})
+    return f"lot {str(count + 1).zfill(3)}"
+
+# Helper function to generate cutting lot number
+async def generate_cutting_lot_number():
+    count = await db.cutting_orders.count_documents({})
+    return f"cut {str(count + 1).zfill(3)}"
+
 
 # Fabric Lot Routes
 @api_router.post("/fabric-lots", response_model=FabricLot)
