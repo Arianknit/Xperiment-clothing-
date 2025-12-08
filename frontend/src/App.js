@@ -1768,12 +1768,12 @@ function App() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="outsourcing-operation-filter" className="text-xs">Operation Type (Optional)</Label>
-                      <Select onValueChange={(value) => document.getElementById('outsourcing-operation-filter').setAttribute('data-value', value)}>
+                      <Select defaultValue="all" onValueChange={(value) => document.getElementById('outsourcing-operation-filter').setAttribute('data-value', value === 'all' ? '' : value)}>
                         <SelectTrigger id="outsourcing-operation-filter" className="h-9" data-value="">
                           <SelectValue placeholder="Select operation" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All</SelectItem>
+                          <SelectItem value="all">All</SelectItem>
                           <SelectItem value="Printing">Printing</SelectItem>
                           <SelectItem value="Embroidery">Embroidery</SelectItem>
                           <SelectItem value="Stone">Stone</SelectItem>
