@@ -1741,6 +1741,8 @@ async def get_dashboard_stats():
     total_cutting_orders = await db.cutting_orders.count_documents({})
     total_outsourcing_orders = await db.outsourcing_orders.count_documents({})
     pending_outsourcing = await db.outsourcing_orders.count_documents({"status": "Sent"})
+    total_ironing_orders = await db.ironing_orders.count_documents({})
+    pending_ironing = await db.ironing_orders.count_documents({"status": "Sent"})
     
     # Calculate total fabric in stock
     lots = await db.fabric_lots.find({}, {"_id": 0, "remaining_quantity": 1, "remaining_rib_quantity": 1}).to_list(1000)
@@ -1763,9 +1765,17 @@ async def get_dashboard_stats():
     total_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in receipts)
     total_shortage_pcs = sum(r.get('total_shortage', 0) for r in receipts)
     
+    # Calculate ironing costs
+    ironing_orders = await db.ironing_orders.find({}, {"_id": 0, "total_amount": 1}).to_list(1000)
+    total_ironing_cost = sum(o.get('total_amount', 0) for o in ironing_orders)
+    
+    ironing_receipts = await db.ironing_receipts.find({}, {"_id": 0, "shortage_debit_amount": 1, "total_shortage": 1}).to_list(1000)
+    total_ironing_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in ironing_receipts)
+    total_ironing_shortage_pcs = sum(r.get('total_shortage', 0) for r in ironing_receipts)
+    
     # Calculate comprehensive total amount
-    # Total Amount = Fabric Cost + Cutting Cost + Outsourcing Cost - Shortage Debit
-    comprehensive_total = (total_production_cost + total_cutting_cost + total_outsourcing_cost) - total_shortage_debit
+    # Total Amount = Fabric Cost + Cutting Cost + Outsourcing Cost + Ironing Cost - Shortage Debit - Ironing Shortage Debit
+    comprehensive_total = (total_production_cost + total_cutting_cost + total_outsourcing_cost + total_ironing_cost) - total_shortage_debit - total_ironing_shortage_debit
     
     return {
         "total_lots": total_lots,
@@ -1782,6 +1792,11 @@ async def get_dashboard_stats():
         "total_outsourcing_cost": round(total_outsourcing_cost, 2),
         "total_shortage_debit": round(total_shortage_debit, 2),
         "total_shortage_pcs": total_shortage_pcs,
+        "total_ironing_orders": total_ironing_orders,
+        "pending_ironing": pending_ironing,
+        "total_ironing_cost": round(total_ironing_cost, 2),
+        "total_ironing_shortage_debit": round(total_ironing_shortage_debit, 2),
+        "total_ironing_shortage_pcs": total_ironing_shortage_pcs,
         "comprehensive_total": round(comprehensive_total, 2)
     }
 
