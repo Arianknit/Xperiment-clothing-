@@ -238,6 +238,29 @@ class IroningReceiptCreate(BaseModel):
     received_distribution: Dict[str, int]
 
 
+# Catalog Models
+class Catalog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    catalog_name: str
+    catalog_code: str
+    description: Optional[str] = None
+    lot_numbers: List[str]  # List of cutting lot numbers
+    total_quantity: int
+    available_stock: int
+    size_distribution: Dict[str, int]
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CatalogCreate(BaseModel):
+    catalog_name: str
+    catalog_code: str
+    description: Optional[str] = None
+    lot_numbers: List[str]
+
+class CatalogDispatch(BaseModel):
+    dispatch_quantity: Dict[str, int]  # Size-wise dispatch quantities
+    notes: Optional[str] = None
+
+
 # Helper function to generate DC number
 def generate_dc_number():
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
