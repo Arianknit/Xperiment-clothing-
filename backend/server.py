@@ -1365,6 +1365,243 @@ async def add_outsourcing_payment(order_id: str, payment: PaymentRecord):
 
 
 # Bill Report Generation
+@api_router.get("/reports/bills/unit-wise", response_class=HTMLResponse)
+async def generate_unit_wise_bill(unit_name: str):
+    # Get outsourcing orders for this unit
+    outsourcing_orders = await db.outsourcing_orders.find({"unit_name": unit_name}, {"_id": 0}).to_list(1000)
+    
+    # Convert dates
+    for order in outsourcing_orders:
+        if isinstance(order.get('dc_date'), str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Get receipts and shortage for outsourcing
+    outsourcing_receipts = []
+    total_outsourcing_shortage = 0
+    total_outsourcing_shortage_debit = 0
+    for order in outsourcing_orders:
+        receipts = await db.outsourcing_receipts.find({"outsourcing_order_id": order['id']}, {"_id": 0}).to_list(1000)
+        for r in receipts:
+            if isinstance(r.get('receipt_date'), str):
+                r['receipt_date'] = datetime.fromisoformat(r['receipt_date'])
+        outsourcing_receipts.extend(receipts)
+        total_outsourcing_shortage += sum(r.get('total_shortage', 0) for r in receipts)
+        total_outsourcing_shortage_debit += sum(r.get('shortage_debit_amount', 0) for r in receipts)
+    
+    # Get ironing orders for this unit
+    ironing_orders = await db.ironing_orders.find({"unit_name": unit_name}, {"_id": 0}).to_list(1000)
+    
+    # Convert dates
+    for order in ironing_orders:
+        if isinstance(order.get('dc_date'), str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Get receipts and shortage for ironing
+    ironing_receipts = []
+    total_ironing_shortage = 0
+    total_ironing_shortage_debit = 0
+    for order in ironing_orders:
+        receipts = await db.ironing_receipts.find({"ironing_order_id": order['id']}, {"_id": 0}).to_list(1000)
+        for r in receipts:
+            if isinstance(r.get('receipt_date'), str):
+                r['receipt_date'] = datetime.fromisoformat(r['receipt_date'])
+        ironing_receipts.extend(receipts)
+        total_ironing_shortage += sum(r.get('total_shortage', 0) for r in receipts)
+        total_ironing_shortage_debit += sum(r.get('shortage_debit_amount', 0) for r in receipts)
+    
+    # Calculate totals
+    total_outsourcing_amount = sum(o.get('total_amount', 0) for o in outsourcing_orders)
+    total_outsourcing_paid = sum(o.get('paid_amount', 0) for o in outsourcing_orders)
+    total_outsourcing_balance = total_outsourcing_amount - total_outsourcing_paid
+    
+    total_ironing_amount = sum(o.get('total_amount', 0) for o in ironing_orders)
+    total_ironing_paid = sum(o.get('amount_paid', 0) for o in ironing_orders)
+    total_ironing_balance = sum(o.get('balance', 0) for o in ironing_orders)
+    
+    # Calculate net amount (after shortage debit)
+    net_outsourcing_amount = total_outsourcing_amount - total_outsourcing_shortage_debit
+    net_ironing_amount = total_ironing_amount - total_ironing_shortage_debit
+    total_net_amount = net_outsourcing_amount + net_ironing_amount
+    
+    # Generate HTML report
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Unit Bill - {unit_name}</title>
+        <style>
+            @media print {{ @page {{ margin: 1cm; }} body {{ margin: 0; }} .no-print {{ display: none; }} }}
+            body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }}
+            .header {{ text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 20px; margin-bottom: 30px; }}
+            .header h1 {{ margin: 0; color: #4F46E5; font-size: 28px; }}
+            .header p {{ margin: 5px 0; color: #666; }}
+            .unit-info {{ background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; }}
+            .unit-info h3 {{ margin: 0 0 10px 0; color: #1e40af; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            th {{ background: #4F46E5; color: white; padding: 12px; text-align: left; font-size: 13px; }}
+            td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 12px; }}
+            tr:hover {{ background: #f5f5f5; }}
+            .section-title {{ font-size: 20px; color: #4F46E5; margin: 30px 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #4F46E5; }}
+            .summary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 8px; margin-top: 30px; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }}
+            .summary-item {{ background: rgba(255,255,255,0.15); padding: 15px; border-radius: 6px; text-align: center; }}
+            .summary-label {{ font-size: 13px; opacity: 0.9; }}
+            .summary-value {{ font-size: 22px; font-weight: bold; margin-top: 5px; }}
+            .grand-total {{ text-align: center; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.3); }}
+            .grand-total-label {{ font-size: 16px; opacity: 0.9; }}
+            .grand-total-value {{ font-size: 36px; font-weight: bold; margin-top: 10px; }}
+            .print-btn {{ background: #4F46E5; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }}
+            .badge {{ padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }}
+            .badge-green {{ background: #10b981; color: white; }}
+            .badge-red {{ background: #ef4444; color: white; }}
+        </style>
+    </head>
+    <body>
+        <button class="print-btn no-print" onclick="window.print()">🖨️ Print Bill</button>
+        
+        <div class="header">
+            <h1>UNIT BILL REPORT</h1>
+            <p style="font-size: 18px; font-weight: bold; margin-top: 10px;">Unit: {unit_name}</p>
+            <p>Report Generated: {datetime.now(timezone.utc).strftime('%d %B %Y, %I:%M %p')}</p>
+        </div>
+        
+        <div class="unit-info">
+            <h3>Summary</h3>
+            <p><strong>Total Orders:</strong> {len(outsourcing_orders) + len(ironing_orders)} (Outsourcing: {len(outsourcing_orders)}, Ironing: {len(ironing_orders)})</p>
+            <p><strong>Total Amount:</strong> ₹{total_outsourcing_amount + total_ironing_amount:.2f}</p>
+            <p><strong>Total Shortage Debit:</strong> ₹{total_outsourcing_shortage_debit + total_ironing_shortage_debit:.2f} ({total_outsourcing_shortage + total_ironing_shortage} pcs)</p>
+            <p><strong>Net Amount:</strong> ₹{total_net_amount:.2f}</p>
+        </div>
+        
+        <!-- Outsourcing Orders -->
+        {'<h2 class="section-title">📦 OUTSOURCING OPERATIONS</h2>' if outsourcing_orders else ''}
+        {'''<table>
+            <thead>
+                <tr>
+                    <th>DC Number</th>
+                    <th>Date</th>
+                    <th>Operation</th>
+                    <th>Lot</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Shortage</th>
+                    <th>Debit</th>
+                    <th>Net Amount</th>
+                </tr>
+            </thead>
+            <tbody>''' if outsourcing_orders else ''}
+                {''.join([f'''
+                <tr>
+                    <td><strong>{o.get('dc_number', 'N/A')}</strong></td>
+                    <td>{o.get('dc_date').strftime('%d %b %Y') if o.get('dc_date') else 'N/A'}</td>
+                    <td>{o.get('operation_type', 'N/A')}</td>
+                    <td>{o.get('cutting_lot_number', 'N/A')}</td>
+                    <td>{o.get('total_quantity', 0)} pcs</td>
+                    <td>₹{o.get('rate_per_pcs', 0):.2f}</td>
+                    <td>₹{o.get('total_amount', 0):.2f}</td>
+                    <td style="color: red;">{sum(r.get('total_shortage', 0) for r in outsourcing_receipts if r.get('outsourcing_order_id') == o.get('id'))} pcs</td>
+                    <td style="color: red;">₹{sum(r.get('shortage_debit_amount', 0) for r in outsourcing_receipts if r.get('outsourcing_order_id') == o.get('id')):.2f}</td>
+                    <td><strong>₹{o.get('total_amount', 0) - sum(r.get('shortage_debit_amount', 0) for r in outsourcing_receipts if r.get('outsourcing_order_id') == o.get('id')):.2f}</strong></td>
+                </tr>
+                ''' for o in outsourcing_orders])}
+            {'</tbody></table>' if outsourcing_orders else '<p style="text-align: center; color: #666; padding: 20px;">No outsourcing operations for this unit</p>'}
+        
+        <!-- Ironing Orders -->
+        {'<h2 class="section-title">🔥 IRONING OPERATIONS</h2>' if ironing_orders else ''}
+        {'''<table>
+            <thead>
+                <tr>
+                    <th>DC Number</th>
+                    <th>Date</th>
+                    <th>Lot</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Shortage</th>
+                    <th>Debit</th>
+                    <th>Net Amount</th>
+                </tr>
+            </thead>
+            <tbody>''' if ironing_orders else ''}
+                {''.join([f'''
+                <tr>
+                    <td><strong>{o.get('dc_number', 'N/A')}</strong></td>
+                    <td>{o.get('dc_date').strftime('%d %b %Y') if o.get('dc_date') else 'N/A'}</td>
+                    <td>{o.get('cutting_lot_number', 'N/A')}</td>
+                    <td>{o.get('category', 'N/A')}</td>
+                    <td>{o.get('total_quantity', 0)} pcs</td>
+                    <td>₹{o.get('rate_per_pcs', 0):.2f}</td>
+                    <td>₹{o.get('total_amount', 0):.2f}</td>
+                    <td style="color: red;">{sum(r.get('total_shortage', 0) for r in ironing_receipts if r.get('ironing_order_id') == o.get('id'))} pcs</td>
+                    <td style="color: red;">₹{sum(r.get('shortage_debit_amount', 0) for r in ironing_receipts if r.get('ironing_order_id') == o.get('id')):.2f}</td>
+                    <td><strong>₹{o.get('total_amount', 0) - sum(r.get('shortage_debit_amount', 0) for r in ironing_receipts if r.get('ironing_order_id') == o.get('id')):.2f}</strong></td>
+                </tr>
+                ''' for o in ironing_orders])}
+            {'</tbody></table>' if ironing_orders else '<p style="text-align: center; color: #666; padding: 20px;">No ironing operations for this unit</p>'}
+        
+        <!-- Summary -->
+        <div class="summary">
+            <h3 style="margin: 0 0 20px 0; text-align: center;">BILLING SUMMARY</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Outsourcing Amount</div>
+                    <div class="summary-value">₹{total_outsourcing_amount:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Ironing Amount</div>
+                    <div class="summary-value">₹{total_ironing_amount:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Amount</div>
+                    <div class="summary-value">₹{total_outsourcing_amount + total_ironing_amount:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Outsourcing Shortage</div>
+                    <div class="summary-value">(-) ₹{total_outsourcing_shortage_debit:.2f}</div>
+                    <div class="summary-label" style="font-size: 11px; margin-top: 5px;">{total_outsourcing_shortage} pcs</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Ironing Shortage</div>
+                    <div class="summary-value">(-) ₹{total_ironing_shortage_debit:.2f}</div>
+                    <div class="summary-label" style="font-size: 11px; margin-top: 5px;">{total_ironing_shortage} pcs</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Paid</div>
+                    <div class="summary-value">₹{total_outsourcing_paid + total_ironing_paid:.2f}</div>
+                </div>
+            </div>
+            <div class="grand-total">
+                <div class="grand-total-label">NET PAYABLE AMOUNT</div>
+                <div class="grand-total-value">₹{total_net_amount:.2f}</div>
+                <div style="font-size: 14px; opacity: 0.9; margin-top: 10px;">
+                    Outstanding Balance: ₹{total_outsourcing_balance + total_ironing_balance:.2f}
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 50px; border-top: 2px solid #ddd; padding-top: 20px;">
+            <div style="display: flex; justify-content: space-between;">
+                <div style="text-align: center; width: 45%;">
+                    <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px;">
+                        Prepared By
+                    </div>
+                </div>
+                <div style="text-align: center; width: 45%;">
+                    <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px;">
+                        Authorized Signature
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html)
+
+
 @api_router.get("/reports/bills", response_class=HTMLResponse)
 async def generate_bill_report():
     # Get all cutting orders
@@ -1382,7 +1619,7 @@ async def generate_bill_report():
     total_cutting_balance = sum(o.get('balance', 0) for o in cutting_orders)
     
     total_outsourcing_amount = sum(o.get('total_amount', 0) for o in outsourcing_orders)
-    total_outsourcing_paid = sum(o.get('amount_paid', 0) for o in outsourcing_orders)
+    total_outsourcing_paid = sum(o.get('paid_amount', 0) for o in outsourcing_orders)
     total_outsourcing_balance = sum(o.get('balance', 0) for o in outsourcing_orders)
     
     # Calculate shortage debit
