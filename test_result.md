@@ -190,7 +190,65 @@ backend:
           comment: "DELETE /api/ironing-orders/{order_id} endpoint exists and appears functional based on code review. Not tested to preserve existing data."
 
 frontend:
-  # No frontend testing performed as per instructions
+  - task: "Ironing Tab Navigation"
+    implemented: true
+    working: true
+    file: "src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Ironing tab is visible with proper testid 'tab-ironing', clickable, and successfully navigates to ironing content. Tab styling matches other tabs with proper active state."
+
+  - task: "Ironing Orders List Display"
+    implemented: true
+    working: true
+    file: "src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Ironing orders list displays correctly with 1 existing order. Order card shows DC number (DC-20251208051441), category badge (Mens), status badge (Received), payment status badge (Partial), unit name (own), total quantity (232 pcs), rate per piece (₹3), total amount (₹696), and size distribution with proper styling."
+
+  - task: "Create Ironing Order Dialog"
+    implemented: true
+    working: true
+    file: "src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Create ironing order dialog opens successfully with 'Send to Ironing' button. Dialog contains all required form fields: DC Date input, Select Stitching Receipt dropdown, Ironing Unit Name input, Rate per Piece input, Create Order button, and Cancel button. All form elements are properly styled and functional."
+
+  - task: "Dashboard Integration"
+    implemented: true
+    working: true
+    file: "src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Dashboard integration working perfectly. Ironing Cost card is displayed in the cost breakdown section showing ₹696. Comprehensive total calculation includes ironing costs with proper formula 'Fabric + Cutting + Outsourcing + Ironing - Shortage Debit' and displays correct total value ₹20b999562.6."
+
+  - task: "Action Buttons on Order Cards"
+    implemented: true
+    working: true
+    file: "src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "All action buttons are properly implemented and visible: DC button for printing delivery challan, Delete button for removing orders, Add Payment button for partial payments. Buttons have proper testids and styling. Payment section shows current status with paid amount (₹50) and balance (₹646)."
 
 metadata:
   created_by: "testing_agent"
