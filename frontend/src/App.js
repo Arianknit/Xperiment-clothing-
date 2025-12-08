@@ -627,6 +627,74 @@ function App() {
     }
   };
 
+  const handleCatalogSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/catalogs`, catalogForm);
+      toast.success("Catalog created successfully");
+      
+      setCatalogDialogOpen(false);
+      setCatalogForm({
+        catalog_name: "",
+        catalog_code: "",
+        description: "",
+        lot_numbers: []
+      });
+      fetchCatalogs();
+    } catch (error) {
+      console.error("Error creating catalog:", error);
+      toast.error(error.response?.data?.detail || "Failed to create catalog");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDispatchSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/catalogs/${selectedCatalog.id}/dispatch`, {
+        dispatch_quantity: dispatchForm
+      });
+      toast.success("Dispatch recorded successfully");
+      
+      setDispatchDialogOpen(false);
+      setDispatchForm({});
+      setSelectedCatalog(null);
+      fetchCatalogs();
+    } catch (error) {
+      console.error("Error recording dispatch:", error);
+      toast.error(error.response?.data?.detail || "Failed to record dispatch");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCatalog = async (catalogId) => {
+    if (!window.confirm("Are you sure you want to delete this catalog?")) return;
+    
+    try {
+      await axios.delete(`${API}/catalogs/${catalogId}`);
+      toast.success("Catalog deleted successfully");
+      fetchCatalogs();
+    } catch (error) {
+      console.error("Error deleting catalog:", error);
+      toast.error("Failed to delete catalog");
+    }
+  };
+
+  const handleLotToggle = (lotNumber) => {
+    setCatalogForm(prev => ({
+      ...prev,
+      lot_numbers: prev.lot_numbers.includes(lotNumber)
+        ? prev.lot_numbers.filter(l => l !== lotNumber)
+        : [...prev.lot_numbers, lotNumber]
+    }));
+  };
+
   const handleSizeChange = (size, value, formSetter, currentForm) => {
     formSetter({
       ...currentForm,
