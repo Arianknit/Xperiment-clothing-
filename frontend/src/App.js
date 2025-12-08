@@ -2319,6 +2319,62 @@ function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Catalog Dispatch Dialog */}
+      <Dialog open={dispatchDialogOpen} onOpenChange={setDispatchDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="dispatch-dialog">
+          <DialogHeader>
+            <DialogTitle>Dispatch from Catalog</DialogTitle>
+            <DialogDescription>
+              {selectedCatalog && `${selectedCatalog.catalog_name} (${selectedCatalog.catalog_code})`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCatalog && (
+            <form onSubmit={handleDispatchSubmit} className="space-y-4">
+              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                <p className="text-sm text-slate-700"><strong>Available Stock:</strong> {selectedCatalog.available_stock} pcs</p>
+              </div>
+              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                <h4 className="font-semibold text-slate-700">Enter Dispatch Quantities</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(selectedCatalog.size_distribution).map(([size, availableQty]) => (
+                    availableQty > 0 && (
+                      <div key={size} className="space-y-1">
+                        <Label htmlFor={`dispatch-${size}`} className="text-xs">{size} (Available: {availableQty})</Label>
+                        <Input 
+                          id={`dispatch-${size}`}
+                          type="number" 
+                          value={dispatchForm[size] || ''} 
+                          onChange={(e) => setDispatchForm({
+                            ...dispatchForm,
+                            [size]: parseInt(e.target.value) || 0
+                          })}
+                          placeholder="0"
+                          max={availableQty}
+                          className="h-8"
+                          data-testid={`dispatch-input-${size}`}
+                        />
+                      </div>
+                    )
+                  ))}
+                </div>
+                <div className="pt-2 border-t">
+                  <p className="text-sm text-slate-600">Total Dispatch: {getTotalQty(dispatchForm)} pcs</p>
+                  {getTotalQty(dispatchForm) > selectedCatalog.available_stock && (
+                    <p className="text-sm text-red-600 font-bold">⚠️ Exceeds available stock!</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setDispatchDialogOpen(false)} data-testid="dispatch-cancel-button">Cancel</Button>
+                <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading || getTotalQty(dispatchForm) === 0 || getTotalQty(dispatchForm) > selectedCatalog.available_stock} data-testid="dispatch-submit-button">
+                  {loading ? "Recording..." : "Record Dispatch"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Ironing Receipt Dialog */}
       <Dialog open={ironingReceiptDialogOpen} onOpenChange={setIroningReceiptDialogOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="ironing-receipt-dialog">
