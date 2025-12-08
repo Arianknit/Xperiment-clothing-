@@ -1486,6 +1486,202 @@ function App() {
               )}
             </div>
           </TabsContent>
+
+          {/* Ironing Tab */}
+          <TabsContent value="ironing" data-testid="ironing-content">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold text-slate-800">Ironing Orders</h2>
+                <Dialog open={ironingDialogOpen} onOpenChange={setIroningDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-amber-600 hover:bg-amber-700 text-white shadow-lg" data-testid="add-ironing-button">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Send to Ironing
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]" data-testid="ironing-dialog">
+                    <DialogHeader>
+                      <DialogTitle>Send to Ironing Unit</DialogTitle>
+                      <DialogDescription>Create a new ironing order from received stitching items</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleIroningSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="ironing-dc-date">DC Date</Label>
+                        <Input id="ironing-dc-date" type="date" value={ironingForm.dc_date} onChange={(e) => setIroningForm({...ironingForm, dc_date: e.target.value})} required data-testid="ironing-dc-date-input" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ironing-receipt">Select Stitching Receipt</Label>
+                        <Select 
+                          value={ironingForm.receipt_id} 
+                          onValueChange={(value) => setIroningForm({...ironingForm, receipt_id: value})}
+                          data-testid="ironing-receipt-select"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select receipt" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {outsourcingReceipts
+                              .filter(r => {
+                                const order = outsourcingOrders.find(o => o.id === r.outsourcing_order_id);
+                                return order?.operation_type === 'Stitching' && !r.sent_to_ironing;
+                              })
+                              .map((receipt) => {
+                                const order = outsourcingOrders.find(o => o.id === receipt.outsourcing_order_id);
+                                return (
+                                  <SelectItem key={receipt.id} value={receipt.id}>
+                                    {receipt.dc_number} - {order?.unit_name} ({receipt.total_received} pcs)
+                                  </SelectItem>
+                                );
+                              })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ironing-unit">Ironing Unit Name</Label>
+                        <Input id="ironing-unit" value={ironingForm.unit_name} onChange={(e) => setIroningForm({...ironingForm, unit_name: e.target.value})} required placeholder="Enter unit name" data-testid="ironing-unit-input" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ironing-rate">Rate per Piece (₹)</Label>
+                        <Input id="ironing-rate" type="number" step="0.01" value={ironingForm.rate_per_pcs} onChange={(e) => setIroningForm({...ironingForm, rate_per_pcs: e.target.value})} required placeholder="0.00" data-testid="ironing-rate-input" />
+                      </div>
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setIroningDialogOpen(false)} data-testid="ironing-cancel-button">Cancel</Button>
+                        <Button type="submit" className="bg-amber-600 hover:bg-amber-700" disabled={loading} data-testid="ironing-submit-button">
+                          {loading ? "Creating..." : "Create Order"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="space-y-4">
+                {ironingOrders.map((order) => (
+                  <Card key={order.id} className="shadow-lg border-l-4 border-l-amber-500" data-testid={`ironing-card-${order.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-xl font-bold text-slate-800">{order.dc_number}</h3>
+                              {getCategoryBadge(order.category)}
+                              <Badge className="bg-amber-100 text-amber-800 border">{order.status}</Badge>
+                              <Badge 
+                                className={
+                                  order.payment_status === 'Paid' ? 'bg-green-100 text-green-800 border-green-200' :
+                                  order.payment_status === 'Partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                  'bg-red-100 text-red-800 border-red-200'
+                                }
+                              >
+                                {order.payment_status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-slate-600">Lot: {order.cutting_lot_number} | Style: {order.style_type}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handlePrintIroningDC(order.id)} data-testid={`print-ironing-dc-${order.id}`}>
+                              <Printer className="h-4 w-4 mr-1" />
+                              DC
+                            </Button>
+                            {order.status === 'Sent' && (
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => {
+                                  setSelectedIroningOrder(order);
+                                  setIroningReceiptForm({
+                                    ironing_order_id: order.id,
+                                    receipt_date: new Date().toISOString().split('T')[0],
+                                    received_distribution: {}
+                                  });
+                                  setIroningReceiptDialogOpen(true);
+                                }}
+                                data-testid={`receive-ironing-${order.id}`}
+                              >
+                                <PackageCheck className="h-4 w-4 mr-1" />
+                                Receive
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteIroningOrder(order.id)} data-testid={`delete-ironing-${order.id}`}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <p className="text-xs text-slate-500">Unit</p>
+                            <p className="font-semibold text-slate-800">{order.unit_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Total Quantity</p>
+                            <p className="font-bold text-amber-600">{order.total_quantity} pcs</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Rate per Piece</p>
+                            <p className="font-semibold text-slate-800">₹{order.rate_per_pcs}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Total Amount</p>
+                            <p className="font-bold text-green-600">₹{order.total_amount}</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-3 rounded-lg border">
+                          <p className="text-xs text-slate-600 mb-2">Size Distribution:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(order.size_distribution).map(([size, qty]) => (
+                              qty > 0 && (
+                                <div key={size} className="bg-white px-3 py-1 rounded border">
+                                  <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                  <span className="text-sm font-bold text-amber-600 ml-1">{qty}</span>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        </div>
+
+                        {order.payment_status !== 'Paid' && (
+                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm text-slate-600">Payment Status</p>
+                                <p className="text-lg font-bold text-slate-800">Paid: ₹{order.amount_paid} / Balance: ₹{order.balance}</p>
+                              </div>
+                              <Button 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => {
+                                  const amount = prompt(`Enter payment amount (Balance: ₹${order.balance})`);
+                                  if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+                                    handleIroningPayment(order.id, amount);
+                                  }
+                                }}
+                                data-testid={`pay-ironing-${order.id}`}
+                              >
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                Add Payment
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {ironingOrders.length === 0 && (
+                <Card className="shadow-lg">
+                  <CardContent className="flex flex-col items-center justify-center py-16">
+                    <Factory className="h-16 w-16 text-slate-300 mb-4" />
+                    <p className="text-slate-500 text-lg">No ironing orders yet</p>
+                    <p className="text-slate-400 text-sm mt-2">Create an order to send items for ironing</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </main>
 
