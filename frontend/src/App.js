@@ -200,6 +200,26 @@ function App() {
     }
   };
 
+  const fetchIroningOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/ironing-orders`);
+      setIroningOrders(response.data);
+    } catch (error) {
+      console.error("Error fetching ironing orders:", error);
+      toast.error("Failed to fetch ironing orders");
+    }
+  };
+
+  const fetchIroningReceipts = async () => {
+    try {
+      const response = await axios.get(`${API}/ironing-receipts`);
+      setIroningReceipts(response.data);
+    } catch (error) {
+      console.error("Error fetching ironing receipts:", error);
+      toast.error("Failed to fetch ironing receipts");
+    }
+  };
+
   const handleLotSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
