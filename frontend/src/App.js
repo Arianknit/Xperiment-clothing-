@@ -597,7 +597,7 @@ function App() {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 max-w-4xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
+          <TabsList className="grid w-full grid-cols-6 max-w-5xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-dashboard">
               <TrendingUp className="h-4 w-4 mr-2" />
               Dashboard
@@ -617,6 +617,10 @@ function App() {
             <TabsTrigger value="receipts" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-receipts">
               <PackageCheck className="h-4 w-4 mr-2" />
               Receipts
+            </TabsTrigger>
+            <TabsTrigger value="ironing" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-ironing">
+              <Factory className="h-4 w-4 mr-2" />
+              Ironing
             </TabsTrigger>
           </TabsList>
 
