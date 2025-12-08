@@ -2464,7 +2464,7 @@ async def create_catalog(catalog: CatalogCreate):
     
     # Create catalog
     catalog_dict = catalog.model_dump()
-    catalog_dict['id'] = str(uuid4())
+    catalog_dict['id'] = str(uuid.uuid4())
     catalog_dict['total_quantity'] = total_quantity
     catalog_dict['available_stock'] = total_quantity
     catalog_dict['size_distribution'] = size_distribution
