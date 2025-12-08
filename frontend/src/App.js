@@ -51,6 +51,7 @@ function App() {
   const [outsourcingReceipts, setOutsourcingReceipts] = useState([]);
   const [ironingOrders, setIroningOrders] = useState([]);
   const [ironingReceipts, setIroningReceipts] = useState([]);
+  const [catalogs, setCatalogs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   
