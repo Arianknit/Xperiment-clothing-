@@ -57,7 +57,6 @@ function App() {
   
   // Fabric lot form state
   const [lotForm, setLotForm] = useState({
-    lot_number: "",
     entry_date: new Date().toISOString().split('T')[0],
     fabric_type: "",
     supplier_name: "",
