@@ -282,6 +282,10 @@ async def generate_cutting_lot_number():
 async def create_fabric_lot(lot: FabricLotCreate):
     lot_dict = lot.model_dump()
     
+    # Auto-generate lot number if not provided
+    if not lot_dict.get('lot_number'):
+        lot_dict['lot_number'] = await generate_fabric_lot_number()
+    
     # Calculate total amount
     total_amount = lot_dict['quantity'] * lot_dict['rate_per_kg']
     lot_dict['total_amount'] = round(total_amount, 2)
