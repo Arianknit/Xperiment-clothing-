@@ -120,6 +120,24 @@ function App() {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [selectedOutsourcingOrder, setSelectedOutsourcingOrder] = useState(null);
   
+  // Ironing form state
+  const [ironingForm, setIroningForm] = useState({
+    dc_date: new Date().toISOString().split('T')[0],
+    receipt_id: "",
+    unit_name: "",
+    rate_per_pcs: ""
+  });
+  const [ironingDialogOpen, setIroningDialogOpen] = useState(false);
+  
+  // Ironing receipt form state
+  const [ironingReceiptForm, setIroningReceiptForm] = useState({
+    ironing_order_id: "",
+    receipt_date: new Date().toISOString().split('T')[0],
+    received_distribution: {}
+  });
+  const [ironingReceiptDialogOpen, setIroningReceiptDialogOpen] = useState(false);
+  const [selectedIroningOrder, setSelectedIroningOrder] = useState(null);
+  
   const [barcodeView, setBarcodeView] = useState(null);
 
   useEffect(() => {
