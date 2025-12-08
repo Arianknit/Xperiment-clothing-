@@ -1833,6 +1833,80 @@ function App() {
         </DialogContent>
       </Dialog>
 
+      {/* Ironing Receipt Dialog */}
+      <Dialog open={ironingReceiptDialogOpen} onOpenChange={setIroningReceiptDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="ironing-receipt-dialog">
+          <DialogHeader>
+            <DialogTitle>Record Ironing Receipt</DialogTitle>
+            <DialogDescription>
+              {selectedIroningOrder && `DC: ${selectedIroningOrder.dc_number} - ${selectedIroningOrder.unit_name}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedIroningOrder && (
+            <form onSubmit={handleIroningReceiptSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="ironing-receipt-date">Receipt Date</Label>
+                <Input id="ironing-receipt-date" type="date" value={ironingReceiptForm.receipt_date} onChange={(e) => setIroningReceiptForm({...ironingReceiptForm, receipt_date: e.target.value})} required data-testid="ironing-receipt-date-input" />
+              </div>
+              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                <h4 className="font-semibold text-slate-700">Sent Quantities</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(selectedIroningOrder.size_distribution).map(([size, qty]) => (
+                    qty > 0 && (
+                      <div key={size} className="bg-white px-3 py-2 rounded border">
+                        <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                        <span className="text-sm font-bold text-amber-600 ml-1">{qty}</span>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h4 className="font-semibold text-slate-700">Enter Received Quantities</h4>
+                <div className="grid grid-cols-4 gap-3">
+                  {Object.entries(selectedIroningOrder.size_distribution).map(([size, sentQty]) => (
+                    sentQty > 0 && (
+                      <div key={size} className="space-y-1">
+                        <Label htmlFor={`ironing-received-${size}`} className="text-xs">{size} (Sent: {sentQty})</Label>
+                        <Input 
+                          id={`ironing-received-${size}`}
+                          type="number" 
+                          value={ironingReceiptForm.received_distribution[size] || ''} 
+                          onChange={(e) => setIroningReceiptForm({
+                            ...ironingReceiptForm,
+                            received_distribution: {
+                              ...ironingReceiptForm.received_distribution,
+                              [size]: parseInt(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="0"
+                          max={sentQty}
+                          className="h-8"
+                          data-testid={`ironing-received-input-${size}`}
+                        />
+                      </div>
+                    )
+                  ))}
+                </div>
+                <div className="pt-2 border-t border-amber-200">
+                  <p className="text-sm text-slate-600">Total Received: {getTotalQty(ironingReceiptForm.received_distribution)} pcs</p>
+                  <p className="text-sm text-slate-600">Total Sent: {selectedIroningOrder.total_quantity} pcs</p>
+                  {getTotalQty(ironingReceiptForm.received_distribution) < selectedIroningOrder.total_quantity && (
+                    <p className="text-lg font-bold text-red-600">Shortage: {selectedIroningOrder.total_quantity - getTotalQty(ironingReceiptForm.received_distribution)} pcs</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIroningReceiptDialogOpen(false)} data-testid="ironing-receipt-cancel-button">Cancel</Button>
+                <Button type="submit" className="bg-amber-600 hover:bg-amber-700" disabled={loading} data-testid="ironing-receipt-submit-button">
+                  {loading ? "Saving..." : "Record Receipt"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Barcode View Dialog */}
       <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
         <DialogContent className="sm:max-w-[500px]" data-testid="barcode-dialog">
