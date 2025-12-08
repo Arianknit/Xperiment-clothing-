@@ -1194,6 +1194,16 @@ function App() {
                           </div>
                         </div>
                         <div className="ml-4 flex gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(`${API}/cutting-orders/${order.id}/lot-report`, '_blank')}
+                            className="h-8 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                            data-testid={`lot-report-${order.id}`}
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            Lot Report
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => openEditCuttingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-cutting-order-${order.id}`}>
                             <Pencil className="h-4 w-4" />
                           </Button>
