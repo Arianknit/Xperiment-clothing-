@@ -86,7 +86,7 @@ class CuttingOrder(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CuttingOrderCreate(BaseModel):
-    cutting_lot_number: str
+    cutting_lot_number: Optional[str] = None  # Auto-generated if not provided
     cutting_master_name: str
     cutting_date: datetime
     fabric_lot_id: str
