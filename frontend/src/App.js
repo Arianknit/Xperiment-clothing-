@@ -969,11 +969,12 @@ function App() {
                       <DialogDescription>Enter fabric lot details below</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleLotSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="lot-number">Lot Number</Label>
-                          <Input id="lot-number" value={lotForm.lot_number} onChange={(e) => setLotForm({...lotForm, lot_number: e.target.value})} placeholder="LOT-001" required data-testid="lot-number-input" />
-                        </div>
+                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200 mb-4">
+                        <p className="text-sm text-indigo-700">
+                          <strong>ℹ️ Lot Number:</strong> Will be auto-generated (e.g., lot 001, lot 002, etc.)
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="entry-date">Entry Date</Label>
                           <Input id="entry-date" type="date" value={lotForm.entry_date} onChange={(e) => setLotForm({...lotForm, entry_date: e.target.value})} required data-testid="entry-date-input" />
