@@ -2442,6 +2442,164 @@ async def get_lot_wise_report(order_id: str):
     return HTMLResponse(content=html_content)
 
 
+# Catalog Routes
+@api_router.post("/catalogs", response_model=Catalog)
+async def create_catalog(catalog: CatalogCreate):
+    # Get cutting orders for the selected lot numbers
+    cutting_orders = await db.cutting_orders.find(
+        {"cutting_lot_number": {"$in": catalog.lot_numbers}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    if not cutting_orders:
+        raise HTTPException(status_code=404, detail="No cutting orders found for the specified lot numbers")
+    
+    # Calculate total quantity and size distribution
+    total_quantity = sum(order.get('total_quantity', 0) for order in cutting_orders)
+    size_distribution = {}
+    
+    for order in cutting_orders:
+        for size, qty in order.get('size_distribution', {}).items():
+            size_distribution[size] = size_distribution.get(size, 0) + qty
+    
+    # Create catalog
+    catalog_dict = catalog.model_dump()
+    catalog_dict['id'] = str(uuid4())
+    catalog_dict['total_quantity'] = total_quantity
+    catalog_dict['available_stock'] = total_quantity
+    catalog_dict['size_distribution'] = size_distribution
+    catalog_dict['created_at'] = datetime.now(timezone.utc)
+    
+    catalog_obj = Catalog(**catalog_dict)
+    doc = catalog_obj.model_dump()
+    await db.catalogs.insert_one(doc)
+    
+    return catalog_obj
+
+
+@api_router.get("/catalogs", response_model=List[Catalog])
+async def get_catalogs():
+    catalogs = await db.catalogs.find({}, {"_id": 0}).to_list(1000)
+    return catalogs
+
+
+@api_router.get("/catalogs/{catalog_id}", response_model=Catalog)
+async def get_catalog(catalog_id: str):
+    catalog = await db.catalogs.find_one({"id": catalog_id}, {"_id": 0})
+    if not catalog:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    return catalog
+
+
+@api_router.put("/catalogs/{catalog_id}", response_model=Catalog)
+async def update_catalog(catalog_id: str, catalog_update: CatalogCreate):
+    existing_catalog = await db.catalogs.find_one({"id": catalog_id}, {"_id": 0})
+    if not existing_catalog:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    
+    # Get cutting orders for the new lot numbers
+    cutting_orders = await db.cutting_orders.find(
+        {"cutting_lot_number": {"$in": catalog_update.lot_numbers}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    if not cutting_orders:
+        raise HTTPException(status_code=404, detail="No cutting orders found for the specified lot numbers")
+    
+    # Recalculate total quantity and size distribution
+    total_quantity = sum(order.get('total_quantity', 0) for order in cutting_orders)
+    size_distribution = {}
+    
+    for order in cutting_orders:
+        for size, qty in order.get('size_distribution', {}).items():
+            size_distribution[size] = size_distribution.get(size, 0) + qty
+    
+    # Calculate available stock based on previous dispatches
+    dispatched_quantity = existing_catalog.get('total_quantity', 0) - existing_catalog.get('available_stock', 0)
+    available_stock = total_quantity - dispatched_quantity
+    
+    # Update catalog
+    update_dict = {
+        "catalog_name": catalog_update.catalog_name,
+        "catalog_code": catalog_update.catalog_code,
+        "description": catalog_update.description,
+        "lot_numbers": catalog_update.lot_numbers,
+        "total_quantity": total_quantity,
+        "available_stock": max(0, available_stock),
+        "size_distribution": size_distribution
+    }
+    
+    await db.catalogs.update_one(
+        {"id": catalog_id},
+        {"$set": update_dict}
+    )
+    
+    updated_catalog = await db.catalogs.find_one({"id": catalog_id}, {"_id": 0})
+    return updated_catalog
+
+
+@api_router.post("/catalogs/{catalog_id}/dispatch")
+async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
+    catalog = await db.catalogs.find_one({"id": catalog_id}, {"_id": 0})
+    if not catalog:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    
+    # Calculate total dispatch quantity
+    total_dispatch = sum(dispatch.dispatch_quantity.values())
+    
+    if total_dispatch > catalog.get('available_stock', 0):
+        raise HTTPException(status_code=400, detail="Insufficient stock for dispatch")
+    
+    # Update available stock and size distribution
+    new_available_stock = catalog.get('available_stock', 0) - total_dispatch
+    new_size_distribution = catalog.get('size_distribution', {}).copy()
+    
+    for size, qty in dispatch.dispatch_quantity.items():
+        if size in new_size_distribution:
+            new_size_distribution[size] = max(0, new_size_distribution[size] - qty)
+    
+    await db.catalogs.update_one(
+        {"id": catalog_id},
+        {
+            "$set": {
+                "available_stock": new_available_stock,
+                "size_distribution": new_size_distribution
+            }
+        }
+    )
+    
+    # Record dispatch history
+    dispatch_record = {
+        "id": str(uuid4()),
+        "catalog_id": catalog_id,
+        "catalog_name": catalog.get('catalog_name'),
+        "dispatch_quantity": dispatch.dispatch_quantity,
+        "total_dispatched": total_dispatch,
+        "notes": dispatch.notes,
+        "dispatch_date": datetime.now(timezone.utc)
+    }
+    await db.catalog_dispatches.insert_one(dispatch_record)
+    
+    return {"message": "Dispatch recorded successfully", "new_available_stock": new_available_stock}
+
+
+@api_router.delete("/catalogs/{catalog_id}")
+async def delete_catalog(catalog_id: str):
+    result = await db.catalogs.delete_one({"id": catalog_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    return {"message": "Catalog deleted successfully"}
+
+
+@api_router.get("/catalogs/{catalog_id}/dispatches")
+async def get_catalog_dispatches(catalog_id: str):
+    dispatches = await db.catalog_dispatches.find(
+        {"catalog_id": catalog_id},
+        {"_id": 0}
+    ).to_list(1000)
+    return dispatches
+
+
 # Reports Endpoints
 @api_router.get("/reports/cutting", response_class=HTMLResponse)
 async def get_cutting_report(
