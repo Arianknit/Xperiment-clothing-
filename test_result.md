@@ -258,11 +258,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Dashboard Stats Integration"
-    - "Get Ironing Orders API"
-    - "Get Ironing Receipts API"
-    - "Ironing Payment Recording"
-    - "Ironing DC Generation"
+    - "Ironing Tab Navigation"
+    - "Ironing Orders List Display"
+    - "Create Ironing Order Dialog"
+    - "Dashboard Integration"
+    - "Action Buttons on Order Cards"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
