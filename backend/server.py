@@ -240,7 +240,7 @@ class IroningReceiptCreate(BaseModel):
 
 # Catalog Models
 class Catalog(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid4()))
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     catalog_name: str
     catalog_code: str
     description: Optional[str] = None
