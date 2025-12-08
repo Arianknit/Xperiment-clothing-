@@ -1793,6 +1793,163 @@ function App() {
             </div>
           </TabsContent>
 
+          {/* Catalog Tab */}
+          <TabsContent value="catalog" data-testid="catalog-content">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold text-slate-800">Product Catalog</h2>
+                <Dialog open={catalogDialogOpen} onOpenChange={setCatalogDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" data-testid="add-catalog-button">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Catalog
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="catalog-dialog">
+                    <DialogHeader>
+                      <DialogTitle>Create New Catalog</DialogTitle>
+                      <DialogDescription>Club multiple cutting lots into a catalog and track inventory</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleCatalogSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="catalog-name">Catalog Name</Label>
+                        <Input id="catalog-name" value={catalogForm.catalog_name} onChange={(e) => setCatalogForm({...catalogForm, catalog_name: e.target.value})} required placeholder="e.g., Summer Collection 2025" data-testid="catalog-name-input" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="catalog-code">Catalog Code</Label>
+                        <Input id="catalog-code" value={catalogForm.catalog_code} onChange={(e) => setCatalogForm({...catalogForm, catalog_code: e.target.value})} required placeholder="e.g., SC-2025-001" data-testid="catalog-code-input" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="catalog-description">Description (Optional)</Label>
+                        <Input id="catalog-description" value={catalogForm.description} onChange={(e) => setCatalogForm({...catalogForm, description: e.target.value})} placeholder="Add description" data-testid="catalog-description-input" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Select Cutting Lots</Label>
+                        <div className="border rounded-lg p-3 max-h-60 overflow-y-auto bg-slate-50">
+                          {cuttingOrders.length === 0 && <p className="text-sm text-slate-500 text-center py-4">No cutting orders available</p>}
+                          {cuttingOrders.map((order) => (
+                            <div key={order.id} className="flex items-center space-x-3 py-2 border-b last:border-b-0">
+                              <input
+                                type="checkbox"
+                                id={`lot-${order.id}`}
+                                checked={catalogForm.lot_numbers.includes(order.cutting_lot_number)}
+                                onChange={() => handleLotToggle(order.cutting_lot_number)}
+                                className="h-4 w-4 text-indigo-600 rounded"
+                              />
+                              <label htmlFor={`lot-${order.id}`} className="flex-1 cursor-pointer">
+                                <div className="text-sm font-semibold text-slate-800">{order.cutting_lot_number}</div>
+                                <div className="text-xs text-slate-600">{order.category} - {order.style_type} | {order.total_quantity} pcs</div>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        {catalogForm.lot_numbers.length > 0 && (
+                          <p className="text-sm text-indigo-600 font-medium">{catalogForm.lot_numbers.length} lot(s) selected</p>
+                        )}
+                      </div>
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setCatalogDialogOpen(false)} data-testid="catalog-cancel-button">Cancel</Button>
+                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || catalogForm.lot_numbers.length === 0} data-testid="catalog-submit-button">
+                          {loading ? "Creating..." : "Create Catalog"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="space-y-4">
+                {catalogs.map((catalog) => (
+                  <Card key={catalog.id} className="shadow-lg border-l-4 border-l-indigo-500" data-testid={`catalog-card-${catalog.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-xl font-bold text-slate-800">{catalog.catalog_name}</h3>
+                              <Badge className="bg-indigo-100 text-indigo-800 border">{catalog.catalog_code}</Badge>
+                            </div>
+                            {catalog.description && <p className="text-sm text-slate-600">{catalog.description}</p>}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => {
+                                setSelectedCatalog(catalog);
+                                setDispatchForm({});
+                                setDispatchDialogOpen(true);
+                              }}
+                              data-testid={`dispatch-catalog-${catalog.id}`}
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              Dispatch
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteCatalog(catalog.id)} data-testid={`delete-catalog-${catalog.id}`}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                            <p className="text-xs text-slate-600">Total Quantity</p>
+                            <p className="text-2xl font-bold text-blue-600">{catalog.total_quantity}</p>
+                          </div>
+                          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                            <p className="text-xs text-slate-600">Available Stock</p>
+                            <p className="text-2xl font-bold text-green-600">{catalog.available_stock}</p>
+                          </div>
+                          <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                            <p className="text-xs text-slate-600">Dispatched</p>
+                            <p className="text-2xl font-bold text-amber-600">{catalog.total_quantity - catalog.available_stock}</p>
+                          </div>
+                          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                            <p className="text-xs text-slate-600">Lots Clubbed</p>
+                            <p className="text-2xl font-bold text-purple-600">{catalog.lot_numbers.length}</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-3 rounded-lg border">
+                          <p className="text-xs text-slate-600 mb-2">Lot Numbers:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {catalog.lot_numbers.map((lot) => (
+                              <Badge key={lot} variant="outline" className="bg-white">{lot}</Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-3 rounded-lg border">
+                          <p className="text-xs text-slate-600 mb-2">Size-wise Stock:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(catalog.size_distribution).map(([size, qty]) => (
+                              qty > 0 && (
+                                <div key={size} className="bg-white px-3 py-1 rounded border">
+                                  <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                  <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {catalogs.length === 0 && (
+                <Card className="shadow-lg">
+                  <CardContent className="flex flex-col items-center justify-center py-16">
+                    <BookOpen className="h-16 w-16 text-slate-300 mb-4" />
+                    <p className="text-slate-500 text-lg">No catalogs created yet</p>
+                    <p className="text-slate-400 text-sm mt-2">Create a catalog by clubbing multiple cutting lots</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Reports Tab */}
           <TabsContent value="reports" data-testid="reports-content">
             <div className="space-y-6">
