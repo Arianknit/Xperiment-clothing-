@@ -139,6 +139,18 @@ function App() {
   const [ironingReceiptDialogOpen, setIroningReceiptDialogOpen] = useState(false);
   const [selectedIroningOrder, setSelectedIroningOrder] = useState(null);
   
+  // Catalog form state
+  const [catalogForm, setCatalogForm] = useState({
+    catalog_name: "",
+    catalog_code: "",
+    description: "",
+    lot_numbers: []
+  });
+  const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
+  const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
+  const [selectedCatalog, setSelectedCatalog] = useState(null);
+  const [dispatchForm, setDispatchForm] = useState({});
+  
   const [barcodeView, setBarcodeView] = useState(null);
 
   useEffect(() => {
