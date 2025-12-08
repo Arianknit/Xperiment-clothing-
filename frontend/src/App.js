@@ -146,6 +146,8 @@ function App() {
     fetchCuttingOrders();
     fetchOutsourcingOrders();
     fetchOutsourcingReceipts();
+    fetchIroningOrders();
+    fetchIroningReceipts();
   }, []);
 
   const fetchDashboardStats = async () => {
