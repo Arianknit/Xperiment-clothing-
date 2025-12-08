@@ -509,6 +509,100 @@ function App() {
     }
   };
 
+  const handleIroningSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/ironing-orders`, {
+        ...ironingForm,
+        dc_date: new Date(ironingForm.dc_date).toISOString(),
+        rate_per_pcs: parseFloat(ironingForm.rate_per_pcs)
+      });
+      toast.success("Ironing order created successfully");
+      
+      setIroningDialogOpen(false);
+      setIroningForm({
+        dc_date: new Date().toISOString().split('T')[0],
+        receipt_id: "",
+        unit_name: "",
+        rate_per_pcs: ""
+      });
+      fetchIroningOrders();
+      fetchOutsourcingReceipts();
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error creating ironing order:", error);
+      toast.error(error.response?.data?.detail || "Failed to create ironing order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleIroningReceiptSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/ironing-receipts`, {
+        ...ironingReceiptForm,
+        receipt_date: new Date(ironingReceiptForm.receipt_date).toISOString()
+      });
+      toast.success("Ironing receipt recorded successfully");
+      
+      setIroningReceiptDialogOpen(false);
+      setIroningReceiptForm({
+        ironing_order_id: "",
+        receipt_date: new Date().toISOString().split('T')[0],
+        received_distribution: {}
+      });
+      setSelectedIroningOrder(null);
+      fetchIroningOrders();
+      fetchIroningReceipts();
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error saving ironing receipt:", error);
+      toast.error("Failed to save ironing receipt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleIroningPayment = async (orderId, amount) => {
+    try {
+      await axios.post(`${API}/ironing-orders/${orderId}/payment`, {
+        amount: parseFloat(amount),
+        payment_method: "Cash",
+        notes: ""
+      });
+      toast.success("Payment recorded successfully");
+      fetchIroningOrders();
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast.error("Failed to record payment");
+    }
+  };
+
+  const handlePrintIroningDC = (orderId) => {
+    window.open(`${API}/ironing-orders/${orderId}/dc`, '_blank');
+  };
+
+  const handleDeleteIroningOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to delete this ironing order?")) return;
+    
+    try {
+      await axios.delete(`${API}/ironing-orders/${orderId}`);
+      toast.success("Ironing order deleted successfully");
+      fetchIroningOrders();
+      fetchOutsourcingReceipts();
+      fetchDashboardStats();
+    } catch (error) {
+      console.error("Error deleting ironing order:", error);
+      toast.error("Failed to delete ironing order");
+    }
+  };
+
   const handleSizeChange = (size, value, formSetter, currentForm) => {
     formSetter({
       ...currentForm,
