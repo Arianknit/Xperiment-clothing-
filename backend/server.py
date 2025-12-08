@@ -2570,7 +2570,7 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
     
     # Record dispatch history
     dispatch_record = {
-        "id": str(uuid4()),
+        "id": str(uuid.uuid4()),
         "catalog_id": catalog_id,
         "catalog_name": catalog.get('catalog_name'),
         "dispatch_quantity": dispatch.dispatch_quantity,
