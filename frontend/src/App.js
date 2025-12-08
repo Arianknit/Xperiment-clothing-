@@ -717,7 +717,7 @@ function App() {
                         </div>
                       </div>
                       <div className="mt-6 space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-4 gap-4">
                           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                             <p className="text-sm text-slate-600">Fabric Cost</p>
                             <p className="text-xl font-bold text-blue-700">₹{stats.total_production_cost}</p>
@@ -730,17 +730,21 @@ function App() {
                             <p className="text-sm text-slate-600">Outsourcing Cost</p>
                             <p className="text-xl font-bold text-purple-700">₹{stats.total_outsourcing_cost}</p>
                           </div>
+                          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <p className="text-sm text-slate-600">Ironing Cost</p>
+                            <p className="text-xl font-bold text-amber-700">₹{stats.total_ironing_cost || 0}</p>
+                          </div>
                         </div>
                         <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-lg text-white">
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-sm opacity-90">Comprehensive Total</p>
-                              <p className="text-xs opacity-75 mt-1">Fabric + Cutting + Outsourcing - Shortage Debit</p>
+                              <p className="text-xs opacity-75 mt-1">Fabric + Cutting + Outsourcing + Ironing - Shortage Debit</p>
                             </div>
                             <div className="text-right">
                               <p className="text-4xl font-bold">\u20b9{stats.comprehensive_total}</p>
-                              {stats.total_shortage_debit > 0 && (
-                                <p className="text-sm opacity-90 mt-1">(-\u20b9{stats.total_shortage_debit} debit)</p>
+                              {(stats.total_shortage_debit + (stats.total_ironing_shortage_debit || 0)) > 0 && (
+                                <p className="text-sm opacity-90 mt-1">(-\u20b9{stats.total_shortage_debit + (stats.total_ironing_shortage_debit || 0)} debit)</p>
                               )}
                             </div>
                           </div>
