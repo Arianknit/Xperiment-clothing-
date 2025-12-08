@@ -161,6 +161,7 @@ function App() {
     fetchOutsourcingReceipts();
     fetchIroningOrders();
     fetchIroningReceipts();
+    fetchCatalogs();
   }, []);
 
   const fetchDashboardStats = async () => {
