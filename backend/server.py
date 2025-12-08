@@ -1734,6 +1734,454 @@ async def generate_bill_report():
     return HTMLResponse(content=html_content)
 
 
+# Lot-wise Report
+@api_router.get("/cutting-orders/{order_id}/lot-report", response_class=HTMLResponse)
+async def get_lot_wise_report(order_id: str):
+    # Get cutting order
+    cutting_order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
+    if not cutting_order:
+        raise HTTPException(status_code=404, detail="Cutting order not found")
+    
+    # Convert datetime if needed
+    if isinstance(cutting_order.get('cutting_date'), str):
+        cutting_order['cutting_date'] = datetime.fromisoformat(cutting_order['cutting_date'])
+    
+    # Get fabric lot details
+    fabric_lot = await db.fabric_lots.find_one({"id": cutting_order['fabric_lot_id']}, {"_id": 0})
+    
+    # Get all outsourcing orders for this cutting lot
+    outsourcing_orders = await db.outsourcing_orders.find(
+        {"cutting_lot_number": cutting_order['cutting_lot_number']}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get outsourcing receipts
+    outsourcing_receipts = []
+    total_outsourcing_shortage = 0
+    for order in outsourcing_orders:
+        receipts = await db.outsourcing_receipts.find(
+            {"outsourcing_order_id": order['id']}, 
+            {"_id": 0}
+        ).to_list(1000)
+        outsourcing_receipts.extend(receipts)
+        total_outsourcing_shortage += sum(r.get('total_shortage', 0) for r in receipts)
+    
+    # Get ironing orders for this cutting lot
+    ironing_orders = await db.ironing_orders.find(
+        {"cutting_lot_number": cutting_order['cutting_lot_number']}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get ironing receipts
+    ironing_receipts = []
+    total_ironing_shortage = 0
+    for order in ironing_orders:
+        receipts = await db.ironing_receipts.find(
+            {"ironing_order_id": order['id']}, 
+            {"_id": 0}
+        ).to_list(1000)
+        ironing_receipts.extend(receipts)
+        total_ironing_shortage += sum(r.get('total_shortage', 0) for r in receipts)
+    
+    # Calculate costs
+    fabric_cost = cutting_order.get('total_fabric_cost', 0)
+    cutting_cost = cutting_order.get('total_cutting_amount', 0)
+    outsourcing_cost = sum(o.get('total_amount', 0) for o in outsourcing_orders)
+    ironing_cost = sum(o.get('total_amount', 0) for o in ironing_orders)
+    outsourcing_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in outsourcing_receipts)
+    ironing_shortage_debit = sum(r.get('shortage_debit_amount', 0) for r in ironing_receipts)
+    
+    total_cost = fabric_cost + cutting_cost + outsourcing_cost + ironing_cost - outsourcing_shortage_debit - ironing_shortage_debit
+    
+    # Generate HTML
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Lot-wise Report - {cutting_order['cutting_lot_number']}</title>
+        <style>
+            @media print {{
+                @page {{ margin: 1cm; }}
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                max-width: 1000px;
+                margin: 0 auto;
+                background: #f5f5f5;
+            }}
+            .report-container {{
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 3px solid #4F46E5;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }}
+            .header h1 {{
+                margin: 0;
+                color: #4F46E5;
+                font-size: 28px;
+            }}
+            .header p {{
+                margin: 10px 0 0 0;
+                color: #666;
+                font-size: 16px;
+            }}
+            .section {{
+                margin-bottom: 30px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                overflow: hidden;
+            }}
+            .section-header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 20px;
+                font-weight: bold;
+                font-size: 16px;
+            }}
+            .section-content {{
+                padding: 20px;
+            }}
+            .info-grid {{
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 15px;
+            }}
+            .info-item {{
+                padding: 10px;
+                background: #f9f9f9;
+                border-radius: 4px;
+                border-left: 3px solid #4F46E5;
+            }}
+            .info-label {{
+                font-size: 12px;
+                color: #666;
+                margin-bottom: 5px;
+            }}
+            .info-value {{
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+            }}
+            .size-distribution {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 10px;
+            }}
+            .size-badge {{
+                background: #4F46E5;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: bold;
+            }}
+            .operation-card {{
+                background: #f9f9f9;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                padding: 15px;
+                margin-bottom: 10px;
+            }}
+            .operation-header {{
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }}
+            .operation-type {{
+                background: #10B981;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }}
+            .cost-summary {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 25px;
+                border-radius: 8px;
+                margin-top: 30px;
+            }}
+            .cost-grid {{
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
+            }}
+            .cost-item {{
+                background: rgba(255,255,255,0.15);
+                padding: 15px;
+                border-radius: 6px;
+                text-align: center;
+            }}
+            .cost-label {{
+                font-size: 13px;
+                opacity: 0.9;
+                margin-bottom: 5px;
+            }}
+            .cost-value {{
+                font-size: 22px;
+                font-weight: bold;
+            }}
+            .grand-total {{
+                text-align: center;
+                padding-top: 20px;
+                border-top: 2px solid rgba(255,255,255,0.3);
+            }}
+            .grand-total-label {{
+                font-size: 16px;
+                opacity: 0.9;
+                margin-bottom: 10px;
+            }}
+            .grand-total-value {{
+                font-size: 36px;
+                font-weight: bold;
+            }}
+            .shortage-alert {{
+                background: #FEE2E2;
+                border-left: 4px solid #EF4444;
+                padding: 12px;
+                border-radius: 4px;
+                margin-top: 10px;
+            }}
+            .print-button {{
+                background: #4F46E5;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                margin: 20px auto;
+                display: block;
+            }}
+            .print-button:hover {{
+                background: #4338CA;
+            }}
+            @media print {{
+                .print-button {{ display: none; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="report-container">
+            <button class="print-button no-print" onclick="window.print()">🖨️ Print Report</button>
+            
+            <div class="header">
+                <h1>LOT-WISE PRODUCTION REPORT</h1>
+                <p>Cutting Lot: <strong>{cutting_order['cutting_lot_number']}</strong></p>
+                <p>Report Generated: {datetime.now(timezone.utc).strftime('%d %B %Y, %I:%M %p')}</p>
+            </div>
+            
+            <!-- Fabric Details -->
+            <div class="section">
+                <div class="section-header">📦 FABRIC LOT DETAILS</div>
+                <div class="section-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Lot Number</div>
+                            <div class="info-value">{fabric_lot.get('lot_number', 'N/A') if fabric_lot else 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Fabric Type</div>
+                            <div class="info-value">{fabric_lot.get('fabric_type', 'N/A') if fabric_lot else 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Color</div>
+                            <div class="info-value">{fabric_lot.get('color', 'N/A') if fabric_lot else 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Supplier</div>
+                            <div class="info-value">{fabric_lot.get('supplier_name', 'N/A') if fabric_lot else 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Rate per Kg</div>
+                            <div class="info-value">₹{fabric_lot.get('rate_per_kg', 0) if fabric_lot else 0:.2f}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Fabric Used</div>
+                            <div class="info-value">{cutting_order.get('fabric_used', 0):.2f} kg</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cutting Details -->
+            <div class="section">
+                <div class="section-header">✂️ CUTTING DETAILS</div>
+                <div class="section-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Cutting Master</div>
+                            <div class="info-value">{cutting_order.get('cutting_master_name', 'N/A')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Category</div>
+                            <div class="info-value">{cutting_order.get('category', 'N/A')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Style Type</div>
+                            <div class="info-value">{cutting_order.get('style_type', 'N/A')}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Quantity</div>
+                            <div class="info-value">{cutting_order.get('total_quantity', 0)} pcs</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Cutting Rate</div>
+                            <div class="info-value">₹{cutting_order.get('cutting_rate_per_pcs', 0):.2f}/pc</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Cutting Cost</div>
+                            <div class="info-value">₹{cutting_cost:.2f}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Size Distribution</div>
+                        <div class="size-distribution">
+                            {''.join([f'<span class="size-badge">{size}: {qty}</span>' for size, qty in cutting_order.get('size_distribution', {}).items() if qty > 0])}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Outsourcing Operations -->
+            <div class="section">
+                <div class="section-header">🏭 OUTSOURCING OPERATIONS ({len(outsourcing_orders)})</div>
+                <div class="section-content">
+                    {''.join([f'''
+                    <div class="operation-card">
+                        <div class="operation-header">
+                            <div>
+                                <span class="operation-type">{order.get('operation_type', 'N/A')}</span>
+                                <strong style="margin-left: 10px;">DC: {order.get('dc_number', 'N/A')}</strong>
+                            </div>
+                            <div><strong>₹{order.get('total_amount', 0):.2f}</strong></div>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Unit Name</div>
+                                <div class="info-value">{order.get('unit_name', 'N/A')}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Quantity</div>
+                                <div class="info-value">{order.get('total_quantity', 0)} pcs</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Rate</div>
+                                <div class="info-value">₹{order.get('rate_per_pcs', 0):.2f}/pc</div>
+                            </div>
+                        </div>
+                        {''.join([f'<div class="shortage-alert"><strong>⚠️ Shortage:</strong> {receipt.get("total_shortage", 0)} pcs (₹{receipt.get("shortage_debit_amount", 0):.2f} debit)</div>' for receipt in outsourcing_receipts if receipt.get('outsourcing_order_id') == order.get('id') and receipt.get('total_shortage', 0) > 0])}
+                    </div>
+                    ''' for order in outsourcing_orders]) if outsourcing_orders else '<p style="text-align: center; color: #666;">No outsourcing operations</p>'}
+                </div>
+            </div>
+            
+            <!-- Ironing Operations -->
+            <div class="section">
+                <div class="section-header">🔥 IRONING OPERATIONS ({len(ironing_orders)})</div>
+                <div class="section-content">
+                    {''.join([f'''
+                    <div class="operation-card">
+                        <div class="operation-header">
+                            <div><strong>DC: {order.get('dc_number', 'N/A')}</strong></div>
+                            <div><strong>₹{order.get('total_amount', 0):.2f}</strong></div>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Unit Name</div>
+                                <div class="info-value">{order.get('unit_name', 'N/A')}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Quantity</div>
+                                <div class="info-value">{order.get('total_quantity', 0)} pcs</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Rate</div>
+                                <div class="info-value">₹{order.get('rate_per_pcs', 0):.2f}/pc</div>
+                            </div>
+                        </div>
+                        {''.join([f'<div class="shortage-alert"><strong>⚠️ Shortage:</strong> {receipt.get("total_shortage", 0)} pcs (₹{receipt.get("shortage_debit_amount", 0):.2f} debit)</div>' for receipt in ironing_receipts if receipt.get('ironing_order_id') == order.get('id') and receipt.get('total_shortage', 0) > 0])}
+                    </div>
+                    ''' for order in ironing_orders]) if ironing_orders else '<p style="text-align: center; color: #666;">No ironing operations</p>'}
+                </div>
+            </div>
+            
+            <!-- Cost Summary -->
+            <div class="cost-summary">
+                <h3 style="margin: 0 0 20px 0; text-align: center; font-size: 20px;">💰 COST BREAKDOWN</h3>
+                <div class="cost-grid">
+                    <div class="cost-item">
+                        <div class="cost-label">Fabric Cost</div>
+                        <div class="cost-value">₹{fabric_cost:.2f}</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Cutting Cost</div>
+                        <div class="cost-value">₹{cutting_cost:.2f}</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Outsourcing Cost</div>
+                        <div class="cost-value">₹{outsourcing_cost:.2f}</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Ironing Cost</div>
+                        <div class="cost-value">₹{ironing_cost:.2f}</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Outsourcing Shortage</div>
+                        <div class="cost-value">(-) ₹{outsourcing_shortage_debit:.2f}</div>
+                        <div class="cost-label" style="margin-top: 5px; font-size: 11px;">{total_outsourcing_shortage} pcs</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Ironing Shortage</div>
+                        <div class="cost-value">(-) ₹{ironing_shortage_debit:.2f}</div>
+                        <div class="cost-label" style="margin-top: 5px; font-size: 11px;">{total_ironing_shortage} pcs</div>
+                    </div>
+                </div>
+                <div class="grand-total">
+                    <div class="grand-total-label">TOTAL COST FOR LOT</div>
+                    <div class="grand-total-value">₹{total_cost:.2f}</div>
+                    <div style="font-size: 12px; opacity: 0.9; margin-top: 10px;">
+                        Cost per piece: ₹{(total_cost / cutting_order.get('total_quantity', 1)):.2f}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 50px; border-top: 2px solid #ddd; padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="text-align: center; width: 45%;">
+                        <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px;">
+                            Prepared By
+                        </div>
+                    </div>
+                    <div style="text-align: center; width: 45%;">
+                        <div style="border-top: 1px solid #000; margin-top: 50px; padding-top: 5px;">
+                            Authorized Signature
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
+
+
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
