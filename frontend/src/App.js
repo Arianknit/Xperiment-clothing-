@@ -49,6 +49,8 @@ function App() {
   const [cuttingOrders, setCuttingOrders] = useState([]);
   const [outsourcingOrders, setOutsourcingOrders] = useState([]);
   const [outsourcingReceipts, setOutsourcingReceipts] = useState([]);
+  const [ironingOrders, setIroningOrders] = useState([]);
+  const [ironingReceipts, setIroningReceipts] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   
