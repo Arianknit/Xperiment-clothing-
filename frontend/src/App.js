@@ -1696,6 +1696,177 @@ function App() {
               )}
             </div>
           </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" data-testid="reports-content">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold text-slate-800">Reports</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Cutting Report Card */}
+                <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-blue-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-700">
+                      <Scissors className="h-5 w-5" />
+                      Cutting Report
+                    </CardTitle>
+                    <CardDescription>View cutting operations with filters</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cutting-start-date" className="text-xs">Start Date</Label>
+                      <Input id="cutting-start-date" type="date" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cutting-end-date" className="text-xs">End Date</Label>
+                      <Input id="cutting-end-date" type="date" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cutting-master-filter" className="text-xs">Cutting Master (Optional)</Label>
+                      <Input id="cutting-master-filter" placeholder="Enter master name" className="h-9" />
+                    </div>
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        const startDate = document.getElementById('cutting-start-date').value;
+                        const endDate = document.getElementById('cutting-end-date').value;
+                        const master = document.getElementById('cutting-master-filter').value;
+                        let url = `${API}/reports/cutting?`;
+                        if (startDate) url += `start_date=${startDate}&`;
+                        if (endDate) url += `end_date=${endDate}&`;
+                        if (master) url += `cutting_master=${master}&`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Report
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Outsourcing Report Card */}
+                <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-green-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-700">
+                      <Send className="h-5 w-5" />
+                      Outsourcing Report
+                    </CardTitle>
+                    <CardDescription>View outsourcing operations with filters</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="outsourcing-start-date" className="text-xs">Start Date</Label>
+                      <Input id="outsourcing-start-date" type="date" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="outsourcing-end-date" className="text-xs">End Date</Label>
+                      <Input id="outsourcing-end-date" type="date" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="outsourcing-unit-filter" className="text-xs">Unit Name (Optional)</Label>
+                      <Input id="outsourcing-unit-filter" placeholder="Enter unit name" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="outsourcing-operation-filter" className="text-xs">Operation Type (Optional)</Label>
+                      <Select onValueChange={(value) => document.getElementById('outsourcing-operation-filter').setAttribute('data-value', value)}>
+                        <SelectTrigger id="outsourcing-operation-filter" className="h-9" data-value="">
+                          <SelectValue placeholder="Select operation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All</SelectItem>
+                          <SelectItem value="Printing">Printing</SelectItem>
+                          <SelectItem value="Embroidery">Embroidery</SelectItem>
+                          <SelectItem value="Stone">Stone</SelectItem>
+                          <SelectItem value="Sequins">Sequins</SelectItem>
+                          <SelectItem value="Sticker">Sticker</SelectItem>
+                          <SelectItem value="Stitching">Stitching</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button 
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        const startDate = document.getElementById('outsourcing-start-date').value;
+                        const endDate = document.getElementById('outsourcing-end-date').value;
+                        const unit = document.getElementById('outsourcing-unit-filter').value;
+                        const operation = document.getElementById('outsourcing-operation-filter').getAttribute('data-value');
+                        let url = `${API}/reports/outsourcing?`;
+                        if (startDate) url += `start_date=${startDate}&`;
+                        if (endDate) url += `end_date=${endDate}&`;
+                        if (unit) url += `unit_name=${unit}&`;
+                        if (operation) url += `operation_type=${operation}&`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Report
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Ironing Report Card */}
+                <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-amber-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-amber-700">
+                      <Factory className="h-5 w-5" />
+                      Ironing Report
+                    </CardTitle>
+                    <CardDescription>View ironing operations with filters</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ironing-start-date" className="text-xs">Start Date</Label>
+                      <Input id="ironing-start-date" type="date" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ironing-end-date" className="text-xs">End Date</Label>
+                      <Input id="ironing-end-date" type="date" className="h-9" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ironing-unit-filter" className="text-xs">Unit Name (Optional)</Label>
+                      <Input id="ironing-unit-filter" placeholder="Enter unit name" className="h-9" />
+                    </div>
+                    <Button 
+                      className="w-full bg-amber-600 hover:bg-amber-700"
+                      onClick={() => {
+                        const startDate = document.getElementById('ironing-start-date').value;
+                        const endDate = document.getElementById('ironing-end-date').value;
+                        const unit = document.getElementById('ironing-unit-filter').value;
+                        let url = `${API}/reports/ironing?`;
+                        if (startDate) url += `start_date=${startDate}&`;
+                        if (endDate) url += `end_date=${endDate}&`;
+                        if (unit) url += `unit_name=${unit}&`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Report
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Info Card */}
+              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-indigo-100 p-3 rounded-full">
+                      <AlertCircle className="h-6 w-6 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-2">Report Filters</h4>
+                      <ul className="text-sm text-slate-600 space-y-1">
+                        <li>• Select date range to filter records by date</li>
+                        <li>• Use unit/master filters to view specific vendor or worker reports</li>
+                        <li>• Leave filters empty to view all records</li>
+                        <li>• Reports can be printed or saved as PDF from the browser</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       </main>
 
