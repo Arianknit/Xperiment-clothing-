@@ -1121,11 +1121,12 @@ function App() {
                       <DialogDescription>Enter cutting operation details</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleCuttingSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="cutting-lot-number">Cutting Lot Number</Label>
-                          <Input id="cutting-lot-number" value={cuttingForm.cutting_lot_number} onChange={(e) => setCuttingForm({...cuttingForm, cutting_lot_number: e.target.value})} placeholder="CUT-001" required data-testid="cutting-lot-number-input" />
-                        </div>
+                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200 mb-4">
+                        <p className="text-sm text-indigo-700">
+                          <strong>ℹ️ Cutting Lot Number:</strong> Will be auto-generated (e.g., cut 001, cut 002, etc.)
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="cutting-master-name">Cutting Master Name</Label>
                           <Input id="cutting-master-name" value={cuttingForm.cutting_master_name} onChange={(e) => setCuttingForm({...cuttingForm, cutting_master_name: e.target.value})} placeholder="Master Name" required data-testid="cutting-master-name-input" />
