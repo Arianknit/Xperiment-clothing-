@@ -2182,6 +2182,452 @@ async def get_lot_wise_report(order_id: str):
     return HTMLResponse(content=html_content)
 
 
+# Reports Endpoints
+@api_router.get("/reports/cutting", response_class=HTMLResponse)
+async def get_cutting_report(
+    start_date: str = None,
+    end_date: str = None,
+    cutting_master: str = None
+):
+    query = {}
+    
+    # Apply date filter
+    if start_date and end_date:
+        start = datetime.fromisoformat(start_date)
+        end = datetime.fromisoformat(end_date)
+        query['cutting_date'] = {'$gte': start, '$lte': end}
+    
+    # Apply cutting master filter
+    if cutting_master:
+        query['cutting_master_name'] = cutting_master
+    
+    # Get cutting orders
+    orders = await db.cutting_orders.find(query, {"_id": 0}).to_list(1000)
+    
+    # Convert dates
+    for order in orders:
+        if isinstance(order.get('cutting_date'), str):
+            order['cutting_date'] = datetime.fromisoformat(order['cutting_date'])
+    
+    # Calculate totals
+    total_quantity = sum(o.get('total_quantity', 0) for o in orders)
+    total_fabric_cost = sum(o.get('total_fabric_cost', 0) for o in orders)
+    total_cutting_cost = sum(o.get('total_cutting_amount', 0) for o in orders)
+    total_paid = sum(o.get('amount_paid', 0) for o in orders)
+    total_balance = sum(o.get('balance', 0) for o in orders)
+    
+    # Generate HTML report
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Cutting Report</title>
+        <style>
+            @media print {{ @page {{ margin: 1cm; }} body {{ margin: 0; }} .no-print {{ display: none; }} }}
+            body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }}
+            .header {{ text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 20px; margin-bottom: 30px; }}
+            .header h1 {{ margin: 0; color: #4F46E5; font-size: 28px; }}
+            .filters {{ background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th {{ background: #4F46E5; color: white; padding: 12px; text-align: left; font-size: 12px; }}
+            td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }}
+            tr:hover {{ background: #f5f5f5; }}
+            .summary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }}
+            .summary-item {{ text-align: center; }}
+            .summary-label {{ font-size: 13px; opacity: 0.9; }}
+            .summary-value {{ font-size: 24px; font-weight: bold; margin-top: 5px; }}
+            .print-btn {{ background: #4F46E5; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }}
+        </style>
+    </head>
+    <body>
+        <button class="print-btn no-print" onclick="window.print()">🖨️ Print Report</button>
+        
+        <div class="header">
+            <h1>CUTTING REPORT</h1>
+            <p style="margin: 10px 0 0 0; color: #666;">Report Generated: {datetime.now(timezone.utc).strftime('%d %B %Y, %I:%M %p')}</p>
+        </div>
+        
+        <div class="filters">
+            <strong>Filters Applied:</strong> 
+            Date: {start_date or 'All'} to {end_date or 'All'} | 
+            Master: {cutting_master or 'All'}
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Lot Number</th>
+                    <th>Date</th>
+                    <th>Master</th>
+                    <th>Category</th>
+                    <th>Style</th>
+                    <th>Quantity</th>
+                    <th>Fabric Cost</th>
+                    <th>Cutting Cost</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join([f'''
+                <tr>
+                    <td><strong>{o.get('cutting_lot_number', 'N/A')}</strong></td>
+                    <td>{o.get('cutting_date').strftime('%d %b %Y') if o.get('cutting_date') else 'N/A'}</td>
+                    <td>{o.get('cutting_master_name', 'N/A')}</td>
+                    <td>{o.get('category', 'N/A')}</td>
+                    <td>{o.get('style_type', 'N/A')}</td>
+                    <td><strong>{o.get('total_quantity', 0)}</strong></td>
+                    <td>₹{o.get('total_fabric_cost', 0):.2f}</td>
+                    <td>₹{o.get('total_cutting_amount', 0):.2f}</td>
+                    <td style="color: green;">₹{o.get('amount_paid', 0):.2f}</td>
+                    <td style="color: red;">₹{o.get('balance', 0):.2f}</td>
+                </tr>
+                ''' for o in orders]) if orders else '<tr><td colspan="10" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            <h3 style="margin: 0 0 20px 0; text-align: center;">SUMMARY</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Orders</div>
+                    <div class="summary-value">{len(orders)}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Quantity</div>
+                    <div class="summary-value">{total_quantity} pcs</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Fabric Cost</div>
+                    <div class="summary-value">₹{total_fabric_cost:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Cutting Cost</div>
+                    <div class="summary-value">₹{total_cutting_cost:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Paid</div>
+                    <div class="summary-value">₹{total_paid:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Balance</div>
+                    <div class="summary-value">₹{total_balance:.2f}</div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html)
+
+
+@api_router.get("/reports/outsourcing", response_class=HTMLResponse)
+async def get_outsourcing_report(
+    start_date: str = None,
+    end_date: str = None,
+    unit_name: str = None,
+    operation_type: str = None
+):
+    query = {}
+    
+    # Apply date filter
+    if start_date and end_date:
+        start = datetime.fromisoformat(start_date)
+        end = datetime.fromisoformat(end_date)
+        query['dc_date'] = {'$gte': start, '$lte': end}
+    
+    # Apply unit filter
+    if unit_name:
+        query['unit_name'] = unit_name
+    
+    # Apply operation type filter
+    if operation_type:
+        query['operation_type'] = operation_type
+    
+    # Get outsourcing orders
+    orders = await db.outsourcing_orders.find(query, {"_id": 0}).to_list(1000)
+    
+    # Convert dates
+    for order in orders:
+        if isinstance(order.get('dc_date'), str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Get receipts for shortage calculation
+    total_shortage_debit = 0
+    total_shortage_pcs = 0
+    for order in orders:
+        receipts = await db.outsourcing_receipts.find({"outsourcing_order_id": order['id']}, {"_id": 0}).to_list(1000)
+        order['receipts'] = receipts
+        total_shortage_debit += sum(r.get('shortage_debit_amount', 0) for r in receipts)
+        total_shortage_pcs += sum(r.get('total_shortage', 0) for r in receipts)
+    
+    # Calculate totals
+    total_quantity = sum(o.get('total_quantity', 0) for o in orders)
+    total_cost = sum(o.get('total_amount', 0) for o in orders)
+    total_paid = sum(o.get('paid_amount', 0) for o in orders)
+    total_balance = sum(o.get('total_amount', 0) - o.get('paid_amount', 0) for o in orders)
+    
+    # Generate HTML report
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Outsourcing Report</title>
+        <style>
+            @media print {{ @page {{ margin: 1cm; }} body {{ margin: 0; }} .no-print {{ display: none; }} }}
+            body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }}
+            .header {{ text-align: center; border-bottom: 3px solid #10B981; padding-bottom: 20px; margin-bottom: 30px; }}
+            .header h1 {{ margin: 0; color: #10B981; font-size: 28px; }}
+            .filters {{ background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th {{ background: #10B981; color: white; padding: 12px; text-align: left; font-size: 12px; }}
+            td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }}
+            tr:hover {{ background: #f5f5f5; }}
+            .summary {{ background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }}
+            .summary-item {{ text-align: center; }}
+            .summary-label {{ font-size: 13px; opacity: 0.9; }}
+            .summary-value {{ font-size: 24px; font-weight: bold; margin-top: 5px; }}
+            .print-btn {{ background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }}
+            .op-badge {{ display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; background: #e0e0e0; }}
+        </style>
+    </head>
+    <body>
+        <button class="print-btn no-print" onclick="window.print()">🖨️ Print Report</button>
+        
+        <div class="header">
+            <h1>OUTSOURCING REPORT</h1>
+            <p style="margin: 10px 0 0 0; color: #666;">Report Generated: {datetime.now(timezone.utc).strftime('%d %B %Y, %I:%M %p')}</p>
+        </div>
+        
+        <div class="filters">
+            <strong>Filters Applied:</strong> 
+            Date: {start_date or 'All'} to {end_date or 'All'} | 
+            Unit: {unit_name or 'All'} | 
+            Operation: {operation_type or 'All'}
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>DC Number</th>
+                    <th>Date</th>
+                    <th>Operation</th>
+                    <th>Unit</th>
+                    <th>Lot</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Shortage</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join([f'''
+                <tr>
+                    <td><strong>{o.get('dc_number', 'N/A')}</strong></td>
+                    <td>{o.get('dc_date').strftime('%d %b %Y') if o.get('dc_date') else 'N/A'}</td>
+                    <td><span class="op-badge">{o.get('operation_type', 'N/A')}</span></td>
+                    <td>{o.get('unit_name', 'N/A')}</td>
+                    <td>{o.get('cutting_lot_number', 'N/A')}</td>
+                    <td><strong>{o.get('total_quantity', 0)}</strong></td>
+                    <td>₹{o.get('rate_per_pcs', 0):.2f}</td>
+                    <td>₹{o.get('total_amount', 0):.2f}</td>
+                    <td style="color: red;">{sum(r.get('total_shortage', 0) for r in o.get('receipts', []))} pcs</td>
+                    <td>{o.get('status', 'N/A')}</td>
+                </tr>
+                ''' for o in orders]) if orders else '<tr><td colspan="10" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            <h3 style="margin: 0 0 20px 0; text-align: center;">SUMMARY</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Orders</div>
+                    <div class="summary-value">{len(orders)}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Quantity</div>
+                    <div class="summary-value">{total_quantity} pcs</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Cost</div>
+                    <div class="summary-value">₹{total_cost:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Paid</div>
+                    <div class="summary-value">₹{total_paid:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Balance</div>
+                    <div class="summary-value">₹{total_balance:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Shortage Debit</div>
+                    <div class="summary-value">₹{total_shortage_debit:.2f}</div>
+                    <div class="summary-label" style="margin-top: 5px; font-size: 11px;">{total_shortage_pcs} pcs</div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html)
+
+
+@api_router.get("/reports/ironing", response_class=HTMLResponse)
+async def get_ironing_report(
+    start_date: str = None,
+    end_date: str = None,
+    unit_name: str = None
+):
+    query = {}
+    
+    # Apply date filter
+    if start_date and end_date:
+        start = datetime.fromisoformat(start_date)
+        end = datetime.fromisoformat(end_date)
+        query['dc_date'] = {'$gte': start, '$lte': end}
+    
+    # Apply unit filter
+    if unit_name:
+        query['unit_name'] = unit_name
+    
+    # Get ironing orders
+    orders = await db.ironing_orders.find(query, {"_id": 0}).to_list(1000)
+    
+    # Convert dates
+    for order in orders:
+        if isinstance(order.get('dc_date'), str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Get receipts for shortage calculation
+    total_shortage_debit = 0
+    total_shortage_pcs = 0
+    for order in orders:
+        receipts = await db.ironing_receipts.find({"ironing_order_id": order['id']}, {"_id": 0}).to_list(1000)
+        order['receipts'] = receipts
+        total_shortage_debit += sum(r.get('shortage_debit_amount', 0) for r in receipts)
+        total_shortage_pcs += sum(r.get('total_shortage', 0) for r in receipts)
+    
+    # Calculate totals
+    total_quantity = sum(o.get('total_quantity', 0) for o in orders)
+    total_cost = sum(o.get('total_amount', 0) for o in orders)
+    total_paid = sum(o.get('amount_paid', 0) for o in orders)
+    total_balance = sum(o.get('balance', 0) for o in orders)
+    
+    # Generate HTML report
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Ironing Report</title>
+        <style>
+            @media print {{ @page {{ margin: 1cm; }} body {{ margin: 0; }} .no-print {{ display: none; }} }}
+            body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }}
+            .header {{ text-align: center; border-bottom: 3px solid #F59E0B; padding-bottom: 20px; margin-bottom: 30px; }}
+            .header h1 {{ margin: 0; color: #F59E0B; font-size: 28px; }}
+            .filters {{ background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th {{ background: #F59E0B; color: white; padding: 12px; text-align: left; font-size: 12px; }}
+            td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }}
+            tr:hover {{ background: #f5f5f5; }}
+            .summary {{ background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }}
+            .summary-item {{ text-align: center; }}
+            .summary-label {{ font-size: 13px; opacity: 0.9; }}
+            .summary-value {{ font-size: 24px; font-weight: bold; margin-top: 5px; }}
+            .print-btn {{ background: #F59E0B; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }}
+        </style>
+    </head>
+    <body>
+        <button class="print-btn no-print" onclick="window.print()">🖨️ Print Report</button>
+        
+        <div class="header">
+            <h1>IRONING REPORT</h1>
+            <p style="margin: 10px 0 0 0; color: #666;">Report Generated: {datetime.now(timezone.utc).strftime('%d %B %Y, %I:%M %p')}</p>
+        </div>
+        
+        <div class="filters">
+            <strong>Filters Applied:</strong> 
+            Date: {start_date or 'All'} to {end_date or 'All'} | 
+            Unit: {unit_name or 'All'}
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>DC Number</th>
+                    <th>Date</th>
+                    <th>Unit</th>
+                    <th>Lot</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Shortage</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join([f'''
+                <tr>
+                    <td><strong>{o.get('dc_number', 'N/A')}</strong></td>
+                    <td>{o.get('dc_date').strftime('%d %b %Y') if o.get('dc_date') else 'N/A'}</td>
+                    <td>{o.get('unit_name', 'N/A')}</td>
+                    <td>{o.get('cutting_lot_number', 'N/A')}</td>
+                    <td>{o.get('category', 'N/A')}</td>
+                    <td><strong>{o.get('total_quantity', 0)}</strong></td>
+                    <td>₹{o.get('rate_per_pcs', 0):.2f}</td>
+                    <td>₹{o.get('total_amount', 0):.2f}</td>
+                    <td style="color: red;">{sum(r.get('total_shortage', 0) for r in o.get('receipts', []))} pcs</td>
+                    <td>{o.get('status', 'N/A')}</td>
+                </tr>
+                ''' for o in orders]) if orders else '<tr><td colspan="10" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            <h3 style="margin: 0 0 20px 0; text-align: center;">SUMMARY</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Orders</div>
+                    <div class="summary-value">{len(orders)}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Quantity</div>
+                    <div class="summary-value">{total_quantity} pcs</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Cost</div>
+                    <div class="summary-value">₹{total_cost:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Paid</div>
+                    <div class="summary-value">₹{total_paid:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Balance</div>
+                    <div class="summary-value">₹{total_balance:.2f}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Shortage Debit</div>
+                    <div class="summary-value">₹{total_shortage_debit:.2f}</div>
+                    <div class="summary-label" style="margin-top: 5px; font-size: 11px;">{total_shortage_pcs} pcs</div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html)
+
+
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
