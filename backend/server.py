@@ -341,6 +341,10 @@ async def delete_fabric_lot(lot_id: str):
 async def create_cutting_order(order: CuttingOrderCreate):
     order_dict = order.model_dump()
     
+    # Auto-generate cutting lot number if not provided
+    if not order_dict.get('cutting_lot_number'):
+        order_dict['cutting_lot_number'] = await generate_cutting_lot_number()
+    
     # Calculate fabric and rib used
     fabric_used = order_dict['fabric_taken'] - order_dict['fabric_returned']
     rib_used = order_dict['rib_taken'] - order_dict['rib_returned']
