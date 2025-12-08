@@ -234,6 +234,16 @@ function App() {
     }
   };
 
+  const fetchCatalogs = async () => {
+    try {
+      const response = await axios.get(`${API}/catalogs`);
+      setCatalogs(response.data);
+    } catch (error) {
+      console.error("Error fetching catalogs:", error);
+      toast.error("Failed to fetch catalogs");
+    }
+  };
+
   const handleLotSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
