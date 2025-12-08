@@ -1846,8 +1846,55 @@ function App() {
                 </Card>
               </div>
 
+              {/* Unit-wise Bill Section */}
+              <div className="mt-8">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">Unit-wise Bill Generation</h3>
+                <Card className="shadow-lg border-l-4 border-l-purple-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-purple-700">
+                      <DollarSign className="h-5 w-5" />
+                      Generate Bill for Unit
+                    </CardTitle>
+                    <CardDescription>Create detailed bill for specific outsourcing or ironing unit</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="unit-bill-name" className="text-xs">Unit Name</Label>
+                      <Input 
+                        id="unit-bill-name" 
+                        placeholder="Enter unit name (e.g., satish printing, own)"
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                      <p className="text-xs text-slate-600 mb-2">💡 This will generate a comprehensive bill including:</p>
+                      <ul className="text-xs text-slate-600 space-y-1 ml-4">
+                        <li>• All outsourcing operations for this unit</li>
+                        <li>• All ironing operations for this unit</li>
+                        <li>• Shortage deductions</li>
+                        <li>• Payment details and outstanding balance</li>
+                      </ul>
+                    </div>
+                    <Button 
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      onClick={() => {
+                        const unitName = document.getElementById('unit-bill-name').value.trim();
+                        if (unitName) {
+                          window.open(`${API}/reports/bills/unit-wise?unit_name=${encodeURIComponent(unitName)}`, '_blank');
+                        } else {
+                          toast.error('Please enter unit name');
+                        }
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Unit Bill
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Info Card */}
-              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+              <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 mt-6">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-indigo-100 p-3 rounded-full">
@@ -1860,6 +1907,7 @@ function App() {
                         <li>• Use unit/master filters to view specific vendor or worker reports</li>
                         <li>• Leave filters empty to view all records</li>
                         <li>• Reports can be printed or saved as PDF from the browser</li>
+                        <li>• <strong>Unit-wise bill:</strong> Enter exact unit name for detailed billing report</li>
                       </ul>
                     </div>
                   </div>
