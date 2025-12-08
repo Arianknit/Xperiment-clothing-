@@ -49,7 +49,7 @@ class FabricLot(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class FabricLotCreate(BaseModel):
-    lot_number: str
+    lot_number: Optional[str] = None  # Auto-generated if not provided
     entry_date: datetime
     fabric_type: str
     supplier_name: str
