@@ -251,6 +251,7 @@ class Catalog(BaseModel):
     catalog_name: str
     catalog_code: str
     description: Optional[str] = None
+    color: Optional[str] = ""
     lot_numbers: List[str]  # List of cutting lot numbers
     total_quantity: int
     available_stock: int
