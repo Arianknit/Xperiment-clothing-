@@ -2956,8 +2956,6 @@ async def get_ironing_report(
     end_date: str = None,
     unit_name: str = None
 ):
-    query = {}
-    
     # Get all ironing orders first (dates are stored as strings)
     orders = await db.ironing_orders.find({}, {"_id": 0}).to_list(1000)
     
