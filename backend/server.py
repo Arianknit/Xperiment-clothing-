@@ -208,6 +208,9 @@ class IroningOrder(BaseModel):
     total_quantity: int
     rate_per_pcs: float
     total_amount: float
+    master_pack_ratio: Optional[Dict[str, int]] = {}  # e.g., {"S": 2, "M": 2, "L": 2, "XL": 2}
+    complete_packs: Optional[int] = 0
+    loose_pieces: Optional[int] = 0
     amount_paid: Optional[float] = 0.0
     balance: Optional[float] = 0.0
     payment_status: Optional[str] = "Unpaid"
