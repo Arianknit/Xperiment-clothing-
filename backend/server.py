@@ -138,6 +138,7 @@ class OutsourcingOrder(BaseModel):
     total_quantity: int
     rate_per_pcs: float
     total_amount: float
+    notes: Optional[str] = ""  # Comments/Notes for DC
     amount_paid: Optional[float] = 0.0
     balance: Optional[float] = 0.0
     payment_status: Optional[str] = "Unpaid"  # Unpaid, Partial, Paid
