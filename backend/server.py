@@ -400,6 +400,9 @@ async def create_cutting_order(order: CuttingOrderCreate):
     total_fabric_cost = fabric_used * fabric_lot['rate_per_kg']
     order_dict['total_fabric_cost'] = round(total_fabric_cost, 2)
     
+    # Auto-populate color from fabric lot
+    order_dict['color'] = fabric_lot.get('color', '')
+    
     order_obj = CuttingOrder(**order_dict)
     
     doc = order_obj.model_dump()
