@@ -887,6 +887,10 @@ async def get_delivery_challan(order_id: str):
                 <div class="info-label">Style Type:</div>
                 <div class="info-value">{order['style_type']}</div>
             </div>
+            <div class="info-row">
+                <div class="info-label">Color:</div>
+                <div class="info-value" style="font-weight: bold; color: #4F46E5;">{order.get('color', 'N/A')}</div>
+            </div>
         </div>
         
         <h3>Size-wise Quantity Details</h3>
@@ -1365,6 +1369,10 @@ async def get_ironing_dc(order_id: str):
             <div class="info-row">
                 <div class="info-label">Style Type:</div>
                 <div class="info-value">{order['style_type']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Color:</div>
+                <div class="info-value" style="font-weight: bold; color: #4F46E5;">{order.get('color', 'N/A')}</div>
             </div>
         </div>
         
