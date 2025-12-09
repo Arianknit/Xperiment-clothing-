@@ -1309,6 +1309,21 @@ function App() {
                               <p className="font-bold text-purple-600">{order.fabric_used} kg</p>
                             </div>
                           </div>
+                          {order.bundle_distribution && Object.keys(order.bundle_distribution).length > 0 && (
+                            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                              <p className="text-xs text-slate-600 mb-2">Bundle Distribution:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(order.bundle_distribution).map(([bundle, qty]) => (
+                                  qty > 0 && (
+                                    <div key={bundle} className="bg-white px-3 py-1 rounded border">
+                                      <span className="text-xs font-semibold text-slate-700">{bundle}:</span>
+                                      <span className="text-sm font-bold text-amber-600 ml-1">{qty}</span>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           <div className="flex gap-2 pt-2">
                             {(order.payment_status !== "Paid") && (
                               <Button 
