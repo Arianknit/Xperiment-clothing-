@@ -1206,6 +1206,34 @@ function App() {
                         <Label htmlFor="cutting-rate">Cutting Rate per Piece (₹)</Label>
                         <Input id="cutting-rate" type="number" step="0.01" value={cuttingForm.cutting_rate_per_pcs} onChange={(e) => setCuttingForm({...cuttingForm, cutting_rate_per_pcs: e.target.value})} placeholder="10" required data-testid="cutting-rate-input" />
                       </div>
+                      <div className="space-y-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <h4 className="font-semibold text-slate-700">Bundle Distribution</h4>
+                        <div className="grid grid-cols-3 gap-3">
+                          {BUNDLE_TYPES.map((bundle) => (
+                            <div key={bundle} className="space-y-1">
+                              <Label htmlFor={`bundle-${bundle}`} className="text-xs">{bundle}</Label>
+                              <Input 
+                                id={`bundle-${bundle}`}
+                                type="number" 
+                                value={cuttingForm.bundle_distribution[bundle] || ''} 
+                                onChange={(e) => setCuttingForm({
+                                  ...cuttingForm,
+                                  bundle_distribution: {
+                                    ...cuttingForm.bundle_distribution,
+                                    [bundle]: parseInt(e.target.value) || 0
+                                  }
+                                })}
+                                placeholder="0"
+                                className="h-8"
+                                data-testid={`bundle-input-${bundle}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="pt-2 border-t border-amber-200">
+                          <p className="text-sm text-slate-600">Total Bundles: {getTotalQty(cuttingForm.bundle_distribution)} pcs</p>
+                        </div>
+                      </div>
                       <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
                         <h4 className="font-semibold text-slate-700">Size Distribution</h4>
                         <div className="grid grid-cols-4 gap-3">
