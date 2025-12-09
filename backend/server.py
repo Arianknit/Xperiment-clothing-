@@ -2595,6 +2595,18 @@ async def create_catalog(catalog: CatalogCreate):
     if not cutting_orders:
         raise HTTPException(status_code=404, detail="No cutting orders found for the specified lot numbers")
     
+    # Check if any lot is already used in another catalog
+    already_used = []
+    for order in cutting_orders:
+        if order.get('used_in_catalog') and order.get('catalog_name'):
+            already_used.append(f"{order['cutting_lot_number']} (already in catalog: {order['catalog_name']})")
+    
+    if already_used:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot create catalog. The following lots are already used: {', '.join(already_used)}"
+        )
+    
     # Calculate total quantity and size distribution
     total_quantity = sum(order.get('total_quantity', 0) for order in cutting_orders)
     size_distribution = {}
@@ -2618,6 +2630,17 @@ async def create_catalog(catalog: CatalogCreate):
     catalog_obj = Catalog(**catalog_dict)
     doc = catalog_obj.model_dump()
     await db.catalogs.insert_one(doc)
+    
+    # Mark cutting orders as used in this catalog
+    for lot_number in catalog.lot_numbers:
+        await db.cutting_orders.update_many(
+            {"cutting_lot_number": lot_number},
+            {"$set": {
+                "used_in_catalog": True,
+                "catalog_id": catalog_dict['id'],
+                "catalog_name": catalog.catalog_name
+            }}
+        )
     
     return catalog_obj
 
