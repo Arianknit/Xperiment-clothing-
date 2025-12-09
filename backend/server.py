@@ -2665,6 +2665,9 @@ async def update_catalog(catalog_id: str, catalog_update: CatalogCreate):
     if not existing_catalog:
         raise HTTPException(status_code=404, detail="Catalog not found")
     
+    # Get old lot numbers to unmark them
+    old_lot_numbers = existing_catalog.get('lot_numbers', [])
+    
     # Get cutting orders for the new lot numbers
     cutting_orders = await db.cutting_orders.find(
         {"cutting_lot_number": {"$in": catalog_update.lot_numbers}},
@@ -2673,6 +2676,18 @@ async def update_catalog(catalog_id: str, catalog_update: CatalogCreate):
     
     if not cutting_orders:
         raise HTTPException(status_code=404, detail="No cutting orders found for the specified lot numbers")
+    
+    # Check if any NEW lot is already used in another catalog
+    already_used = []
+    for order in cutting_orders:
+        if order.get('used_in_catalog') and order.get('catalog_id') != catalog_id:
+            already_used.append(f"{order['cutting_lot_number']} (already in catalog: {order['catalog_name']})")
+    
+    if already_used:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot update catalog. The following lots are already used: {', '.join(already_used)}"
+        )
     
     # Recalculate total quantity and size distribution
     total_quantity = sum(order.get('total_quantity', 0) for order in cutting_orders)
@@ -2705,6 +2720,29 @@ async def update_catalog(catalog_id: str, catalog_update: CatalogCreate):
         {"id": catalog_id},
         {"$set": update_dict}
     )
+    
+    # Unmark old lots that are no longer in this catalog
+    removed_lots = [lot for lot in old_lot_numbers if lot not in catalog_update.lot_numbers]
+    if removed_lots:
+        await db.cutting_orders.update_many(
+            {"cutting_lot_number": {"$in": removed_lots}, "catalog_id": catalog_id},
+            {"$set": {
+                "used_in_catalog": False,
+                "catalog_id": None,
+                "catalog_name": None
+            }}
+        )
+    
+    # Mark new lots as used in this catalog
+    for lot_number in catalog_update.lot_numbers:
+        await db.cutting_orders.update_many(
+            {"cutting_lot_number": lot_number},
+            {"$set": {
+                "used_in_catalog": True,
+                "catalog_id": catalog_id,
+                "catalog_name": catalog_update.catalog_name
+            }}
+        )
     
     updated_catalog = await db.catalogs.find_one({"id": catalog_id}, {"_id": 0})
     return updated_catalog
