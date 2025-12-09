@@ -3362,6 +3362,68 @@ class UnitPayment(BaseModel):
     payment_method: Optional[str] = "Cash"
     notes: Optional[str] = ""
 
+@api_router.get("/units/{unit_name}/pending-bills")
+async def get_unit_pending_bills(unit_name: str):
+    """Get summary of pending bills for a specific unit"""
+    # Get outsourcing orders
+    outsourcing_orders = await db.outsourcing_orders.find(
+        {
+            "unit_name": unit_name,
+            "payment_status": {"$in": ["Unpaid", "Partial"]}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get ironing orders
+    ironing_orders = await db.ironing_orders.find(
+        {
+            "unit_name": unit_name,
+            "payment_status": {"$in": ["Unpaid", "Partial"]}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Calculate totals
+    outsourcing_pending = sum(order.get('balance', 0) for order in outsourcing_orders)
+    ironing_pending = sum(order.get('balance', 0) for order in ironing_orders)
+    total_pending = outsourcing_pending + ironing_pending
+    
+    # Prepare bill details
+    bills = []
+    for order in outsourcing_orders:
+        bills.append({
+            "type": "outsourcing",
+            "dc_number": order['dc_number'],
+            "date": order['dc_date'] if isinstance(order['dc_date'], str) else order['dc_date'].isoformat(),
+            "total_amount": order.get('total_amount', 0),
+            "paid": order.get('amount_paid', 0),
+            "balance": order.get('balance', 0),
+            "status": order.get('payment_status', 'Unpaid')
+        })
+    
+    for order in ironing_orders:
+        bills.append({
+            "type": "ironing",
+            "dc_number": order['dc_number'],
+            "date": order['dc_date'] if isinstance(order['dc_date'], str) else order['dc_date'].isoformat(),
+            "total_amount": order.get('total_amount', 0),
+            "paid": order.get('amount_paid', 0),
+            "balance": order.get('balance', 0),
+            "status": order.get('payment_status', 'Unpaid')
+        })
+    
+    # Sort by date
+    bills.sort(key=lambda x: x['date'])
+    
+    return {
+        "unit_name": unit_name,
+        "outsourcing_pending": round(outsourcing_pending, 2),
+        "ironing_pending": round(ironing_pending, 2),
+        "total_pending": round(total_pending, 2),
+        "bills_count": len(bills),
+        "bills": bills
+    }
+
 @api_router.post("/units/payment")
 async def record_unit_payment(payment: UnitPayment):
     """
