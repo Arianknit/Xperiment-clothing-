@@ -2577,6 +2577,9 @@ async def update_catalog(catalog_id: str, catalog_update: CatalogCreate):
         for size, qty in order.get('size_distribution', {}).items():
             size_distribution[size] = size_distribution.get(size, 0) + qty
     
+    # Get color from first cutting order (assuming all lots in catalog have same color)
+    color = cutting_orders[0].get('color', '') if cutting_orders else ''
+    
     # Calculate available stock based on previous dispatches
     dispatched_quantity = existing_catalog.get('total_quantity', 0) - existing_catalog.get('available_stock', 0)
     available_stock = total_quantity - dispatched_quantity
@@ -2586,6 +2589,7 @@ async def update_catalog(catalog_id: str, catalog_update: CatalogCreate):
         "catalog_name": catalog_update.catalog_name,
         "catalog_code": catalog_update.catalog_code,
         "description": catalog_update.description,
+        "color": color,
         "lot_numbers": catalog_update.lot_numbers,
         "total_quantity": total_quantity,
         "available_stock": max(0, available_stock),
