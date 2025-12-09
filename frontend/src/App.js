@@ -1502,6 +1502,17 @@ function App() {
                         <Label htmlFor="outsourcing-rate">Rate per Piece (₹)</Label>
                         <Input id="outsourcing-rate" type="number" step="0.01" value={outsourcingForm.rate_per_pcs} onChange={(e) => setOutsourcingForm({...outsourcingForm, rate_per_pcs: e.target.value})} placeholder="15" required data-testid="outsourcing-rate-input" />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="outsourcing-notes">Comments/Notes (Optional)</Label>
+                        <textarea 
+                          id="outsourcing-notes" 
+                          value={outsourcingForm.notes} 
+                          onChange={(e) => setOutsourcingForm({...outsourcingForm, notes: e.target.value})} 
+                          placeholder="Add any special instructions or comments for this order..."
+                          className="w-full min-h-[80px] p-2 border rounded-md text-sm"
+                          data-testid="outsourcing-notes-input"
+                        />
+                      </div>
                       {outsourcingForm.cutting_order_id && (
                         <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
                           <h4 className="font-semibold text-slate-700">Size Distribution</h4>
