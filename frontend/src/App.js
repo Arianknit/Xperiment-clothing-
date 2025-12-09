@@ -1563,6 +1563,7 @@ function App() {
                             <h3 className="text-xl font-bold text-slate-800">{order.dc_number}</h3>
                             {getStatusBadge(order.status)}
                             <Badge className="bg-purple-100 text-purple-800 border border-purple-200">{order.operation_type}</Badge>
+                            {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
                             {getPaymentStatusBadge(order.payment_status || "Unpaid")}
                           </div>
                           {order.cutting_lot_number && (
