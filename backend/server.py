@@ -1242,6 +1242,23 @@ async def create_ironing_receipt(receipt: IroningReceiptCreate):
     shortage_debit_amount = total_shortage * receipt_dict['rate_per_pcs']
     receipt_dict['shortage_debit_amount'] = round(shortage_debit_amount, 2)
     
+    # Calculate master packs from ironing order's ratio
+    master_pack_ratio = ironing_order.get('master_pack_ratio', {})
+    if master_pack_ratio:
+        complete_packs, loose_pieces, loose_pieces_dist = calculate_master_packs(
+            receipt_dict['received_distribution'], 
+            master_pack_ratio
+        )
+        receipt_dict['master_pack_ratio'] = master_pack_ratio
+        receipt_dict['complete_packs'] = complete_packs
+        receipt_dict['loose_pieces'] = loose_pieces
+        receipt_dict['loose_pieces_distribution'] = loose_pieces_dist
+    else:
+        receipt_dict['master_pack_ratio'] = {}
+        receipt_dict['complete_packs'] = 0
+        receipt_dict['loose_pieces'] = total_received
+        receipt_dict['loose_pieces_distribution'] = receipt_dict['received_distribution'].copy()
+    
     receipt_obj = IroningReceipt(**receipt_dict)
     
     doc = receipt_obj.model_dump()
