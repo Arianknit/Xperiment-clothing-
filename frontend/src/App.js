@@ -1785,6 +1785,32 @@ function App() {
                         <Label htmlFor="ironing-rate">Rate per Piece (₹)</Label>
                         <Input id="ironing-rate" type="number" step="0.01" value={ironingForm.rate_per_pcs} onChange={(e) => setIroningForm({...ironingForm, rate_per_pcs: e.target.value})} required placeholder="0.00" data-testid="ironing-rate-input" />
                       </div>
+                      <div className="space-y-2 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <Label className="text-purple-900 font-semibold">📦 Master Pack Ratio (Optional)</Label>
+                        <p className="text-xs text-slate-600 mb-2">Define how many pieces of each size make 1 master pack</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'].map(size => (
+                            <div key={size}>
+                              <Label className="text-xs">{size}</Label>
+                              <Input 
+                                type="number" 
+                                min="0"
+                                placeholder="0"
+                                className="h-8"
+                                value={ironingForm.master_pack_ratio[size] || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                  setIroningForm({
+                                    ...ironingForm, 
+                                    master_pack_ratio: {...ironingForm.master_pack_ratio, [size]: value}
+                                  });
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">Example: 2-2-2-2 means 2S + 2M + 2L + 2XL = 1 master pack</p>
+                      </div>
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setIroningDialogOpen(false)} data-testid="ironing-cancel-button">Cancel</Button>
                         <Button type="submit" className="bg-amber-600 hover:bg-amber-700" disabled={loading} data-testid="ironing-submit-button">
