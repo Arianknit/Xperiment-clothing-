@@ -2617,6 +2617,37 @@ function App() {
                   )}
                 </div>
               </div>
+              {selectedIroningOrder.master_pack_ratio && Object.keys(selectedIroningOrder.master_pack_ratio).length > 0 && getTotalQty(ironingReceiptForm.received_distribution) > 0 && (() => {
+                const ratio = selectedIroningOrder.master_pack_ratio;
+                let completePacks = Infinity;
+                for (const [size, ratioQty] of Object.entries(ratio)) {
+                  if (ratioQty > 0) {
+                    const receivedQty = ironingReceiptForm.received_distribution[size] || 0;
+                    completePacks = Math.min(completePacks, Math.floor(receivedQty / ratioQty));
+                  }
+                }
+                if (completePacks === Infinity) completePacks = 0;
+                const loosePieces = getTotalQty(ironingReceiptForm.received_distribution) - (completePacks * Object.values(ratio).reduce((a, b) => a + b, 0));
+                return (
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <h4 className="font-semibold text-purple-900 mb-3">📦 Master Pack Calculation</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs text-slate-500">Complete Packs</p>
+                        <p className="text-2xl font-bold text-purple-600">{completePacks}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-xs text-slate-500">Loose Pieces</p>
+                        <p className="text-2xl font-bold text-amber-600">{loosePieces}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-slate-600">
+                      <span className="font-semibold">Ratio: </span>
+                      {Object.entries(ratio).filter(([_, qty]) => qty > 0).map(([size, qty]) => `${size}:${qty}`).join(', ')}
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIroningReceiptDialogOpen(false)} data-testid="ironing-receipt-cancel-button">Cancel</Button>
                 <Button type="submit" className="bg-amber-600 hover:bg-amber-700" disabled={loading} data-testid="ironing-receipt-submit-button">
