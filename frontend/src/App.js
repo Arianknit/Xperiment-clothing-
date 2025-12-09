@@ -1805,6 +1805,7 @@ function App() {
                               <h3 className="text-xl font-bold text-slate-800">{order.dc_number}</h3>
                               {getCategoryBadge(order.category)}
                               <Badge className="bg-amber-100 text-amber-800 border">{order.status}</Badge>
+                              {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
                               <Badge 
                                 className={
                                   order.payment_status === 'Paid' ? 'bg-green-100 text-green-800 border-green-200' :
