@@ -310,6 +310,25 @@ function App() {
     setLoading(true);
     
     try {
+      // Validate fabric availability
+      const selectedLot = fabricLots.find(lot => lot.id === cuttingForm.fabric_lot_id);
+      if (selectedLot) {
+        const fabricTaken = parseFloat(cuttingForm.fabric_taken);
+        const ribTaken = parseFloat(cuttingForm.rib_taken);
+        
+        if (fabricTaken > selectedLot.remaining_quantity) {
+          toast.error(`Fabric taken (${fabricTaken} kg) exceeds available fabric (${selectedLot.remaining_quantity} kg) in lot ${selectedLot.lot_number}`);
+          setLoading(false);
+          return;
+        }
+        
+        if (ribTaken > selectedLot.remaining_rib_quantity) {
+          toast.error(`Rib taken (${ribTaken} kg) exceeds available rib (${selectedLot.remaining_rib_quantity} kg) in lot ${selectedLot.lot_number}`);
+          setLoading(false);
+          return;
+        }
+      }
+      
       if (editingCuttingOrder) {
         await axios.put(`${API}/cutting-orders/${editingCuttingOrder.id}`, {
           cutting_lot_number: cuttingForm.cutting_lot_number,
