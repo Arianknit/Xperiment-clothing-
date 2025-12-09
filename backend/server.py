@@ -2798,8 +2798,6 @@ async def get_outsourcing_report(
     unit_name: str = None,
     operation_type: str = None
 ):
-    query = {}
-    
     # Get all outsourcing orders first (dates are stored as strings)
     orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
     
