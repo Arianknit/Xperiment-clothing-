@@ -281,6 +281,40 @@ class CatalogDispatch(BaseModel):
     notes: Optional[str] = None
 
 
+# Helper function to calculate master packs
+def calculate_master_packs(size_distribution: Dict[str, int], master_pack_ratio: Dict[str, int]):
+    """
+    Calculate complete master packs and loose pieces
+    Example: size_distribution = {"S": 10, "M": 19, "L": 15, "XL": 8}
+             master_pack_ratio = {"S": 2, "M": 2, "L": 2, "XL": 2}
+    Result: 4 complete packs (using 8S, 8M, 8L, 8XL), 20 loose pieces (2S, 11M, 7L, 0XL)
+    """
+    if not master_pack_ratio or not size_distribution:
+        return 0, sum(size_distribution.values()), size_distribution.copy()
+    
+    # Calculate how many complete packs we can make
+    complete_packs = float('inf')
+    for size, ratio_qty in master_pack_ratio.items():
+        if ratio_qty > 0:
+            available_qty = size_distribution.get(size, 0)
+            possible_packs = available_qty // ratio_qty
+            complete_packs = min(complete_packs, possible_packs)
+    
+    # If no valid packs, return all as loose
+    if complete_packs == float('inf') or complete_packs == 0:
+        return 0, sum(size_distribution.values()), size_distribution.copy()
+    
+    # Calculate loose pieces
+    loose_pieces_distribution = {}
+    total_loose = 0
+    for size, qty in size_distribution.items():
+        used_in_packs = complete_packs * master_pack_ratio.get(size, 0)
+        loose = qty - used_in_packs
+        loose_pieces_distribution[size] = loose
+        total_loose += loose
+    
+    return int(complete_packs), total_loose, loose_pieces_distribution
+
 # Helper function to generate DC number
 def generate_dc_number():
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
