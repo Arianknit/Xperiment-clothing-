@@ -76,6 +76,7 @@ class CuttingOrder(BaseModel):
     rib_returned: float
     rib_used: float
     size_distribution: Dict[str, int]  # {"S": 10, "M": 20, ...}
+    bundle_distribution: Optional[Dict[str, int]] = {}  # {"Front": 100, "Back": 100, ...}
     total_quantity: int
     cutting_rate_per_pcs: Optional[float] = 0.0
     total_cutting_amount: Optional[float] = 0.0
