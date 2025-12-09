@@ -614,7 +614,8 @@ function App() {
         dc_date: new Date().toISOString().split('T')[0],
         receipt_id: "",
         unit_name: "",
-        rate_per_pcs: ""
+        rate_per_pcs: "",
+        master_pack_ratio: {}
       });
       fetchIroningOrders();
       fetchOutsourcingReceipts();
