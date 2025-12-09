@@ -339,7 +339,6 @@ function App() {
       
       setCuttingDialogOpen(false);
       setCuttingForm({
-        cutting_lot_number: "",
         cutting_master_name: "",
         cutting_date: new Date().toISOString().split('T')[0],
         fabric_lot_id: "",
@@ -351,7 +350,19 @@ function App() {
         rib_taken: "",
         rib_returned: "",
         cutting_rate_per_pcs: "",
-        size_distribution: {}
+        size_distribution: {},
+        bundle_distribution: {
+          'Front': 0,
+          'Back': 0,
+          'Sleeve': 0,
+          'Rib': 0,
+          'Patti': 0,
+          'Collar': 0,
+          'Front L Panel': 0,
+          'Front R Panel': 0,
+          'Back L Panel': 0,
+          'Back R Panel': 0
+        }
       });
       setEditingCuttingOrder(null);
       fetchCuttingOrders();
