@@ -3354,6 +3354,138 @@ async def get_dashboard_stats():
     }
 
 
+# Unit Payment Endpoint
+class UnitPayment(BaseModel):
+    unit_name: str
+    amount: float
+    payment_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    payment_method: Optional[str] = "Cash"
+    notes: Optional[str] = ""
+
+@api_router.post("/units/payment")
+async def record_unit_payment(payment: UnitPayment):
+    """
+    Record payment for a unit across multiple orders (outsourcing and ironing)
+    Automatically allocates payment to pending orders for that unit
+    """
+    unit_name = payment.unit_name
+    payment_amount = payment.amount
+    
+    # Get all outsourcing orders for this unit with pending balance
+    outsourcing_orders = await db.outsourcing_orders.find(
+        {
+            "unit_name": unit_name,
+            "payment_status": {"$in": ["Unpaid", "Partial"]}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Convert dates
+    for order in outsourcing_orders:
+        if isinstance(order.get('dc_date'), str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Get all ironing orders for this unit with pending balance
+    ironing_orders = await db.ironing_orders.find(
+        {
+            "unit_name": unit_name,
+            "payment_status": {"$in": ["Unpaid", "Partial"]}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Convert dates
+    for order in ironing_orders:
+        if isinstance(order.get('dc_date'), str):
+            order['dc_date'] = datetime.fromisoformat(order['dc_date'])
+    
+    # Calculate total pending for this unit
+    total_pending = 0
+    for order in outsourcing_orders:
+        total_pending += order.get('balance', 0)
+    for order in ironing_orders:
+        total_pending += order.get('balance', 0)
+    
+    if total_pending == 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No pending bills found for unit: {unit_name}"
+        )
+    
+    if payment_amount > total_pending:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment amount (₹{payment_amount}) exceeds total pending bills (₹{total_pending:.2f}) for unit: {unit_name}"
+        )
+    
+    # Allocate payment to orders (oldest first)
+    all_orders = []
+    for order in outsourcing_orders:
+        all_orders.append({"type": "outsourcing", "order": order})
+    for order in ironing_orders:
+        all_orders.append({"type": "ironing", "order": order})
+    
+    # Sort by date (oldest first)
+    all_orders.sort(key=lambda x: x['order']['dc_date'])
+    
+    remaining_payment = payment_amount
+    allocations = []
+    
+    for item in all_orders:
+        if remaining_payment <= 0:
+            break
+        
+        order = item['order']
+        order_type = item['type']
+        balance = order.get('balance', 0)
+        
+        if balance <= 0:
+            continue
+        
+        # Allocate payment to this order
+        allocation = min(remaining_payment, balance)
+        new_amount_paid = order.get('amount_paid', 0) + allocation
+        new_balance = balance - allocation
+        
+        # Determine new payment status
+        if new_balance <= 0:
+            payment_status = "Paid"
+            new_balance = 0
+        elif new_amount_paid > 0:
+            payment_status = "Partial"
+        else:
+            payment_status = "Unpaid"
+        
+        # Update the order
+        collection = db.outsourcing_orders if order_type == "outsourcing" else db.ironing_orders
+        await collection.update_one(
+            {"id": order['id']},
+            {"$set": {
+                "amount_paid": round(new_amount_paid, 2),
+                "balance": round(new_balance, 2),
+                "payment_status": payment_status
+            }}
+        )
+        
+        allocations.append({
+            "order_type": order_type,
+            "dc_number": order['dc_number'],
+            "allocated_amount": round(allocation, 2),
+            "new_balance": round(new_balance, 2)
+        })
+        
+        remaining_payment -= allocation
+    
+    return {
+        "message": "Payment recorded successfully",
+        "unit_name": unit_name,
+        "total_payment": payment_amount,
+        "total_pending_before": round(total_pending, 2),
+        "total_pending_after": round(total_pending - payment_amount, 2),
+        "allocations": allocations
+    }
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
