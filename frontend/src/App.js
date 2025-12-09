@@ -410,7 +410,19 @@ function App() {
       rib_taken: order.rib_taken.toString(),
       rib_returned: order.rib_returned.toString(),
       cutting_rate_per_pcs: (order.cutting_rate_per_pcs || 0).toString(),
-      size_distribution: order.size_distribution
+      size_distribution: order.size_distribution,
+      bundle_distribution: order.bundle_distribution || {
+        'Front': 0,
+        'Back': 0,
+        'Sleeve': 0,
+        'Rib': 0,
+        'Patti': 0,
+        'Collar': 0,
+        'Front L Panel': 0,
+        'Front R Panel': 0,
+        'Back L Panel': 0,
+        'Back R Panel': 0
+      }
     });
     setCuttingDialogOpen(true);
   };
