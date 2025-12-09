@@ -1998,6 +1998,7 @@ function App() {
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-xl font-bold text-slate-800">{catalog.catalog_name}</h3>
                               <Badge className="bg-indigo-100 text-indigo-800 border">{catalog.catalog_code}</Badge>
+                              {catalog.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {catalog.color}</Badge>}
                             </div>
                             {catalog.description && <p className="text-sm text-slate-600">{catalog.description}</p>}
                           </div>
