@@ -2656,8 +2656,8 @@ async def get_cutting_report(
     
     # Apply date filter
     if start_date and end_date:
-        start = datetime.fromisoformat(start_date).replace(hour=0, minute=0, second=0, microsecond=0)
-        end = datetime.fromisoformat(end_date).replace(hour=23, minute=59, second=59, microsecond=999999)
+        start = datetime.fromisoformat(start_date).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+        end = datetime.fromisoformat(end_date).replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=timezone.utc)
         query['cutting_date'] = {'$gte': start, '$lte': end}
     
     # Apply cutting master filter
