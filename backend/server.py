@@ -367,10 +367,24 @@ async def create_cutting_order(order: CuttingOrderCreate):
     order_dict['balance'] = total_cutting_amount
     order_dict['payment_status'] = "Unpaid"
     
-    # Get fabric lot to calculate cost
+    # Get fabric lot to calculate cost and validate availability
     fabric_lot = await db.fabric_lots.find_one({"id": order_dict['fabric_lot_id']}, {"_id": 0})
     if not fabric_lot:
         raise HTTPException(status_code=404, detail="Fabric lot not found")
+    
+    # Validate fabric taken doesn't exceed available quantity
+    if order_dict['fabric_taken'] > fabric_lot.get('remaining_quantity', 0):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Fabric taken ({order_dict['fabric_taken']} kg) exceeds available fabric ({fabric_lot.get('remaining_quantity', 0)} kg) in lot {fabric_lot.get('lot_number')}"
+        )
+    
+    # Validate rib taken doesn't exceed available rib quantity
+    if order_dict['rib_taken'] > fabric_lot.get('remaining_rib_quantity', 0):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Rib taken ({order_dict['rib_taken']} kg) exceeds available rib ({fabric_lot.get('remaining_rib_quantity', 0)} kg) in lot {fabric_lot.get('lot_number')}"
+        )
     
     # Calculate total fabric cost
     total_fabric_cost = fabric_used * fabric_lot['rate_per_kg']
