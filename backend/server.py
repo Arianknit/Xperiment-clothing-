@@ -2624,8 +2624,12 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
         "catalog_name": catalog.get('catalog_name'),
         "dispatch_quantity": dispatch.dispatch_quantity,
         "total_dispatched": total_dispatch,
+        "customer_name": dispatch.customer_name,
+        "dispatch_date": dispatch.dispatch_date,
+        "bora_number": dispatch.bora_number,
+        "color": dispatch.color,
         "notes": dispatch.notes,
-        "dispatch_date": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc)
     }
     await db.catalog_dispatches.insert_one(dispatch_record)
     
