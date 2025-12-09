@@ -1191,11 +1191,21 @@ function App() {
                             <SelectContent>
                               {fabricLots.map((lot) => (
                                 <SelectItem key={lot.id} value={lot.id}>
-                                  {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg)
+                                  {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg available)
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {cuttingForm.fabric_lot_id && (() => {
+                            const selectedLot = fabricLots.find(l => l.id === cuttingForm.fabric_lot_id);
+                            return selectedLot ? (
+                              <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                                <p className="text-xs text-blue-700">
+                                  <strong>Available:</strong> Fabric: {selectedLot.remaining_quantity} kg | Rib: {selectedLot.remaining_rib_quantity} kg
+                                </p>
+                              </div>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
