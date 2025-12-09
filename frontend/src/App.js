@@ -1350,11 +1350,14 @@ function App() {
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <h3 className="text-xl font-bold text-slate-800">{order.cutting_lot_number || order.lot_number}</h3>
                             {getCategoryBadge(order.category)}
                             <Badge className="bg-slate-100 text-slate-700 border">{order.style_type}</Badge>
                             {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
+                            {order.used_in_catalog && order.catalog_name && (
+                              <Badge className="bg-green-100 text-green-700 border-green-300">📦 In: {order.catalog_name}</Badge>
+                            )}
                             {getPaymentStatusBadge(order.payment_status || "Unpaid")}
                           </div>
                           {order.cutting_master_name && (
