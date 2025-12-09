@@ -83,7 +83,18 @@ function App() {
     rib_returned: "",
     cutting_rate_per_pcs: "",
     size_distribution: {},
-    bundle_distribution: {}
+    bundle_distribution: {
+      'Front': 0,
+      'Back': 0,
+      'Sleeve': 0,
+      'Rib': 0,
+      'Patti': 0,
+      'Collar': 0,
+      'Front L Panel': 0,
+      'Front R Panel': 0,
+      'Back L Panel': 0,
+      'Back R Panel': 0
+    }
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
   const [editingCuttingOrder, setEditingCuttingOrder] = useState(null);
