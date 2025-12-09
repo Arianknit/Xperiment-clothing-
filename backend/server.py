@@ -241,6 +241,10 @@ class IroningReceipt(BaseModel):
     total_shortage: int
     rate_per_pcs: float
     shortage_debit_amount: float
+    master_pack_ratio: Optional[Dict[str, int]] = {}
+    complete_packs: Optional[int] = 0
+    loose_pieces: Optional[int] = 0
+    loose_pieces_distribution: Optional[Dict[str, int]] = {}
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class IroningReceiptCreate(BaseModel):
