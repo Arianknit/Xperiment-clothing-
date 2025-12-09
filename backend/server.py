@@ -85,6 +85,9 @@ class CuttingOrder(BaseModel):
     balance: Optional[float] = 0.0
     payment_status: Optional[str] = "Unpaid"  # Unpaid, Partial, Paid
     total_fabric_cost: float
+    used_in_catalog: Optional[bool] = False
+    catalog_id: Optional[str] = None
+    catalog_name: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CuttingOrderCreate(BaseModel):
