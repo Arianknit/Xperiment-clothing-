@@ -2008,17 +2008,26 @@ function App() {
                         <Label>Select Cutting Lots</Label>
                         <div className="border rounded-lg p-3 max-h-60 overflow-y-auto bg-slate-50">
                           {cuttingOrders.length === 0 && <p className="text-sm text-slate-500 text-center py-4">No cutting orders available</p>}
+                          {cuttingOrders.filter(order => !order.used_in_catalog).length === 0 && cuttingOrders.length > 0 && (
+                            <p className="text-sm text-amber-600 text-center py-4">⚠️ All cutting lots are already used in catalogs</p>
+                          )}
                           {cuttingOrders.map((order) => (
-                            <div key={order.id} className="flex items-center space-x-3 py-2 border-b last:border-b-0">
+                            <div key={order.id} className={`flex items-center space-x-3 py-2 border-b last:border-b-0 ${order.used_in_catalog ? 'opacity-40' : ''}`}>
                               <input
                                 type="checkbox"
                                 id={`lot-${order.id}`}
                                 checked={catalogForm.lot_numbers.includes(order.cutting_lot_number)}
                                 onChange={() => handleLotToggle(order.cutting_lot_number)}
-                                className="h-4 w-4 text-indigo-600 rounded"
+                                disabled={order.used_in_catalog}
+                                className="h-4 w-4 text-indigo-600 rounded disabled:cursor-not-allowed"
                               />
-                              <label htmlFor={`lot-${order.id}`} className="flex-1 cursor-pointer">
-                                <div className="text-sm font-semibold text-slate-800">{order.cutting_lot_number}</div>
+                              <label htmlFor={`lot-${order.id}`} className={`flex-1 ${order.used_in_catalog ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                                <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                                  {order.cutting_lot_number}
+                                  {order.used_in_catalog && (
+                                    <span className="text-xs text-green-600 font-normal">✓ Used in: {order.catalog_name}</span>
+                                  )}
+                                </div>
                                 <div className="text-xs text-slate-600">{order.category} - {order.style_type} | {order.total_quantity} pcs</div>
                               </label>
                             </div>
