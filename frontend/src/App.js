@@ -1352,6 +1352,7 @@ function App() {
                             <h3 className="text-xl font-bold text-slate-800">{order.cutting_lot_number || order.lot_number}</h3>
                             {getCategoryBadge(order.category)}
                             <Badge className="bg-slate-100 text-slate-700 border">{order.style_type}</Badge>
+                            {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
                             {getPaymentStatusBadge(order.payment_status || "Unpaid")}
                           </div>
                           {order.cutting_master_name && (
