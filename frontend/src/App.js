@@ -41,6 +41,8 @@ const SIZE_CONFIG = {
   Women: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL']
 };
 
+const BUNDLE_TYPES = ['Front', 'Back', 'Sleeve', 'Rib', 'Patti', 'Collar', 'Front L Panel', 'Front R Panel', 'Back L Panel', 'Back R Panel'];
+
 const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker', 'Stitching'];
 
 function App() {
