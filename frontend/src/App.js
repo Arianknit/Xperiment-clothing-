@@ -82,7 +82,8 @@ function App() {
     rib_taken: "",
     rib_returned: "",
     cutting_rate_per_pcs: "",
-    size_distribution: {}
+    size_distribution: {},
+    bundle_distribution: {}
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
   const [editingCuttingOrder, setEditingCuttingOrder] = useState(null);
