@@ -340,7 +340,8 @@ function App() {
           rib_taken: parseFloat(cuttingForm.rib_taken),
           rib_returned: parseFloat(cuttingForm.rib_returned),
           cutting_rate_per_pcs: parseFloat(cuttingForm.cutting_rate_per_pcs),
-          size_distribution: cuttingForm.size_distribution
+          size_distribution: cuttingForm.size_distribution,
+          bundle_distribution: cuttingForm.bundle_distribution
         });
         toast.success("Cutting order updated successfully");
       } else {
