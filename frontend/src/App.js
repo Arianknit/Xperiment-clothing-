@@ -1122,7 +1122,7 @@ function App() {
                 <h2 className="text-3xl font-bold text-slate-800">Cutting Operations</h2>
                 <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_lot_number: "", cutting_master_name: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {} }); }} data-testid="add-cutting-button">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_master_name: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {}, bundle_distribution: { 'Front': 0, 'Back': 0, 'Sleeve': 0, 'Rib': 0, 'Patti': 0, 'Collar': 0, 'Front L Panel': 0, 'Front R Panel': 0, 'Back L Panel': 0, 'Back R Panel': 0 } }); }} data-testid="add-cutting-button">
                       <Plus className="h-4 w-4 mr-2" />
                       New Cutting Order
                     </Button>
