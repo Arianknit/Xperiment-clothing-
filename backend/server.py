@@ -1125,6 +1125,18 @@ async def create_ironing_order(order: IroningOrderCreate):
     total_amount = total_quantity * order_dict['rate_per_pcs']
     order_dict['total_amount'] = round(total_amount, 2)
     
+    # Calculate master packs if ratio is provided
+    if order_dict.get('master_pack_ratio'):
+        complete_packs, loose_pieces, _ = calculate_master_packs(
+            receipt['received_distribution'], 
+            order_dict['master_pack_ratio']
+        )
+        order_dict['complete_packs'] = complete_packs
+        order_dict['loose_pieces'] = loose_pieces
+    else:
+        order_dict['complete_packs'] = 0
+        order_dict['loose_pieces'] = total_quantity
+    
     # Initialize payment fields
     order_dict['amount_paid'] = 0.0
     order_dict['balance'] = total_amount
