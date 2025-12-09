@@ -2799,6 +2799,22 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
 
 @api_router.delete("/catalogs/{catalog_id}")
 async def delete_catalog(catalog_id: str):
+    # Get the catalog to find its lots
+    catalog = await db.catalogs.find_one({"id": catalog_id}, {"_id": 0})
+    if not catalog:
+        raise HTTPException(status_code=404, detail="Catalog not found")
+    
+    # Unmark cutting orders
+    await db.cutting_orders.update_many(
+        {"catalog_id": catalog_id},
+        {"$set": {
+            "used_in_catalog": False,
+            "catalog_id": None,
+            "catalog_name": None
+        }}
+    )
+    
+    # Delete the catalog
     result = await db.catalogs.delete_one({"id": catalog_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Catalog not found")
