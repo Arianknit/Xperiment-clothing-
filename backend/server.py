@@ -2654,18 +2654,23 @@ async def get_cutting_report(
 ):
     query = {}
     
-    # Apply date filter
+    # Get all cutting orders first (dates are stored as strings)
+    orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Apply filters in Python since dates are strings
     if start_date and end_date:
         start = datetime.fromisoformat(start_date).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
         end = datetime.fromisoformat(end_date).replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=timezone.utc)
-        query['cutting_date'] = {'$gte': start, '$lte': end}
+        filtered_orders = []
+        for order in orders:
+            order_date = datetime.fromisoformat(order['cutting_date']) if isinstance(order['cutting_date'], str) else order['cutting_date']
+            if start <= order_date <= end:
+                filtered_orders.append(order)
+        orders = filtered_orders
     
     # Apply cutting master filter
     if cutting_master:
-        query['cutting_master_name'] = cutting_master
-    
-    # Get cutting orders
-    orders = await db.cutting_orders.find(query, {"_id": 0}).to_list(1000)
+        orders = [o for o in orders if o.get('cutting_master_name') == cutting_master]
     
     # Convert dates
     for order in orders:
