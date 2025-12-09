@@ -262,6 +262,10 @@ class CatalogCreate(BaseModel):
 
 class CatalogDispatch(BaseModel):
     dispatch_quantity: Dict[str, int]  # Size-wise dispatch quantities
+    customer_name: str
+    dispatch_date: datetime
+    bora_number: str  # Bundle/Batch number
+    color: str  # T-shirt color
     notes: Optional[str] = None
 
 
