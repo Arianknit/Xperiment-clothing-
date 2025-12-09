@@ -67,6 +67,7 @@ class CuttingOrder(BaseModel):
     cutting_date: datetime
     fabric_lot_id: str
     lot_number: str
+    color: Optional[str] = ""
     category: str  # Kids, Mens, Women
     style_type: str
     fabric_taken: float
