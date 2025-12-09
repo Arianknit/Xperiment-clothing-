@@ -1059,10 +1059,11 @@ async def create_ironing_order(order: IroningOrderCreate):
     if isinstance(receipt.get('receipt_date'), str):
         receipt['receipt_date'] = datetime.fromisoformat(receipt['receipt_date'])
     
-    # Get the original outsourcing order to get cutting_lot_number
+    # Get the original outsourcing order to get cutting_lot_number and color
     outsourcing_order = await db.outsourcing_orders.find_one({"id": receipt['outsourcing_order_id']}, {"_id": 0})
     
     order_dict['cutting_lot_number'] = outsourcing_order.get('cutting_lot_number', '')
+    order_dict['color'] = outsourcing_order.get('color', '')
     order_dict['category'] = outsourcing_order.get('category', '')
     order_dict['style_type'] = outsourcing_order.get('style_type', '')
     order_dict['size_distribution'] = receipt['received_distribution']
