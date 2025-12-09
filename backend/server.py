@@ -156,6 +156,7 @@ class OutsourcingOrderCreate(BaseModel):
     unit_name: str
     size_distribution: Dict[str, int]
     rate_per_pcs: float
+    notes: Optional[str] = ""
 
 class OutsourcingOrderUpdate(BaseModel):
     dc_date: Optional[datetime] = None
