@@ -2960,18 +2960,23 @@ async def get_ironing_report(
 ):
     query = {}
     
-    # Apply date filter
+    # Get all ironing orders first (dates are stored as strings)
+    orders = await db.ironing_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Apply filters in Python since dates are strings
     if start_date and end_date:
         start = datetime.fromisoformat(start_date).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
         end = datetime.fromisoformat(end_date).replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=timezone.utc)
-        query['dc_date'] = {'$gte': start, '$lte': end}
+        filtered_orders = []
+        for order in orders:
+            order_date = datetime.fromisoformat(order['dc_date']) if isinstance(order['dc_date'], str) else order['dc_date']
+            if start <= order_date <= end:
+                filtered_orders.append(order)
+        orders = filtered_orders
     
     # Apply unit filter
     if unit_name:
-        query['unit_name'] = unit_name
-    
-    # Get ironing orders
-    orders = await db.ironing_orders.find(query, {"_id": 0}).to_list(1000)
+        orders = [o for o in orders if o.get('unit_name') == unit_name]
     
     # Convert dates
     for order in orders:
