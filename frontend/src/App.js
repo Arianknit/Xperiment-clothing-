@@ -162,7 +162,13 @@ function App() {
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState(null);
-  const [dispatchForm, setDispatchForm] = useState({});
+  const [dispatchForm, setDispatchForm] = useState({
+    customer_name: "",
+    dispatch_date: new Date().toISOString().split('T')[0],
+    bora_number: "",
+    color: "",
+    notes: ""
+  });
   
   const [barcodeView, setBarcodeView] = useState(null);
 
