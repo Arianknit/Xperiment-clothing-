@@ -11,7 +11,7 @@ import sys
 import os
 
 # Get backend URL from environment
-BACKEND_URL = "https://cut-stitch-track.preview.emergentagent.com/api"
+BACKEND_URL = "https://garment-tracker-20.preview.emergentagent.com/api"
 
 class IroningUnitTester:
     def __init__(self):
