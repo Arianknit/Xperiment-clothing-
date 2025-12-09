@@ -119,6 +119,7 @@ function App() {
     operation_type: "Printing",
     unit_name: "",
     rate_per_pcs: "",
+    notes: "",
     size_distribution: {}
   });
   const [outsourcingDialogOpen, setOutsourcingDialogOpen] = useState(false);
