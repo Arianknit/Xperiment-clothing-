@@ -200,6 +200,7 @@ class IroningOrder(BaseModel):
     dc_date: datetime
     receipt_id: str  # outsourcing_receipt_id
     cutting_lot_number: str
+    color: Optional[str] = ""
     category: str
     style_type: str
     unit_name: str
