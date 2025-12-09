@@ -131,6 +131,7 @@ class OutsourcingOrder(BaseModel):
     cutting_order_id: str
     cutting_lot_number: Optional[str] = ""
     lot_number: str
+    color: Optional[str] = ""
     category: str
     style_type: str
     operation_type: str  # Printing, Embroidery, Stone, Sequins, Sticker
