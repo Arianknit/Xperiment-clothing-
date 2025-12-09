@@ -99,6 +99,7 @@ class CuttingOrderCreate(BaseModel):
     rib_taken: float
     rib_returned: float
     size_distribution: Dict[str, int]
+    bundle_distribution: Optional[Dict[str, int]] = {}
     cutting_rate_per_pcs: float
 
 class CuttingOrderUpdate(BaseModel):
