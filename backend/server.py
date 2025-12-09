@@ -2521,12 +2521,16 @@ async def create_catalog(catalog: CatalogCreate):
         for size, qty in order.get('size_distribution', {}).items():
             size_distribution[size] = size_distribution.get(size, 0) + qty
     
+    # Get color from first cutting order (assuming all lots in catalog have same color)
+    color = cutting_orders[0].get('color', '') if cutting_orders else ''
+    
     # Create catalog
     catalog_dict = catalog.model_dump()
     catalog_dict['id'] = str(uuid.uuid4())
     catalog_dict['total_quantity'] = total_quantity
     catalog_dict['available_stock'] = total_quantity
     catalog_dict['size_distribution'] = size_distribution
+    catalog_dict['color'] = color
     catalog_dict['created_at'] = datetime.now(timezone.utc)
     
     catalog_obj = Catalog(**catalog_dict)
