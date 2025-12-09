@@ -916,6 +916,15 @@ async def get_delivery_challan(order_id: str):
             </div>
         </div>
         
+        {f'''
+        <div class="info-section" style="margin-top: 30px;">
+            <h3>Comments/Notes:</h3>
+            <div style="border: 1px solid #ddd; padding: 15px; background-color: #f9f9f9; border-radius: 5px; min-height: 60px;">
+                {order.get('notes', '')}
+            </div>
+        </div>
+        ''' if order.get('notes') else ''}
+        
         <div class="footer">
             <div class="signature-section">
                 <div class="signature-box">
