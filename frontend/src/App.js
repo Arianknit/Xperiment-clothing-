@@ -1909,6 +1909,26 @@ function App() {
                           </div>
                         </div>
 
+                        {order.master_pack_ratio && Object.keys(order.master_pack_ratio).length > 0 && (
+                          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                            <p className="text-xs text-slate-600 mb-2">📦 Master Pack Details:</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-white p-2 rounded border">
+                                <p className="text-xs text-slate-500">Complete Packs</p>
+                                <p className="text-xl font-bold text-purple-600">{order.complete_packs || 0}</p>
+                              </div>
+                              <div className="bg-white p-2 rounded border">
+                                <p className="text-xs text-slate-500">Loose Pieces</p>
+                                <p className="text-xl font-bold text-amber-600">{order.loose_pieces || 0}</p>
+                              </div>
+                            </div>
+                            <div className="mt-2 text-xs text-slate-600">
+                              <span className="font-semibold">Ratio: </span>
+                              {Object.entries(order.master_pack_ratio).filter(([_, qty]) => qty > 0).map(([size, qty]) => `${size}:${qty}`).join(', ')}
+                            </div>
+                          </div>
+                        )}
+
                         {order.payment_status !== 'Paid' && (
                           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                             <div className="flex items-center justify-between">
