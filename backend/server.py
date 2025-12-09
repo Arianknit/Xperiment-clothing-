@@ -223,6 +223,7 @@ class IroningOrderCreate(BaseModel):
     receipt_id: str
     unit_name: str
     rate_per_pcs: float
+    master_pack_ratio: Optional[Dict[str, int]] = {}
 
 class IroningReceipt(BaseModel):
     model_config = ConfigDict(extra="ignore")
