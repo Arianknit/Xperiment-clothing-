@@ -1200,9 +1200,19 @@ function App() {
                             </div>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <Button size="icon" variant="ghost" onClick={() => handleDeleteLot(lot.id)} className="h-8 w-8 text-red-600 hover:bg-red-50" data-testid={`delete-lot-${lot.id}`}>
-                            <Trash2 className="h-4 w-4" />
+                        <div className="ml-4 flex flex-col gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to return fabric lot ${lot.lot_number}?\n\nThis action will:\n• Remove ${lot.quantity}kg fabric from inventory\n• Delete all roll numbers\n• This cannot be undone if the fabric has been used in cutting orders`)) {
+                                handleDeleteLot(lot.id);
+                              }
+                            }} 
+                            className="text-red-600 border-red-300 hover:bg-red-50 text-xs"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Return Fabric
                           </Button>
                         </div>
                       </div>
