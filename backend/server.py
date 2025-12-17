@@ -438,6 +438,85 @@ async def delete_fabric_lot(lot_id: str):
     }
 
 
+class RollWeightsUpdate(BaseModel):
+    scale_readings: List[float]  # Cumulative scale readings after each roll
+
+@api_router.put("/fabric-lots/{lot_id}/roll-weights")
+async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
+    """
+    Update roll weights using cumulative scale readings
+    
+    Example: 
+    - Roll 1 on scale: 22 kg → scale_readings[0] = 22, roll_weight[0] = 22
+    - Roll 2 added: 45 kg → scale_readings[1] = 45, roll_weight[1] = 23 (45-22)
+    - Roll 3 added: 70 kg → scale_readings[2] = 70, roll_weight[2] = 25 (70-45)
+    """
+    fabric_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not fabric_lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
+    
+    scale_readings = weights_update.scale_readings
+    number_of_rolls = fabric_lot.get('number_of_rolls', 1)
+    
+    # Validate number of readings matches number of rolls
+    if len(scale_readings) != number_of_rolls:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Number of scale readings ({len(scale_readings)}) must match number of rolls ({number_of_rolls})"
+        )
+    
+    # Validate scale readings are in ascending order
+    for i in range(1, len(scale_readings)):
+        if scale_readings[i] <= scale_readings[i-1]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Scale readings must be in ascending order. Reading {i+1} ({scale_readings[i]}) is not greater than reading {i} ({scale_readings[i-1]})"
+            )
+    
+    # Calculate individual roll weights
+    roll_weights = []
+    for i, reading in enumerate(scale_readings):
+        if i == 0:
+            # First roll weight is the first reading
+            roll_weight = reading
+        else:
+            # Subsequent rolls: current reading - previous reading
+            roll_weight = reading - scale_readings[i-1]
+        roll_weights.append(round(roll_weight, 2))
+    
+    # Calculate total from individual weights
+    total_calculated = sum(roll_weights)
+    
+    # Update fabric lot
+    await db.fabric_lots.update_one(
+        {"id": lot_id},
+        {"$set": {
+            "scale_readings": scale_readings,
+            "roll_weights": roll_weights,
+            "quantity": round(total_calculated, 2),
+            "remaining_quantity": round(total_calculated, 2)
+        }}
+    )
+    
+    updated_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    
+    return {
+        "message": "Roll weights updated successfully",
+        "lot_number": updated_lot.get('lot_number'),
+        "scale_readings": scale_readings,
+        "roll_weights": roll_weights,
+        "total_weight": round(total_calculated, 2),
+        "roll_details": [
+            {
+                "roll_number": updated_lot['roll_numbers'][i],
+                "weight": roll_weights[i],
+                "scale_reading": scale_readings[i]
+            }
+            for i in range(len(roll_weights))
+        ]
+    }
+
+
 # Cutting Order Routes
 @api_router.post("/cutting-orders", response_model=CuttingOrder)
 async def create_cutting_order(order: CuttingOrderCreate):
