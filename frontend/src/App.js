@@ -355,6 +355,29 @@ function App() {
     }
   };
 
+  const handleReturnFabricSubmit = async () => {
+    try {
+      setLoading(true);
+      await axios.post(`${API}/fabric-lots/${selectedLotForReturn.id}/return`, returnForm);
+      toast.success(`Fabric returned successfully! ${returnForm.quantity_returned}kg removed from inventory.`);
+      setReturnFabricDialogOpen(false);
+      setSelectedLotForReturn(null);
+      setReturnForm({
+        returned_rolls: [],
+        quantity_returned: '',
+        reason: 'Wrong Color',
+        comments: ''
+      });
+      fetchFabricLots();
+    } catch (error) {
+      console.error("Error returning fabric:", error);
+      const errorMessage = error.response?.data?.detail || "Failed to return fabric";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteLot = async (lotId) => {
     if (!window.confirm("Are you sure you want to delete this fabric lot?")) return;
     
