@@ -404,10 +404,77 @@ async def get_fabric_lot(lot_id: str):
     
     return lot
 
+@api_router.post("/fabric-lots/{lot_id}/return", response_model=FabricReturn)
+async def return_fabric_to_supplier(lot_id: str, fabric_return: FabricReturnCreate):
+    """
+    Partial return of fabric to supplier
+    Allows returning specific rolls with reason and reduces inventory
+    """
+    fabric_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not fabric_lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
+    
+    # Validate returned rolls exist
+    lot_rolls = fabric_lot.get('roll_numbers', [])
+    for roll in fabric_return.returned_rolls:
+        if roll not in lot_rolls:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Roll {roll} not found in fabric lot {fabric_lot.get('lot_number', 'N/A')}"
+            )
+    
+    # Validate quantity
+    if fabric_return.quantity_returned > fabric_lot.get('remaining_quantity', 0):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot return {fabric_return.quantity_returned}kg. Only {fabric_lot.get('remaining_quantity', 0)}kg remaining in lot."
+        )
+    
+    # Create return record
+    return_dict = fabric_return.model_dump()
+    return_dict['id'] = str(uuid.uuid4())
+    return_dict['fabric_lot_id'] = lot_id
+    return_dict['lot_number'] = fabric_lot.get('lot_number', 'N/A')
+    return_dict['return_date'] = datetime.now(timezone.utc)
+    
+    return_obj = FabricReturn(**return_dict)
+    
+    # Save return record
+    doc = return_obj.model_dump()
+    doc['return_date'] = doc['return_date'].isoformat()
+    await db.fabric_returns.insert_one(doc)
+    
+    # Update fabric lot - reduce quantity
+    new_remaining_qty = fabric_lot.get('remaining_quantity', 0) - fabric_return.quantity_returned
+    new_total_qty = fabric_lot.get('quantity', 0) - fabric_return.quantity_returned
+    
+    # Remove returned rolls from roll_numbers
+    updated_roll_numbers = [roll for roll in lot_rolls if roll not in fabric_return.returned_rolls]
+    
+    # Update roll weights if they exist
+    updated_roll_weights = []
+    if fabric_lot.get('roll_weights'):
+        for i, roll in enumerate(lot_rolls):
+            if roll not in fabric_return.returned_rolls:
+                updated_roll_weights.append(fabric_lot['roll_weights'][i])
+    
+    await db.fabric_lots.update_one(
+        {"id": lot_id},
+        {"$set": {
+            "quantity": round(new_total_qty, 2),
+            "remaining_quantity": round(new_remaining_qty, 2),
+            "roll_numbers": updated_roll_numbers,
+            "roll_weights": updated_roll_weights,
+            "number_of_rolls": len(updated_roll_numbers)
+        }}
+    )
+    
+    return return_obj
+
 @api_router.delete("/fabric-lots/{lot_id}")
 async def delete_fabric_lot(lot_id: str):
     """
-    Return/Delete a fabric lot (for wrong fabric received or mistakes)
+    Full return/Delete a fabric lot (for wrong fabric received or mistakes)
     """
     # Check if fabric has been used in any cutting orders
     fabric_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
