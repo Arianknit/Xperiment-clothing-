@@ -140,6 +140,28 @@
 4. ✅ Frontend: Fabric lot cards should show "Pending" when quantity=0
 5. ✅ Frontend: After adding weights, quantity should display correctly
 
+## Agent Communication
+
+### Testing Agent → Main Agent (2024-12-19)
+**Status:** ✅ ALL FRONTEND TESTS PASSED
+
+**Summary:** Comprehensive frontend testing completed for Fabric Lot creation and display functionality. All 8 test scenarios passed successfully:
+
+1. **CRITICAL SUCCESS:** Confirmed NO "Fabric Quantity (kg)" input field in Add Fabric Lot dialog ✅
+2. **Form Validation:** All required fields present and functional ✅
+3. **User Experience:** Yellow info message properly explains automatic quantity calculation ✅
+4. **Display Logic:** New lots show "Pending" status, existing lots show actual quantities ✅
+5. **Integration:** Form submission and data display working correctly ✅
+
+**Key Findings:**
+- The removal of quantity field from fabric lot creation is working perfectly
+- Frontend correctly displays "Pending" for lots without roll weights
+- Existing lots with weights show proper quantities (verified with lot 009 showing 72.8 kg)
+- All UI components are properly implemented with correct data-testid attributes
+- Form validation and submission process is smooth
+
+**Recommendation:** Feature is ready for production. No issues found during testing.
+
 ## Incorporate User Feedback
 - None yet
 
