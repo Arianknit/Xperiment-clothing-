@@ -1159,12 +1159,12 @@ function App() {
                         />
                         <p className="text-xs text-slate-500">Each roll will get a unique identifier</p>
                       </div>
-                      {lotForm.quantity && lotForm.rate_per_kg && (
-                        <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                          <p className="text-sm text-slate-600">Total Amount:</p>
-                          <p className="text-2xl font-bold text-indigo-600">₹{(parseFloat(lotForm.quantity) * parseFloat(lotForm.rate_per_kg)).toFixed(2)}</p>
-                        </div>
-                      )}
+                      <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <p className="text-sm text-amber-700">💡 Fabric quantity will be calculated automatically after weighing the rolls.</p>
+                        {lotForm.rate_per_kg && (
+                          <p className="text-xs text-amber-600 mt-1">Rate: ₹{parseFloat(lotForm.rate_per_kg).toFixed(2)}/kg</p>
+                        )}
+                      </div>
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setLotDialogOpen(false)} data-testid="lot-cancel-button">Cancel</Button>
                         <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading} data-testid="lot-submit-button">
