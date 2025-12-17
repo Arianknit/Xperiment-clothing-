@@ -68,6 +68,7 @@ function App() {
     rate_per_kg: ""
   });
   const [lotDialogOpen, setLotDialogOpen] = useState(false);
+  const [availableCuttingOrders, setAvailableCuttingOrders] = useState([]);
   
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
