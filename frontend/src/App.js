@@ -74,7 +74,6 @@ function App() {
     fabric_type: "",
     supplier_name: "",
     color: "",
-    quantity: "",
     rib_quantity: "",
     rate_per_kg: "",
     number_of_rolls: 1
@@ -308,7 +307,6 @@ function App() {
       await axios.post(`${API}/fabric-lots`, {
         ...lotForm,
         entry_date: new Date(lotForm.entry_date).toISOString(),
-        quantity: parseFloat(lotForm.quantity),
         rib_quantity: parseFloat(lotForm.rib_quantity),
         rate_per_kg: parseFloat(lotForm.rate_per_kg)
       });
@@ -321,9 +319,9 @@ function App() {
         fabric_type: "",
         supplier_name: "",
         color: "",
-        quantity: "",
         rib_quantity: "",
-        rate_per_kg: ""
+        rate_per_kg: "",
+        number_of_rolls: 1
       });
       fetchFabricLots();
       fetchDashboardStats();
