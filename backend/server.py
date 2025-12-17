@@ -62,6 +62,22 @@ class FabricLotCreate(BaseModel):
     rate_per_kg: float
     number_of_rolls: Optional[int] = 1
 
+class FabricReturn(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    fabric_lot_id: str
+    lot_number: str
+    returned_rolls: List[str]  # Roll numbers being returned
+    quantity_returned: float
+    reason: str
+    comments: Optional[str] = ""
+    return_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class FabricReturnCreate(BaseModel):
+    returned_rolls: List[str]
+    quantity_returned: float
+    reason: str
+    comments: Optional[str] = ""
+
 class CuttingOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
