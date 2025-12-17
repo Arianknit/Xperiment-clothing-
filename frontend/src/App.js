@@ -238,6 +238,15 @@ function App() {
     }
   };
 
+  const fetchOverdueOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/outsourcing-orders/overdue/reminders`);
+      setOverdueOrders(response.data.overdue_orders || []);
+    } catch (error) {
+      console.error("Error fetching overdue orders:", error);
+    }
+  };
+
   const fetchOutsourcingReceipts = async () => {
     try {
       const response = await axios.get(`${API}/outsourcing-receipts`);
