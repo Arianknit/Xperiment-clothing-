@@ -613,11 +613,21 @@ async def delete_cutting_order(order_id: str):
 async def create_outsourcing_order(order: OutsourcingOrderCreate):
     order_dict = order.model_dump()
     
-    # Get cutting order to retrieve cutting_lot_number and color
+    # Get cutting order to retrieve cutting_lot_number, color, and check operations
     cutting_order = await db.cutting_orders.find_one({"id": order_dict['cutting_order_id']}, {"_id": 0})
     if cutting_order:
         order_dict['cutting_lot_number'] = cutting_order.get('cutting_lot_number', '')
         order_dict['color'] = cutting_order.get('color', '')
+        
+        # Check if this operation has already been done on this cutting lot
+        completed_operations = cutting_order.get('completed_operations', [])
+        operation_type = order_dict['operation_type']
+        
+        if operation_type in completed_operations:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Operation '{operation_type}' has already been completed for cutting lot {cutting_order.get('cutting_lot_number', 'N/A')}. Cannot send to the same operation again."
+            )
     else:
         order_dict['cutting_lot_number'] = ''
         order_dict['color'] = ''
@@ -648,6 +658,13 @@ async def create_outsourcing_order(order: OutsourcingOrderCreate):
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.outsourcing_orders.insert_one(doc)
+    
+    # Mark this operation as completed on the cutting order
+    await db.cutting_orders.update_one(
+        {"id": order_dict['cutting_order_id']},
+        {"$addToSet": {"completed_operations": operation_type}}
+    )
+    
     return order_obj
 
 @api_router.get("/outsourcing-orders", response_model=List[OutsourcingOrder])
