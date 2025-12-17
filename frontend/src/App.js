@@ -1409,6 +1409,9 @@ function App() {
                             {getCategoryBadge(order.category)}
                             <Badge className="bg-slate-100 text-slate-700 border">{order.style_type}</Badge>
                             {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
+                            {order.sent_to_ironing && (
+                              <Badge className="bg-orange-100 text-orange-700 border-orange-300">🔥 In Ironing</Badge>
+                            )}
                             {order.used_in_catalog && order.catalog_name && (
                               <Badge className="bg-green-100 text-green-700 border-green-300">📦 In: {order.catalog_name}</Badge>
                             )}
