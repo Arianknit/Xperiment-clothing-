@@ -1174,6 +1174,12 @@ async def create_ironing_order(order: IroningOrderCreate):
         {"$set": {"sent_to_ironing": True}}
     )
     
+    # Mark the cutting order as sent to ironing
+    await db.cutting_orders.update_one(
+        {"cutting_lot_number": order_dict['cutting_lot_number']},
+        {"$set": {"sent_to_ironing": True}}
+    )
+    
     return order_obj
 
 @api_router.get("/ironing-orders", response_model=List[IroningOrder])
