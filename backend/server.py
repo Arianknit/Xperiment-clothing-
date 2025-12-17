@@ -441,6 +441,22 @@ async def delete_fabric_lot(lot_id: str):
 class RollWeightsUpdate(BaseModel):
     scale_readings: List[float]  # Cumulative scale readings after each roll
 
+class FabricReturn(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    fabric_lot_id: str
+    lot_number: str
+    returned_rolls: List[str]  # Roll numbers being returned
+    quantity_returned: float
+    reason: str
+    comments: Optional[str] = ""
+    return_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class FabricReturnCreate(BaseModel):
+    returned_rolls: List[str]
+    quantity_returned: float
+    reason: str
+    comments: Optional[str] = ""
+
 @api_router.put("/fabric-lots/{lot_id}/roll-weights")
 async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
     """
