@@ -94,17 +94,19 @@ class CuttingOrderCreate(BaseModel):
     cutting_lot_number: Optional[str] = None  # Auto-generated if not provided
     cutting_master_name: str
     cutting_date: datetime
-    fabric_lot_id: str
-    lot_number: str
+    fabric_lot_id: Optional[str] = None  # Optional for old cutting lots
+    lot_number: Optional[str] = None  # Optional for old cutting lots
+    color: Optional[str] = ""
     category: str
     style_type: str
-    fabric_taken: float
-    fabric_returned: float
-    rib_taken: float
-    rib_returned: float
+    fabric_taken: Optional[float] = 0.0
+    fabric_returned: Optional[float] = 0.0
+    rib_taken: Optional[float] = 0.0
+    rib_returned: Optional[float] = 0.0
     size_distribution: Dict[str, int]
     bundle_distribution: Optional[Dict[str, int]] = {}
     cutting_rate_per_pcs: float
+    is_old_lot: Optional[bool] = False  # Flag for old cutting lots without fabric entry
 
 class CuttingOrderUpdate(BaseModel):
     cutting_lot_number: Optional[str] = None
