@@ -1100,6 +1100,19 @@ function App() {
                         <Label htmlFor="rate-per-kg">Rate per kg (₹)</Label>
                         <Input id="rate-per-kg" type="number" step="0.01" value={lotForm.rate_per_kg} onChange={(e) => setLotForm({...lotForm, rate_per_kg: e.target.value})} placeholder="500" required data-testid="rate-per-kg-input" />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="number-of-rolls">Number of Rolls</Label>
+                        <Input 
+                          id="number-of-rolls" 
+                          type="number" 
+                          min="1" 
+                          value={lotForm.number_of_rolls} 
+                          onChange={(e) => setLotForm({...lotForm, number_of_rolls: parseInt(e.target.value) || 1})} 
+                          placeholder="1" 
+                          required 
+                        />
+                        <p className="text-xs text-slate-500">Each roll will get a unique identifier</p>
+                      </div>
                       {lotForm.quantity && lotForm.rate_per_kg && (
                         <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
                           <p className="text-sm text-slate-600">Total Amount:</p>
