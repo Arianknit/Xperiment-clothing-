@@ -1289,32 +1289,36 @@ function App() {
                           <Input id="style-type" value={cuttingForm.style_type} onChange={(e) => setCuttingForm({...cuttingForm, style_type: e.target.value})} placeholder="T-Shirt" required data-testid="style-type-input" />
                         </div>
                       </div>
-                      <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
-                        <h4 className="font-semibold text-slate-700">Fabric Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="fabric-taken">Taken (kg)</Label>
-                            <Input id="fabric-taken" type="number" step="0.01" value={cuttingForm.fabric_taken} onChange={(e) => setCuttingForm({...cuttingForm, fabric_taken: e.target.value})} required data-testid="fabric-taken-input" />
+                      {!cuttingForm.is_old_lot && (
+                        <>
+                          <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                            <h4 className="font-semibold text-slate-700">Fabric Details</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="fabric-taken">Taken (kg)</Label>
+                                <Input id="fabric-taken" type="number" step="0.01" value={cuttingForm.fabric_taken} onChange={(e) => setCuttingForm({...cuttingForm, fabric_taken: e.target.value})} required data-testid="fabric-taken-input" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="fabric-returned">Returned (kg)</Label>
+                                <Input id="fabric-returned" type="number" step="0.01" value={cuttingForm.fabric_returned} onChange={(e) => setCuttingForm({...cuttingForm, fabric_returned: e.target.value})} required data-testid="fabric-returned-input" />
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="fabric-returned">Returned (kg)</Label>
-                            <Input id="fabric-returned" type="number" step="0.01" value={cuttingForm.fabric_returned} onChange={(e) => setCuttingForm({...cuttingForm, fabric_returned: e.target.value})} required data-testid="fabric-returned-input" />
+                          <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                            <h4 className="font-semibold text-slate-700">Rib Details</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="rib-taken">Taken (kg)</Label>
+                                <Input id="rib-taken" type="number" step="0.01" value={cuttingForm.rib_taken} onChange={(e) => setCuttingForm({...cuttingForm, rib_taken: e.target.value})} required data-testid="rib-taken-input" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="rib-returned">Returned (kg)</Label>
+                                <Input id="rib-returned" type="number" step="0.01" value={cuttingForm.rib_returned} onChange={(e) => setCuttingForm({...cuttingForm, rib_returned: e.target.value})} required data-testid="rib-returned-input" />
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
-                        <h4 className="font-semibold text-slate-700">Rib Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="rib-taken">Taken (kg)</Label>
-                            <Input id="rib-taken" type="number" step="0.01" value={cuttingForm.rib_taken} onChange={(e) => setCuttingForm({...cuttingForm, rib_taken: e.target.value})} required data-testid="rib-taken-input" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="rib-returned">Returned (kg)</Label>
-                            <Input id="rib-returned" type="number" step="0.01" value={cuttingForm.rib_returned} onChange={(e) => setCuttingForm({...cuttingForm, rib_returned: e.target.value})} required data-testid="rib-returned-input" />
-                          </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="cutting-rate">Cutting Rate per Piece (₹)</Label>
                         <Input id="cutting-rate" type="number" step="0.01" value={cuttingForm.cutting_rate_per_pcs} onChange={(e) => setCuttingForm({...cuttingForm, cutting_rate_per_pcs: e.target.value})} placeholder="10" required data-testid="cutting-rate-input" />
