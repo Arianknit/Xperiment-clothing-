@@ -59,6 +59,14 @@ function App() {
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
   const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
   const [scaleReadings, setScaleReadings] = useState([]);
+  const [returnFabricDialogOpen, setReturnFabricDialogOpen] = useState(false);
+  const [selectedLotForReturn, setSelectedLotForReturn] = useState(null);
+  const [returnForm, setReturnForm] = useState({
+    returned_rolls: [],
+    quantity_returned: '',
+    reason: 'Wrong Color',
+    comments: ''
+  });
   
   // Fabric lot form state
   const [lotForm, setLotForm] = useState({
