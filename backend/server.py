@@ -58,7 +58,6 @@ class FabricLotCreate(BaseModel):
     fabric_type: str
     supplier_name: str
     color: str
-    quantity: float
     rib_quantity: float
     rate_per_kg: float
     number_of_rolls: Optional[int] = 1
@@ -364,10 +363,10 @@ async def create_fabric_lot(lot: FabricLotCreate):
     
     lot_dict['roll_numbers'] = roll_numbers
     
-    # Calculate total amount
-    total_amount = lot_dict['quantity'] * lot_dict['rate_per_kg']
-    lot_dict['total_amount'] = round(total_amount, 2)
-    lot_dict['remaining_quantity'] = lot_dict['quantity']
+    # Initialize quantity to 0 - will be calculated from roll weights
+    lot_dict['quantity'] = 0
+    lot_dict['remaining_quantity'] = 0
+    lot_dict['total_amount'] = 0  # Will be updated when roll weights are added
     lot_dict['remaining_rib_quantity'] = lot_dict['rib_quantity']
     
     lot_obj = FabricLot(**lot_dict)
