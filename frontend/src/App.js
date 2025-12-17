@@ -1296,15 +1296,26 @@ function App() {
                           {lot.roll_numbers && lot.roll_numbers.length > 0 && (
                             <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 mt-2">
                               <p className="text-xs text-purple-900 font-semibold mb-2">
-                                📦 Roll Numbers ({lot.number_of_rolls || lot.roll_numbers.length} rolls):
+                                📦 Roll Details ({lot.number_of_rolls || lot.roll_numbers.length} rolls):
                               </p>
-                              <div className="flex flex-wrap gap-2">
-                                {lot.roll_numbers.map((roll, idx) => (
-                                  <Badge key={idx} className="bg-purple-100 text-purple-700 border-purple-300 font-mono text-xs">
-                                    {roll}
-                                  </Badge>
-                                ))}
-                              </div>
+                              {lot.roll_weights && lot.roll_weights.length > 0 ? (
+                                <div className="space-y-2">
+                                  {lot.roll_numbers.map((roll, idx) => (
+                                    <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border">
+                                      <span className="font-mono text-xs text-purple-600">{roll}</span>
+                                      <span className="font-bold text-green-600">⚖️ {lot.roll_weights[idx]} kg</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="flex flex-wrap gap-2">
+                                  {lot.roll_numbers.map((roll, idx) => (
+                                    <Badge key={idx} className="bg-purple-100 text-purple-700 border-purple-300 font-mono text-xs">
+                                      {roll}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t">
