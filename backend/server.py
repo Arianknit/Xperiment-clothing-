@@ -569,6 +569,10 @@ async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
     # Calculate total from individual weights
     total_calculated = sum(roll_weights)
     
+    # Calculate total amount based on rate_per_kg
+    rate_per_kg = fabric_lot.get('rate_per_kg', 0)
+    total_amount = round(total_calculated * rate_per_kg, 2)
+    
     # Update fabric lot
     await db.fabric_lots.update_one(
         {"id": lot_id},
@@ -576,7 +580,8 @@ async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
             "scale_readings": scale_readings,
             "roll_weights": roll_weights,
             "quantity": round(total_calculated, 2),
-            "remaining_quantity": round(total_calculated, 2)
+            "remaining_quantity": round(total_calculated, 2),
+            "total_amount": total_amount
         }}
     )
     
