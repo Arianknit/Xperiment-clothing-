@@ -624,10 +624,38 @@ async def create_outsourcing_order(order: OutsourcingOrderCreate):
         operation_type = order_dict['operation_type']
         
         if operation_type in completed_operations:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Operation '{operation_type}' has already been completed for cutting lot {cutting_order.get('cutting_lot_number', 'N/A')}. Cannot send to the same operation again."
+            # Find the existing outsourcing order with this operation
+            existing_order = await db.outsourcing_orders.find_one(
+                {
+                    "cutting_order_id": order_dict['cutting_order_id'],
+                    "operation_type": operation_type
+                },
+                {"_id": 0}
             )
+            
+            if existing_order:
+                # Format date for display
+                dc_date_str = existing_order.get('dc_date', '')
+                if isinstance(dc_date_str, str):
+                    try:
+                        dc_date_obj = datetime.fromisoformat(dc_date_str)
+                        dc_date_formatted = dc_date_obj.strftime("%d-%b-%Y")
+                    except:
+                        dc_date_formatted = dc_date_str
+                else:
+                    dc_date_formatted = dc_date_str.strftime("%d-%b-%Y") if dc_date_str else "Unknown"
+                
+                error_message = (
+                    f"Lot {cutting_order.get('cutting_lot_number', 'N/A')} has already been sent for '{operation_type}' operation.\n"
+                    f"Previously sent to: {existing_order.get('unit_name', 'Unknown Unit')}\n"
+                    f"Date: {dc_date_formatted}\n"
+                    f"DC Number: {existing_order.get('dc_number', 'N/A')}\n"
+                    f"Cannot send to the same operation again."
+                )
+            else:
+                error_message = f"Operation '{operation_type}' has already been completed for cutting lot {cutting_order.get('cutting_lot_number', 'N/A')}."
+            
+            raise HTTPException(status_code=400, detail=error_message)
     else:
         order_dict['cutting_lot_number'] = ''
         order_dict['color'] = ''
