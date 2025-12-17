@@ -56,6 +56,9 @@ function App() {
   const [catalogs, setCatalogs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
+  const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
+  const [scaleReadings, setScaleReadings] = useState([]);
   
   // Fabric lot form state
   const [lotForm, setLotForm] = useState({
