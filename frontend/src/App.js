@@ -1138,15 +1138,9 @@ function App() {
                         <Label htmlFor="color">Color</Label>
                         <Input id="color" value={lotForm.color} onChange={(e) => setLotForm({...lotForm, color: e.target.value})} placeholder="Blue" required data-testid="color-input" />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="quantity">Fabric Quantity (kg)</Label>
-                          <Input id="quantity" type="number" step="0.01" value={lotForm.quantity} onChange={(e) => setLotForm({...lotForm, quantity: e.target.value})} placeholder="100" required data-testid="quantity-input" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="rib-quantity">Rib Quantity (kg)</Label>
-                          <Input id="rib-quantity" type="number" step="0.01" value={lotForm.rib_quantity} onChange={(e) => setLotForm({...lotForm, rib_quantity: e.target.value})} placeholder="20" required data-testid="rib-quantity-input" />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="rib-quantity">Rib Quantity (kg)</Label>
+                        <Input id="rib-quantity" type="number" step="0.01" value={lotForm.rib_quantity} onChange={(e) => setLotForm({...lotForm, rib_quantity: e.target.value})} placeholder="20" required data-testid="rib-quantity-input" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="rate-per-kg">Rate per kg (₹)</Label>
