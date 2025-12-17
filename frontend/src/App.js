@@ -65,7 +65,8 @@ function App() {
     color: "",
     quantity: "",
     rib_quantity: "",
-    rate_per_kg: ""
+    rate_per_kg: "",
+    number_of_rolls: 1
   });
   const [lotDialogOpen, setLotDialogOpen] = useState(false);
   const [availableCuttingOrders, setAvailableCuttingOrders] = useState([]);
