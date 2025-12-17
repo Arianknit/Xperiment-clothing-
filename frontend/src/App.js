@@ -1639,7 +1639,7 @@ function App() {
                               <SelectContent>
                                 {fabricLots.map((lot) => (
                                   <SelectItem key={lot.id} value={lot.id}>
-                                    {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg available)
+                                    {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity > 0 ? `${lot.remaining_quantity} kg available` : 'Pending weighing'})
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -1647,10 +1647,13 @@ function App() {
                             {cuttingForm.fabric_lot_id && (() => {
                               const selectedLot = fabricLots.find(l => l.id === cuttingForm.fabric_lot_id);
                               return selectedLot ? (
-                                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                                  <p className="text-xs text-blue-700">
-                                    <strong>Available:</strong> Fabric: {selectedLot.remaining_quantity} kg | Rib: {selectedLot.remaining_rib_quantity} kg
+                                <div className={`mt-2 p-2 rounded border ${selectedLot.remaining_quantity > 0 ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'}`}>
+                                  <p className={`text-xs ${selectedLot.remaining_quantity > 0 ? 'text-blue-700' : 'text-amber-700'}`}>
+                                    <strong>Available:</strong> Fabric: {selectedLot.remaining_quantity > 0 ? `${selectedLot.remaining_quantity} kg` : 'Pending weighing'} | Rib: {selectedLot.remaining_rib_quantity} kg
                                   </p>
+                                  {selectedLot.remaining_quantity === 0 && (
+                                    <p className="text-xs text-amber-600 mt-1">⚠️ Please weigh fabric rolls first before creating cutting order</p>
+                                  )}
                                 </div>
                               ) : null;
                             })()}
