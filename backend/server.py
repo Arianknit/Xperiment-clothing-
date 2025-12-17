@@ -65,8 +65,8 @@ class CuttingOrder(BaseModel):
     cutting_lot_number: Optional[str] = ""
     cutting_master_name: Optional[str] = ""
     cutting_date: datetime
-    fabric_lot_id: str
-    lot_number: str
+    fabric_lot_id: Optional[str] = None
+    lot_number: Optional[str] = None
     color: Optional[str] = ""
     category: str  # Kids, Mens, Women
     style_type: str
