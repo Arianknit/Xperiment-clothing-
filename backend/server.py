@@ -46,6 +46,8 @@ class FabricLot(BaseModel):
     total_amount: float
     remaining_quantity: float
     remaining_rib_quantity: float
+    number_of_rolls: Optional[int] = 1
+    roll_numbers: Optional[List[str]] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class FabricLotCreate(BaseModel):
