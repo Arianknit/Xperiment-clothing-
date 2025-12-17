@@ -327,6 +327,26 @@ function App() {
     }
   };
 
+  const handleRollWeightsSubmit = async () => {
+    try {
+      setLoading(true);
+      await axios.put(`${API}/fabric-lots/${selectedLotForWeights.id}/roll-weights`, {
+        scale_readings: scaleReadings
+      });
+      toast.success("Roll weights updated successfully!");
+      setRollWeightsDialogOpen(false);
+      setSelectedLotForWeights(null);
+      setScaleReadings([]);
+      fetchFabricLots();
+    } catch (error) {
+      console.error("Error updating roll weights:", error);
+      const errorMessage = error.response?.data?.detail || "Failed to update roll weights";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteLot = async (lotId) => {
     if (!window.confirm("Are you sure you want to delete this fabric lot?")) return;
     
