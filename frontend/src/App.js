@@ -1153,6 +1153,109 @@ function App() {
                 </Dialog>
               </div>
 
+              {/* Roll Weights Dialog */}
+              <Dialog open={rollWeightsDialogOpen} onOpenChange={setRollWeightsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>⚖️ Add Roll Weights - {selectedLotForWeights?.lot_number}</DialogTitle>
+                    <DialogDescription>
+                      Enter the cumulative scale reading after placing each roll on the scale. The system will calculate individual roll weights.
+                    </DialogDescription>
+                  </DialogHeader>
+                  {selectedLotForWeights && (
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="font-semibold text-blue-900 mb-2">📝 How it works:</h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li>1️⃣ Place Roll 1 on scale → Enter the scale reading (e.g., 22 kg)</li>
+                          <li>2️⃣ Add Roll 2 (keep Roll 1 on scale) → Enter scale reading (e.g., 45 kg)</li>
+                          <li>3️⃣ Add Roll 3 (keep Rolls 1 & 2 on scale) → Enter scale reading (e.g., 70 kg)</li>
+                          <li>✅ System calculates: Roll 1 = 22kg, Roll 2 = 23kg, Roll 3 = 25kg</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {selectedLotForWeights.roll_numbers.map((rollNumber, index) => (
+                          <div key={index} className="bg-slate-50 p-4 rounded-lg border">
+                            <div className="flex items-center justify-between mb-2">
+                              <div>
+                                <span className="font-semibold text-slate-800">Roll {index + 1}:</span>
+                                <span className="ml-2 text-sm font-mono text-purple-600">{rollNumber}</span>
+                              </div>
+                              {index > 0 && scaleReadings[index] && scaleReadings[index-1] && (
+                                <div className="text-right">
+                                  <p className="text-xs text-slate-500">Calculated Weight</p>
+                                  <p className="text-lg font-bold text-green-600">
+                                    {(parseFloat(scaleReadings[index]) - parseFloat(scaleReadings[index-1])).toFixed(2)} kg
+                                  </p>
+                                </div>
+                              )}
+                              {index === 0 && scaleReadings[0] && (
+                                <div className="text-right">
+                                  <p className="text-xs text-slate-500">Calculated Weight</p>
+                                  <p className="text-lg font-bold text-green-600">
+                                    {parseFloat(scaleReadings[0]).toFixed(2)} kg
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder={`Scale reading after Roll ${index + 1}`}
+                                value={scaleReadings[index]}
+                                onChange={(e) => {
+                                  const newReadings = [...scaleReadings];
+                                  newReadings[index] = e.target.value;
+                                  setScaleReadings(newReadings);
+                                }}
+                                className="flex-1"
+                                disabled={index > 0 && !scaleReadings[index - 1]}
+                              />
+                              <span className="text-slate-600">kg</span>
+                            </div>
+                            {index > 0 && !scaleReadings[index - 1] && (
+                              <p className="text-xs text-amber-600 mt-1">⚠️ Enter Roll {index} weight first</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-green-900">Total Weight:</span>
+                          <span className="text-2xl font-bold text-green-600">
+                            {scaleReadings[scaleReadings.length - 1] || 0} kg
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            setRollWeightsDialogOpen(false);
+                            setSelectedLotForWeights(null);
+                            setScaleReadings([]);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleRollWeightsSubmit}
+                          disabled={loading || scaleReadings.some(r => !r || r === '')}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {loading ? "Saving..." : "Save Weights"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
               <div className="grid grid-cols-1 gap-4">
                 {fabricLots.map((lot) => (
                   <Card key={lot.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`lot-card-${lot.id}`}>
