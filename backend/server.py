@@ -720,6 +720,53 @@ async def get_outsourcing_order(order_id: str):
     
     return order
 
+@api_router.get("/outsourcing-orders/overdue/reminders")
+async def get_overdue_outsourcing_orders():
+    """
+    Get outsourcing orders that have been sent but not received for more than 7 days
+    """
+    # Calculate cutoff date (7 days ago)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
+    
+    # Find orders with status 'Sent' and dc_date older than 7 days
+    orders = await db.outsourcing_orders.find(
+        {"status": "Sent"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    overdue_orders = []
+    
+    for order in orders:
+        # Parse dc_date
+        dc_date = order.get('dc_date')
+        if isinstance(dc_date, str):
+            dc_date = datetime.fromisoformat(dc_date)
+        
+        # Check if overdue (more than 7 days)
+        if dc_date and dc_date < cutoff_date:
+            days_pending = (datetime.now(timezone.utc) - dc_date).days
+            
+            overdue_orders.append({
+                "id": order['id'],
+                "dc_number": order['dc_number'],
+                "cutting_lot_number": order.get('cutting_lot_number', 'N/A'),
+                "operation_type": order['operation_type'],
+                "unit_name": order['unit_name'],
+                "dc_date": dc_date.isoformat(),
+                "days_pending": days_pending,
+                "total_quantity": order.get('total_quantity', 0),
+                "category": order.get('category', ''),
+                "style_type": order.get('style_type', '')
+            })
+    
+    # Sort by days_pending (most overdue first)
+    overdue_orders.sort(key=lambda x: x['days_pending'], reverse=True)
+    
+    return {
+        "count": len(overdue_orders),
+        "overdue_orders": overdue_orders
+    }
+
 @api_router.put("/outsourcing-orders/{order_id}", response_model=OutsourcingOrder)
 async def update_outsourcing_order(order_id: str, order_update: OutsourcingOrderUpdate):
     # Get existing order
