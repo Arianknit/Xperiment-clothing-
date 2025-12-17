@@ -404,12 +404,36 @@ async def get_fabric_lot(lot_id: str):
 
 @api_router.delete("/fabric-lots/{lot_id}")
 async def delete_fabric_lot(lot_id: str):
+    """
+    Return/Delete a fabric lot (for wrong fabric received or mistakes)
+    """
+    # Check if fabric has been used in any cutting orders
+    fabric_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not fabric_lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
+    
+    # Check if fabric has been used
+    cutting_orders = await db.cutting_orders.find(
+        {"fabric_lot_id": lot_id},
+        {"_id": 0}
+    ).to_list(10)
+    
+    if cutting_orders:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot return fabric lot {fabric_lot.get('lot_number', 'N/A')}. It has been used in {len(cutting_orders)} cutting order(s). Please delete those orders first."
+        )
+    
     result = await db.fabric_lots.delete_one({"id": lot_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Fabric lot not found")
     
-    return {"message": "Fabric lot deleted successfully"}
+    return {
+        "message": f"Fabric lot {fabric_lot.get('lot_number', 'N/A')} returned successfully",
+        "lot_number": fabric_lot.get('lot_number', 'N/A'),
+        "quantity_returned": fabric_lot.get('quantity', 0)
+    }
 
 
 # Cutting Order Routes
