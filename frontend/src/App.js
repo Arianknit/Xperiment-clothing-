@@ -1528,7 +1528,17 @@ function App() {
                             <SelectContent>
                               {cuttingOrders.map((order) => (
                                 <SelectItem key={order.id} value={order.id}>
-                                  {order.lot_number} - {order.style_type} ({order.total_quantity} pcs)
+                                  <div className="flex flex-col py-1">
+                                    <div className="font-semibold text-slate-900">
+                                      {order.cutting_lot_number || order.lot_number} - {order.style_type}
+                                    </div>
+                                    <div className="text-xs text-slate-600 mt-1">
+                                      <span className="font-medium">{order.category}</span>
+                                      {order.color && <span> • Color: {order.color}</span>}
+                                      {order.lot_number && order.lot_number !== 'N/A' && <span> • Fabric Lot: {order.lot_number}</span>}
+                                      <span> • {order.total_quantity} pcs</span>
+                                    </div>
+                                  </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>
