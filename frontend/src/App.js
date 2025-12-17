@@ -1628,6 +1628,48 @@ function App() {
                           </Select>
                         </div>
                       </div>
+                      {(() => {
+                        // Check if selected operation already exists on selected cutting order
+                        const selectedOrder = availableCuttingOrders.find(o => o.id === outsourcingForm.cutting_order_id);
+                        const isDuplicate = selectedOrder && outsourcingForm.operation_type && 
+                                          selectedOrder.completed_operations && 
+                                          selectedOrder.completed_operations.includes(outsourcingForm.operation_type);
+                        
+                        if (isDuplicate) {
+                          // Find the existing outsourcing order details
+                          const existingOrder = outsourcingOrders.find(
+                            o => o.cutting_order_id === outsourcingForm.cutting_order_id && 
+                                 o.operation_type === outsourcingForm.operation_type
+                          );
+                          
+                          return (
+                            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                              <div className="flex items-start">
+                                <svg className="h-5 w-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <div className="ml-3">
+                                  <h3 className="text-sm font-semibold text-red-800">⚠️ Duplicate Operation Detected!</h3>
+                                  <p className="text-sm text-red-700 mt-1">
+                                    Lot <strong>{selectedOrder.cutting_lot_number}</strong> has already been sent for <strong>{outsourcingForm.operation_type}</strong> operation.
+                                  </p>
+                                  {existingOrder && (
+                                    <div className="text-xs text-red-600 mt-2 space-y-1">
+                                      <p>• Previously sent to: <strong>{existingOrder.unit_name}</strong></p>
+                                      <p>• Date: <strong>{new Date(existingOrder.dc_date).toLocaleDateString()}</strong></p>
+                                      <p>• DC Number: <strong>{existingOrder.dc_number}</strong></p>
+                                    </div>
+                                  )}
+                                  <p className="text-sm text-red-800 font-semibold mt-2">
+                                    ❌ Cannot send to the same operation again. Please select a different operation or lot.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="operation-type">Operation Type</Label>
