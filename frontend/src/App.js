@@ -1524,6 +1524,43 @@ function App() {
           {/* Outsourcing Tab */}
           <TabsContent value="outsourcing" data-testid="outsourcing-content">
             <div className="space-y-6">
+              {overdueOrders.length > 0 && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-md">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="text-lg font-semibold text-red-800">⚠️ Pending Reminders ({overdueOrders.length})</h3>
+                      <p className="text-sm text-red-700 mt-1">The following lots have been at outsourcing units for more than 7 days without receipt:</p>
+                      <div className="mt-3 space-y-2">
+                        {overdueOrders.slice(0, 5).map((order, idx) => (
+                          <div key={idx} className="bg-white p-3 rounded border-l-2 border-red-400">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-semibold text-slate-800">{order.cutting_lot_number}</span>
+                                <span className="text-slate-600 mx-2">•</span>
+                                <span className="text-slate-700">{order.operation_type}</span>
+                                <span className="text-slate-600 mx-2">•</span>
+                                <span className="text-slate-700">{order.unit_name}</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-red-600 font-bold text-lg">{order.days_pending} days</span>
+                                <p className="text-xs text-slate-500">DC: {order.dc_number}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {overdueOrders.length > 5 && (
+                          <p className="text-sm text-red-600 font-medium mt-2">... and {overdueOrders.length - 5} more overdue orders</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold text-slate-800">Outsourcing Operations</h2>
                 <Dialog open={outsourcingDialogOpen} onOpenChange={setOutsourcingDialogOpen}>
