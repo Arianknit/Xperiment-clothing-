@@ -59,6 +59,7 @@ class FabricLotCreate(BaseModel):
     quantity: float
     rib_quantity: float
     rate_per_kg: float
+    number_of_rolls: Optional[int] = 1
 
 class CuttingOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
