@@ -350,6 +350,18 @@ async def create_fabric_lot(lot: FabricLotCreate):
     if not lot_dict.get('lot_number'):
         lot_dict['lot_number'] = await generate_fabric_lot_number()
     
+    # Generate roll numbers
+    lot_number = lot_dict['lot_number']
+    color = lot_dict['color'].replace(' ', '')  # Remove spaces from color name
+    number_of_rolls = lot_dict.get('number_of_rolls', 1)
+    
+    roll_numbers = []
+    for i in range(1, number_of_rolls + 1):
+        roll_number = f"{lot_number}{color}{i}"
+        roll_numbers.append(roll_number)
+    
+    lot_dict['roll_numbers'] = roll_numbers
+    
     # Calculate total amount
     total_amount = lot_dict['quantity'] * lot_dict['rate_per_kg']
     lot_dict['total_amount'] = round(total_amount, 2)
