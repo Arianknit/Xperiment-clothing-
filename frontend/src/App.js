@@ -186,6 +186,7 @@ function App() {
     fetchIroningOrders();
     fetchIroningReceipts();
     fetchCatalogs();
+    fetchOverdueOrders();
   }, []);
 
   const fetchDashboardStats = async () => {
