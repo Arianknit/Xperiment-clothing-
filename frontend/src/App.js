@@ -1422,6 +1422,16 @@ function App() {
                               <span className="font-semibold">Master:</span> {order.cutting_master_name}
                             </div>
                           )}
+                          {order.completed_operations && order.completed_operations.length > 0 && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs text-slate-500 font-semibold">Operations Done:</span>
+                              {order.completed_operations.map((op, idx) => (
+                                <Badge key={idx} className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                                  ✓ {op}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             <div>
                               <p className="text-xs text-slate-500">Total Qty</p>
