@@ -217,6 +217,16 @@ function App() {
     }
   };
 
+  const fetchAvailableCuttingOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/cutting-orders?exclude_ironing=true`);
+      setAvailableCuttingOrders(response.data);
+    } catch (error) {
+      console.error("Error fetching available cutting orders:", error);
+      toast.error("Failed to fetch available cutting orders");
+    }
+  };
+
   const fetchOutsourcingOrders = async () => {
     try {
       const response = await axios.get(`${API}/outsourcing-orders`);
