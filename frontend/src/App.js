@@ -559,7 +559,9 @@ function App() {
       fetchDashboardStats();
     } catch (error) {
       console.error("Error saving outsourcing order:", error);
-      toast.error("Failed to save outsourcing order");
+      // Show detailed error message from backend if available
+      const errorMessage = error.response?.data?.detail || "Failed to save outsourcing order";
+      toast.error(errorMessage, { duration: 6000 }); // Show for 6 seconds for longer messages
     } finally {
       setLoading(false);
     }
