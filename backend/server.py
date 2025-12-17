@@ -48,6 +48,8 @@ class FabricLot(BaseModel):
     remaining_rib_quantity: float
     number_of_rolls: Optional[int] = 1
     roll_numbers: Optional[List[str]] = []
+    roll_weights: Optional[List[float]] = []  # Individual weight of each roll
+    scale_readings: Optional[List[float]] = []  # Cumulative scale reading after each roll
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class FabricLotCreate(BaseModel):
