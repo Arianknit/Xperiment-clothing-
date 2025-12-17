@@ -1287,6 +1287,156 @@ function App() {
                 </DialogContent>
               </Dialog>
 
+              {/* Return Fabric Dialog */}
+              <Dialog open={returnFabricDialogOpen} onOpenChange={setReturnFabricDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>🗑️ Return Fabric to Supplier - {selectedLotForReturn?.lot_number}</DialogTitle>
+                    <DialogDescription>
+                      Select which rolls to return, specify quantity, and provide reason for return.
+                    </DialogDescription>
+                  </DialogHeader>
+                  {selectedLotForReturn && (
+                    <div className="space-y-4">
+                      <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-amber-800">Total Quantity</p>
+                            <p className="text-lg font-bold text-amber-900">{selectedLotForReturn.quantity} kg</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-amber-800">Remaining</p>
+                            <p className="text-lg font-bold text-amber-900">{selectedLotForReturn.remaining_quantity} kg</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Select Rolls to Return */}
+                      {selectedLotForReturn.roll_numbers && selectedLotForReturn.roll_numbers.length > 0 && (
+                        <div className="space-y-2">
+                          <Label className="text-base font-semibold">Select Rolls to Return</Label>
+                          <div className="bg-slate-50 p-4 rounded-lg border max-h-60 overflow-y-auto">
+                            {selectedLotForReturn.roll_numbers.map((roll, index) => (
+                              <div key={index} className="flex items-center space-x-3 py-2">
+                                <input
+                                  type="checkbox"
+                                  id={`return-roll-${index}`}
+                                  checked={returnForm.returned_rolls.includes(roll)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setReturnForm({
+                                        ...returnForm,
+                                        returned_rolls: [...returnForm.returned_rolls, roll]
+                                      });
+                                    } else {
+                                      setReturnForm({
+                                        ...returnForm,
+                                        returned_rolls: returnForm.returned_rolls.filter(r => r !== roll)
+                                      });
+                                    }
+                                  }}
+                                  className="h-4 w-4"
+                                />
+                                <label htmlFor={`return-roll-${index}`} className="flex-1 cursor-pointer">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-mono text-sm text-purple-600">{roll}</span>
+                                    {selectedLotForReturn.roll_weights && selectedLotForReturn.roll_weights[index] && (
+                                      <span className="text-sm font-semibold text-green-600">
+                                        {selectedLotForReturn.roll_weights[index]} kg
+                                      </span>
+                                    )}
+                                  </div>
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-slate-500">{returnForm.returned_rolls.length} roll(s) selected</p>
+                        </div>
+                      )}
+
+                      {/* Quantity to Return */}
+                      <div className="space-y-2">
+                        <Label htmlFor="return-quantity">Quantity Returning (kg) *</Label>
+                        <Input
+                          id="return-quantity"
+                          type="number"
+                          step="0.01"
+                          value={returnForm.quantity_returned}
+                          onChange={(e) => setReturnForm({...returnForm, quantity_returned: e.target.value})}
+                          placeholder="Enter kg"
+                          required
+                        />
+                      </div>
+
+                      {/* Reason for Return */}
+                      <div className="space-y-2">
+                        <Label htmlFor="return-reason">Reason for Return *</Label>
+                        <Select 
+                          value={returnForm.reason} 
+                          onValueChange={(value) => setReturnForm({...returnForm, reason: value})}
+                        >
+                          <SelectTrigger id="return-reason">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Wrong Color">Wrong Color</SelectItem>
+                            <SelectItem value="Wrong Quality">Wrong Quality</SelectItem>
+                            <SelectItem value="Damaged">Damaged</SelectItem>
+                            <SelectItem value="Defective">Defective</SelectItem>
+                            <SelectItem value="Wrong Type">Wrong Type</SelectItem>
+                            <SelectItem value="Supplier Mistake">Supplier Mistake</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Comments */}
+                      <div className="space-y-2">
+                        <Label htmlFor="return-comments">Additional Comments</Label>
+                        <textarea
+                          id="return-comments"
+                          value={returnForm.comments}
+                          onChange={(e) => setReturnForm({...returnForm, comments: e.target.value})}
+                          placeholder="Enter additional details about the return..."
+                          className="w-full min-h-[80px] p-2 border rounded-md"
+                        />
+                      </div>
+
+                      {/* Summary */}
+                      {returnForm.quantity_returned && (
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                          <h4 className="font-semibold text-red-900 mb-2">Return Summary:</h4>
+                          <ul className="text-sm text-red-800 space-y-1">
+                            <li>• Returning: <strong>{returnForm.quantity_returned} kg</strong></li>
+                            <li>• Rolls: <strong>{returnForm.returned_rolls.length > 0 ? returnForm.returned_rolls.join(', ') : 'None selected'}</strong></li>
+                            <li>• New remaining quantity: <strong>{(selectedLotForReturn.remaining_quantity - parseFloat(returnForm.quantity_returned || 0)).toFixed(2)} kg</strong></li>
+                          </ul>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            setReturnFabricDialogOpen(false);
+                            setSelectedLotForReturn(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleReturnFabricSubmit}
+                          disabled={loading || !returnForm.quantity_returned || returnForm.returned_rolls.length === 0}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {loading ? "Processing..." : "Confirm Return"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
               <div className="grid grid-cols-1 gap-4">
                 {fabricLots.map((lot) => (
                   <Card key={lot.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`lot-card-${lot.id}`}>
