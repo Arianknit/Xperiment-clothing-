@@ -1228,34 +1228,47 @@ function App() {
                           <Label htmlFor="cutting-date">Cutting Date</Label>
                           <Input id="cutting-date" type="date" value={cuttingForm.cutting_date} onChange={(e) => setCuttingForm({...cuttingForm, cutting_date: e.target.value})} required data-testid="cutting-date-input" />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="fabric-lot">Select Fabric Lot</Label>
-                          <Select value={cuttingForm.fabric_lot_id} onValueChange={(value) => {
-                            const selectedLot = fabricLots.find(l => l.id === value);
-                            setCuttingForm({...cuttingForm, fabric_lot_id: value, lot_number: selectedLot ? selectedLot.lot_number : ""});
-                          }} required disabled={!!editingCuttingOrder}>
-                            <SelectTrigger id="fabric-lot" data-testid="fabric-lot-select">
-                              <SelectValue placeholder="Choose lot" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {fabricLots.map((lot) => (
-                                <SelectItem key={lot.id} value={lot.id}>
-                                  {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg available)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {cuttingForm.fabric_lot_id && (() => {
-                            const selectedLot = fabricLots.find(l => l.id === cuttingForm.fabric_lot_id);
-                            return selectedLot ? (
-                              <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                                <p className="text-xs text-blue-700">
-                                  <strong>Available:</strong> Fabric: {selectedLot.remaining_quantity} kg | Rib: {selectedLot.remaining_rib_quantity} kg
-                                </p>
-                              </div>
-                            ) : null;
-                          })()}
-                        </div>
+                        {!cuttingForm.is_old_lot && (
+                          <div className="space-y-2">
+                            <Label htmlFor="fabric-lot">Select Fabric Lot</Label>
+                            <Select value={cuttingForm.fabric_lot_id} onValueChange={(value) => {
+                              const selectedLot = fabricLots.find(l => l.id === value);
+                              setCuttingForm({...cuttingForm, fabric_lot_id: value, lot_number: selectedLot ? selectedLot.lot_number : ""});
+                            }} required disabled={!!editingCuttingOrder}>
+                              <SelectTrigger id="fabric-lot" data-testid="fabric-lot-select">
+                                <SelectValue placeholder="Choose lot" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {fabricLots.map((lot) => (
+                                  <SelectItem key={lot.id} value={lot.id}>
+                                    {lot.lot_number} - {lot.fabric_type} ({lot.remaining_quantity} kg available)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {cuttingForm.fabric_lot_id && (() => {
+                              const selectedLot = fabricLots.find(l => l.id === cuttingForm.fabric_lot_id);
+                              return selectedLot ? (
+                                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                                  <p className="text-xs text-blue-700">
+                                    <strong>Available:</strong> Fabric: {selectedLot.remaining_quantity} kg | Rib: {selectedLot.remaining_rib_quantity} kg
+                                  </p>
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                        )}
+                        {cuttingForm.is_old_lot && (
+                          <div className="space-y-2">
+                            <Label htmlFor="color-input">Color (Optional)</Label>
+                            <Input 
+                              id="color-input" 
+                              value={cuttingForm.color} 
+                              onChange={(e) => setCuttingForm({...cuttingForm, color: e.target.value})} 
+                              placeholder="e.g., Red, Blue"
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
