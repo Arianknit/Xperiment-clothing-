@@ -1727,7 +1727,20 @@ function App() {
                       )}
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setOutsourcingDialogOpen(false)} data-testid="outsourcing-cancel-button">Cancel</Button>
-                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || !outsourcingForm.cutting_order_id} data-testid="outsourcing-submit-button">
+                        <Button 
+                          type="submit" 
+                          className="bg-indigo-600 hover:bg-indigo-700" 
+                          disabled={
+                            loading || 
+                            !outsourcingForm.cutting_order_id || 
+                            (() => {
+                              const selectedOrder = availableCuttingOrders.find(o => o.id === outsourcingForm.cutting_order_id);
+                              return selectedOrder && outsourcingForm.operation_type && 
+                                     selectedOrder.completed_operations && 
+                                     selectedOrder.completed_operations.includes(outsourcingForm.operation_type);
+                            })()
+                          } 
+                          data-testid="outsourcing-submit-button">
                           {loading ? "Saving..." : editingOutsourcingOrder ? "Update Order" : "Create DC"}
                         </Button>
                       </div>
