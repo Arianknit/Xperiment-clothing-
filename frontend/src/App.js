@@ -1224,6 +1224,21 @@ function App() {
                           </div>
                         </div>
                         <div className="ml-4 flex flex-col gap-2">
+                          {lot.roll_numbers && lot.roll_numbers.length > 0 && (!lot.roll_weights || lot.roll_weights.length === 0) && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => {
+                                setSelectedLotForWeights(lot);
+                                setScaleReadings(new Array(lot.number_of_rolls).fill(''));
+                                setRollWeightsDialogOpen(true);
+                              }} 
+                              className="text-blue-600 border-blue-300 hover:bg-blue-50 text-xs"
+                            >
+                              <Weight className="h-3 w-3 mr-1" />
+                              Add Weights
+                            </Button>
+                          )}
                           <Button 
                             size="sm" 
                             variant="outline" 
