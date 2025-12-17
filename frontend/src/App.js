@@ -1347,10 +1347,9 @@ function App() {
                                 setScaleReadings(new Array(lot.number_of_rolls).fill(''));
                                 setRollWeightsDialogOpen(true);
                               }} 
-                              className="text-blue-600 border-blue-300 hover:bg-blue-50 text-xs"
+                              className="text-blue-600 border-blue-300 hover:bg-blue-50 text-xs flex items-center gap-1"
                             >
-                              <Weight className="h-3 w-3 mr-1" />
-                              Add Weights
+                              ⚖️ Add Weights
                             </Button>
                           )}
                           <Button 
@@ -1361,10 +1360,9 @@ function App() {
                                 handleDeleteLot(lot.id);
                               }
                             }} 
-                            className="text-red-600 border-red-300 hover:bg-red-50 text-xs"
+                            className="text-red-600 border-red-300 hover:bg-red-50 text-xs flex items-center gap-1"
                           >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Return Fabric
+                            🗑️ Return Fabric
                           </Button>
                         </div>
                       </div>
