@@ -88,6 +88,7 @@ class CuttingOrder(BaseModel):
     used_in_catalog: Optional[bool] = False
     catalog_id: Optional[str] = None
     catalog_name: Optional[str] = None
+    sent_to_ironing: Optional[bool] = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CuttingOrderCreate(BaseModel):
