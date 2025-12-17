@@ -1387,9 +1387,14 @@ function App() {
                             size="sm" 
                             variant="outline" 
                             onClick={() => {
-                              if (window.confirm(`Are you sure you want to return fabric lot ${lot.lot_number}?\n\nThis action will:\n• Remove ${lot.quantity}kg fabric from inventory\n• Delete all roll numbers\n• This cannot be undone if the fabric has been used in cutting orders`)) {
-                                handleDeleteLot(lot.id);
-                              }
+                              setSelectedLotForReturn(lot);
+                              setReturnForm({
+                                returned_rolls: [],
+                                quantity_returned: '',
+                                reason: 'Wrong Color',
+                                comments: ''
+                              });
+                              setReturnFabricDialogOpen(true);
                             }} 
                             className="text-red-600 border-red-300 hover:bg-red-50 text-xs flex items-center gap-1"
                           >
