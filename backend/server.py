@@ -405,8 +405,8 @@ async def create_cutting_order(order: CuttingOrderCreate):
         order_dict['cutting_lot_number'] = await generate_cutting_lot_number()
     
     # Calculate fabric and rib used
-    fabric_used = order_dict['fabric_taken'] - order_dict['fabric_returned']
-    rib_used = order_dict['rib_taken'] - order_dict['rib_returned']
+    fabric_used = order_dict.get('fabric_taken', 0) - order_dict.get('fabric_returned', 0)
+    rib_used = order_dict.get('rib_taken', 0) - order_dict.get('rib_returned', 0)
     
     order_dict['fabric_used'] = round(fabric_used, 2)
     order_dict['rib_used'] = round(rib_used, 2)
@@ -424,31 +424,52 @@ async def create_cutting_order(order: CuttingOrderCreate):
     order_dict['balance'] = total_cutting_amount
     order_dict['payment_status'] = "Unpaid"
     
-    # Get fabric lot to calculate cost and validate availability
-    fabric_lot = await db.fabric_lots.find_one({"id": order_dict['fabric_lot_id']}, {"_id": 0})
-    if not fabric_lot:
-        raise HTTPException(status_code=404, detail="Fabric lot not found")
-    
-    # Validate fabric taken doesn't exceed available quantity
-    if order_dict['fabric_taken'] > fabric_lot.get('remaining_quantity', 0):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Fabric taken ({order_dict['fabric_taken']} kg) exceeds available fabric ({fabric_lot.get('remaining_quantity', 0)} kg) in lot {fabric_lot.get('lot_number')}"
+    # Check if this is an old cutting lot (no fabric entry)
+    if order_dict.get('is_old_lot') or not order_dict.get('fabric_lot_id'):
+        # For old lots, set fabric cost to 0 and skip fabric validation
+        order_dict['total_fabric_cost'] = 0.0
+        order_dict['lot_number'] = order_dict.get('lot_number') or 'N/A'
+        order_dict['fabric_lot_id'] = None
+        
+    else:
+        # Get fabric lot to calculate cost and validate availability
+        fabric_lot = await db.fabric_lots.find_one({"id": order_dict['fabric_lot_id']}, {"_id": 0})
+        if not fabric_lot:
+            raise HTTPException(status_code=404, detail="Fabric lot not found")
+        
+        # Validate fabric taken doesn't exceed available quantity
+        if order_dict['fabric_taken'] > fabric_lot.get('remaining_quantity', 0):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Fabric taken ({order_dict['fabric_taken']} kg) exceeds available fabric ({fabric_lot.get('remaining_quantity', 0)} kg) in lot {fabric_lot.get('lot_number')}"
+            )
+        
+        # Validate rib taken doesn't exceed available rib quantity
+        if order_dict['rib_taken'] > fabric_lot.get('remaining_rib_quantity', 0):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Rib taken ({order_dict['rib_taken']} kg) exceeds available rib ({fabric_lot.get('remaining_rib_quantity', 0)} kg) in lot {fabric_lot.get('lot_number')}"
+            )
+        
+        # Calculate total fabric cost
+        total_fabric_cost = fabric_used * fabric_lot['rate_per_kg']
+        order_dict['total_fabric_cost'] = round(total_fabric_cost, 2)
+        
+        # Auto-populate color from fabric lot if not provided
+        if not order_dict.get('color'):
+            order_dict['color'] = fabric_lot.get('color', '')
+        
+        # Update fabric lot remaining quantities
+        new_remaining_qty = fabric_lot['remaining_quantity'] - fabric_used
+        new_remaining_rib_qty = fabric_lot['remaining_rib_quantity'] - rib_used
+        
+        await db.fabric_lots.update_one(
+            {"id": order_dict['fabric_lot_id']},
+            {"$set": {
+                "remaining_quantity": round(new_remaining_qty, 2),
+                "remaining_rib_quantity": round(new_remaining_rib_qty, 2)
+            }}
         )
-    
-    # Validate rib taken doesn't exceed available rib quantity
-    if order_dict['rib_taken'] > fabric_lot.get('remaining_rib_quantity', 0):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Rib taken ({order_dict['rib_taken']} kg) exceeds available rib ({fabric_lot.get('remaining_rib_quantity', 0)} kg) in lot {fabric_lot.get('lot_number')}"
-        )
-    
-    # Calculate total fabric cost
-    total_fabric_cost = fabric_used * fabric_lot['rate_per_kg']
-    order_dict['total_fabric_cost'] = round(total_fabric_cost, 2)
-    
-    # Auto-populate color from fabric lot
-    order_dict['color'] = fabric_lot.get('color', '')
     
     order_obj = CuttingOrder(**order_dict)
     
@@ -457,18 +478,6 @@ async def create_cutting_order(order: CuttingOrderCreate):
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.cutting_orders.insert_one(doc)
-    
-    # Update fabric lot remaining quantities
-    new_remaining_qty = fabric_lot['remaining_quantity'] - fabric_used
-    new_remaining_rib_qty = fabric_lot['remaining_rib_quantity'] - rib_used
-    
-    await db.fabric_lots.update_one(
-        {"id": order_dict['fabric_lot_id']},
-        {"$set": {
-            "remaining_quantity": round(new_remaining_qty, 2),
-            "remaining_rib_quantity": round(new_remaining_rib_qty, 2)
-        }}
-    )
     
     return order_obj
 
