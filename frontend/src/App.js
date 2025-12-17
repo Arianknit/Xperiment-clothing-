@@ -1525,7 +1525,7 @@ function App() {
                         <div className="space-y-2">
                           <Label htmlFor="cutting-order">Select Cutting Order</Label>
                           <Select value={outsourcingForm.cutting_order_id} onValueChange={(value) => {
-                            const selectedOrder = cuttingOrders.find(o => o.id === value);
+                            const selectedOrder = availableCuttingOrders.find(o => o.id === value);
                             if (selectedOrder) {
                               setOutsourcingForm({
                                 ...outsourcingForm,
@@ -1541,7 +1541,12 @@ function App() {
                               <SelectValue placeholder="Choose order" />
                             </SelectTrigger>
                             <SelectContent>
-                              {cuttingOrders.map((order) => (
+                              {availableCuttingOrders.length === 0 && (
+                                <div className="p-4 text-center text-slate-500 text-sm">
+                                  No cutting orders available. All lots have been sent to ironing.
+                                </div>
+                              )}
+                              {availableCuttingOrders.map((order) => (
                                 <SelectItem key={order.id} value={order.id}>
                                   <div className="flex flex-col py-1">
                                     <div className="font-semibold text-slate-900">
