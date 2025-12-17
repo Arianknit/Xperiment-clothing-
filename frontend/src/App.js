@@ -1494,11 +1494,19 @@ function App() {
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t">
                             <div>
                               <p className="text-xs text-slate-500">Original Fabric</p>
-                              <p className="font-bold text-green-600">{lot.quantity} kg</p>
+                              {lot.quantity > 0 ? (
+                                <p className="font-bold text-green-600">{lot.quantity} kg</p>
+                              ) : (
+                                <p className="font-bold text-amber-500">Pending</p>
+                              )}
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Remaining</p>
-                              <p className="font-bold text-blue-600">{lot.remaining_quantity} kg</p>
+                              {lot.remaining_quantity > 0 ? (
+                                <p className="font-bold text-blue-600">{lot.remaining_quantity} kg</p>
+                              ) : (
+                                <p className="font-bold text-amber-500">Pending</p>
+                              )}
                             </div>
                             <div>
                               <p className="text-xs text-slate-500">Original Rib</p>
