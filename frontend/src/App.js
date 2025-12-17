@@ -75,6 +75,7 @@ function App() {
     cutting_date: new Date().toISOString().split('T')[0],
     fabric_lot_id: "",
     lot_number: "",
+    color: "",
     category: "Kids",
     style_type: "",
     fabric_taken: "",
@@ -94,7 +95,8 @@ function App() {
       'Front R Panel': 0,
       'Back L Panel': 0,
       'Back R Panel': 0
-    }
+    },
+    is_old_lot: false
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
   const [editingCuttingOrder, setEditingCuttingOrder] = useState(null);
