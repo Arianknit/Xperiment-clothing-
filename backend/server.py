@@ -483,8 +483,16 @@ async def create_cutting_order(order: CuttingOrderCreate):
     return order_obj
 
 @api_router.get("/cutting-orders", response_model=List[CuttingOrder])
-async def get_cutting_orders():
-    orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
+async def get_cutting_orders(exclude_ironing: bool = False):
+    """
+    Get cutting orders with optional filtering
+    exclude_ironing: If True, excludes orders that have been sent to ironing
+    """
+    query = {}
+    if exclude_ironing:
+        query["sent_to_ironing"] = {"$ne": True}
+    
+    orders = await db.cutting_orders.find(query, {"_id": 0}).to_list(1000)
     
     for order in orders:
         if isinstance(order['cutting_date'], str):
