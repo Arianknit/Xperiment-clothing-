@@ -1193,6 +1193,30 @@ function App() {
                           <strong>ℹ️ Cutting Lot Number:</strong> Will be auto-generated (e.g., cut 001, cut 002, etc.)
                         </p>
                       </div>
+                      <div className="flex items-center space-x-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <input
+                          type="checkbox"
+                          id="is-old-lot"
+                          checked={cuttingForm.is_old_lot}
+                          onChange={(e) => {
+                            const isOld = e.target.checked;
+                            setCuttingForm({
+                              ...cuttingForm, 
+                              is_old_lot: isOld,
+                              fabric_lot_id: isOld ? "" : cuttingForm.fabric_lot_id,
+                              lot_number: isOld ? "" : cuttingForm.lot_number,
+                              fabric_taken: isOld ? 0 : cuttingForm.fabric_taken,
+                              fabric_returned: isOld ? 0 : cuttingForm.fabric_returned,
+                              rib_taken: isOld ? 0 : cuttingForm.rib_taken,
+                              rib_returned: isOld ? 0 : cuttingForm.rib_returned
+                            });
+                          }}
+                          className="h-4 w-4"
+                        />
+                        <label htmlFor="is-old-lot" className="text-sm font-medium text-amber-900">
+                          📝 Old Cutting Lot (No Fabric Entry) - For historical data
+                        </label>
+                      </div>
                       <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="cutting-master-name">Cutting Master Name</Label>
