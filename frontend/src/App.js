@@ -463,12 +463,14 @@ function App() {
     try {
       setLoading(true);
       await axios.put(`${API}/fabric-lots/${selectedLotForWeights.id}/roll-weights`, {
-        scale_readings: scaleReadings
+        scale_readings: scaleReadings,
+        restart_points: restartPoints
       });
       toast.success("Roll weights updated successfully!");
       setRollWeightsDialogOpen(false);
       setSelectedLotForWeights(null);
       setScaleReadings([]);
+      setRestartPoints([]);
       fetchFabricLots();
     } catch (error) {
       console.error("Error updating roll weights:", error);
@@ -476,6 +478,32 @@ function App() {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Calculate individual roll weight considering restart points
+  const calculateRollWeight = (index) => {
+    if (!scaleReadings[index]) return null;
+    const reading = parseFloat(scaleReadings[index]);
+    
+    if (index === 0 || restartPoints.includes(index)) {
+      // First roll or restart point - weight is the reading itself
+      return reading.toFixed(2);
+    } else {
+      // Cumulative - subtract previous reading
+      const prevReading = parseFloat(scaleReadings[index - 1] || 0);
+      return (reading - prevReading).toFixed(2);
+    }
+  };
+  
+  // Toggle restart point for a roll
+  const toggleRestartPoint = (index) => {
+    if (index === 0) return; // Can't restart on first roll
+    
+    if (restartPoints.includes(index)) {
+      setRestartPoints(restartPoints.filter(p => p !== index));
+    } else {
+      setRestartPoints([...restartPoints, index].sort((a, b) => a - b));
     }
   };
 
