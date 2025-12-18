@@ -244,6 +244,7 @@ class OutsourcingOrder(BaseModel):
     cutting_order_ids: Optional[List[str]] = []  # Multiple cutting order IDs
     cutting_lot_number: Optional[str] = ""
     cutting_lot_numbers: Optional[List[str]] = []  # Multiple lot numbers
+    lot_details: Optional[List[Dict]] = []  # Lot-wise details: [{lot_number, cutting_lot_number, category, style_type, color, size_distribution, quantity}]
     lot_number: str  # Fabric lot number
     color: Optional[str] = ""
     category: str
