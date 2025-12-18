@@ -124,6 +124,16 @@ function App() {
     number_of_rolls: 1
   });
   const [lotDialogOpen, setLotDialogOpen] = useState(false);
+  const [editFabricDialogOpen, setEditFabricDialogOpen] = useState(false);
+  const [editingFabricLot, setEditingFabricLot] = useState(null);
+  const [editFabricForm, setEditFabricForm] = useState({
+    fabric_type: "",
+    supplier_name: "",
+    color: "",
+    rate_per_kg: "",
+    remaining_quantity: "",
+    remaining_rib_quantity: ""
+  });
   const [availableCuttingOrders, setAvailableCuttingOrders] = useState([]);
   
   // Cutting order form state
