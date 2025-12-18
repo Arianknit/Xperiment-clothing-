@@ -1050,6 +1050,74 @@ async def delete_cutting_order(order_id: str):
     return {"message": "Cutting order deleted successfully"}
 
 
+# ==================== OUTSOURCING UNIT ROUTES ====================
+
+@api_router.get("/outsourcing-units", response_model=List[OutsourcingUnit])
+async def get_outsourcing_units():
+    """Get all nominated outsourcing units"""
+    units = await db.outsourcing_units.find({}, {"_id": 0}).to_list(100)
+    return units
+
+@api_router.get("/outsourcing-units/by-operation/{operation}")
+async def get_units_by_operation(operation: str):
+    """Get units that handle a specific operation"""
+    units = await db.outsourcing_units.find(
+        {"operations": operation, "is_active": True},
+        {"_id": 0}
+    ).to_list(100)
+    return units
+
+@api_router.post("/outsourcing-units", response_model=OutsourcingUnit)
+async def create_outsourcing_unit(unit: OutsourcingUnitCreate):
+    """Create a new nominated outsourcing unit"""
+    # Check if unit name already exists
+    existing = await db.outsourcing_units.find_one({"unit_name": unit.unit_name})
+    if existing:
+        raise HTTPException(status_code=400, detail="Unit with this name already exists")
+    
+    unit_obj = OutsourcingUnit(**unit.model_dump())
+    doc = unit_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.outsourcing_units.insert_one(doc)
+    return unit_obj
+
+@api_router.put("/outsourcing-units/{unit_id}")
+async def update_outsourcing_unit(unit_id: str, unit: OutsourcingUnitCreate):
+    """Update an outsourcing unit"""
+    existing = await db.outsourcing_units.find_one({"id": unit_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    
+    await db.outsourcing_units.update_one(
+        {"id": unit_id},
+        {"$set": unit.model_dump()}
+    )
+    return {"message": "Unit updated successfully"}
+
+@api_router.delete("/outsourcing-units/{unit_id}")
+async def delete_outsourcing_unit(unit_id: str):
+    """Delete an outsourcing unit"""
+    result = await db.outsourcing_units.delete_one({"id": unit_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    return {"message": "Unit deleted successfully"}
+
+@api_router.put("/outsourcing-units/{unit_id}/toggle-status")
+async def toggle_unit_status(unit_id: str):
+    """Toggle active/inactive status of a unit"""
+    unit = await db.outsourcing_units.find_one({"id": unit_id}, {"_id": 0})
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    
+    new_status = not unit.get('is_active', True)
+    await db.outsourcing_units.update_one(
+        {"id": unit_id},
+        {"$set": {"is_active": new_status}}
+    )
+    return {"message": f"Unit {'activated' if new_status else 'deactivated'} successfully"}
+
+
 # Outsourcing Order Routes
 @api_router.post("/outsourcing-orders", response_model=OutsourcingOrder)
 async def create_outsourcing_order(order: OutsourcingOrderCreate):
