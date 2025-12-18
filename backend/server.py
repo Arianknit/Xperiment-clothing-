@@ -272,11 +272,14 @@ class IroningReceipt(BaseModel):
     sent_distribution: Dict[str, int]
     received_distribution: Dict[str, int]
     shortage_distribution: Dict[str, int]
+    mistake_distribution: Optional[Dict[str, int]] = {}  # Mistakes in received goods
     total_sent: int
     total_received: int
     total_shortage: int
+    total_mistakes: Optional[int] = 0  # Total mistake pieces
     rate_per_pcs: float
     shortage_debit_amount: float
+    mistake_debit_amount: Optional[float] = 0.0  # Debit for mistakes
     master_pack_ratio: Optional[Dict[str, int]] = {}
     complete_packs: Optional[int] = 0
     loose_pieces: Optional[int] = 0
