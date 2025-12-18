@@ -4237,12 +4237,39 @@ async def get_unit_pending_bills(unit_name: str):
 @api_router.post("/units/payment")
 async def record_unit_payment(payment: UnitPayment):
     """
-    Record payment for a unit across multiple orders (outsourcing and ironing)
-    Automatically allocates payment to pending orders for that unit
+    Record payment (credit) or debit for a unit
+    Credit: Payment to unit, reduces pending balance
+    Debit: Additional charge/advance to unit, increases pending balance
     """
     unit_name = payment.unit_name
-    payment_amount = payment.amount
+    amount = payment.amount
+    transaction_type = payment.transaction_type  # "credit" or "debit"
     
+    # Record transaction in unit_transactions collection
+    transaction_record = {
+        "id": str(uuid4()),
+        "unit_name": unit_name,
+        "amount": amount,
+        "transaction_type": transaction_type,
+        "payment_method": payment.payment_method,
+        "notes": payment.notes,
+        "transaction_date": payment.payment_date.isoformat() if isinstance(payment.payment_date, datetime) else payment.payment_date,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.unit_transactions.insert_one(transaction_record)
+    
+    # Handle DEBIT transaction (add charge to unit)
+    if transaction_type == "debit":
+        # Create a debit record that increases pending balance
+        return {
+            "message": f"Debit of ₹{amount} recorded for {unit_name}",
+            "unit_name": unit_name,
+            "transaction_type": "debit",
+            "amount": amount,
+            "notes": payment.notes
+        }
+    
+    # Handle CREDIT transaction (payment to unit)
     # Get all outsourcing orders for this unit with pending balance
     outsourcing_orders = await db.outsourcing_orders.find(
         {
@@ -4278,16 +4305,34 @@ async def record_unit_payment(payment: UnitPayment):
     for order in ironing_orders:
         total_pending += order.get('balance', 0)
     
-    if total_pending == 0:
+    # Get total debits for this unit
+    debit_transactions = await db.unit_transactions.find(
+        {"unit_name": unit_name, "transaction_type": "debit"},
+        {"_id": 0}
+    ).to_list(1000)
+    total_debits = sum(t.get('amount', 0) for t in debit_transactions)
+    
+    # Get total credits already paid
+    credit_transactions = await db.unit_transactions.find(
+        {"unit_name": unit_name, "transaction_type": "credit"},
+        {"_id": 0}
+    ).to_list(1000)
+    # Exclude current transaction from count
+    total_credits_paid = sum(t.get('amount', 0) for t in credit_transactions) - amount
+    
+    # Effective pending = order pending + debits - credits already paid
+    effective_pending = total_pending + total_debits - max(0, total_credits_paid)
+    
+    if effective_pending <= 0 and total_pending == 0:
         raise HTTPException(
             status_code=400,
             detail=f"No pending bills found for unit: {unit_name}"
         )
     
-    if payment_amount > total_pending:
+    if amount > effective_pending and effective_pending > 0:
         raise HTTPException(
             status_code=400,
-            detail=f"Payment amount (₹{payment_amount}) exceeds total pending bills (₹{total_pending:.2f}) for unit: {unit_name}"
+            detail=f"Payment amount (₹{amount}) exceeds total pending (₹{effective_pending:.2f}) for unit: {unit_name}"
         )
     
     # Allocate payment to orders (oldest first)
@@ -4300,7 +4345,7 @@ async def record_unit_payment(payment: UnitPayment):
     # Sort by date (oldest first)
     all_orders.sort(key=lambda x: x['order']['dc_date'])
     
-    remaining_payment = payment_amount
+    remaining_payment = amount
     allocations = []
     
     for item in all_orders:
@@ -4351,9 +4396,10 @@ async def record_unit_payment(payment: UnitPayment):
     return {
         "message": "Payment recorded successfully",
         "unit_name": unit_name,
-        "total_payment": payment_amount,
+        "transaction_type": "credit",
+        "total_payment": amount,
         "total_pending_before": round(total_pending, 2),
-        "total_pending_after": round(total_pending - payment_amount, 2),
+        "total_pending_after": round(total_pending - amount, 2),
         "allocations": allocations
     }
 
