@@ -3319,6 +3319,42 @@ function App() {
                   )}
                 </div>
               </div>
+              
+              {/* Mistakes Section */}
+              <div className="space-y-2">
+                <Label className="text-orange-700">⚠️ Mistakes (Defective pieces - will be debited)</Label>
+                <div className="grid grid-cols-4 gap-2 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                  {Object.entries(selectedOutsourcingOrder.size_distribution).map(([size, sentQty]) => (
+                    <div key={`mistake-${size}`} className="space-y-1">
+                      <Label className="text-xs text-orange-700">{size}</Label>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max={receiptForm.received_distribution[size] || 0}
+                        value={receiptForm.mistake_distribution[size] || ''} 
+                        onChange={(e) => setReceiptForm({
+                          ...receiptForm,
+                          mistake_distribution: {
+                            ...receiptForm.mistake_distribution,
+                            [size]: parseInt(e.target.value) || 0
+                          }
+                        })}
+                        placeholder="0"
+                        className="h-8 border-orange-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {getTotalQty(receiptForm.mistake_distribution) > 0 && (
+                  <div className="bg-orange-100 p-2 rounded border border-orange-300">
+                    <p className="text-sm font-semibold text-orange-700">
+                      Total Mistakes: {getTotalQty(receiptForm.mistake_distribution)} pcs 
+                      (Debit: ₹{(getTotalQty(receiptForm.mistake_distribution) * selectedOutsourcingOrder.rate_per_pcs).toFixed(2)})
+                    </p>
+                  </div>
+                )}
+              </div>
+              
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setReceiptDialogOpen(false)} data-testid="receipt-cancel-button">Cancel</Button>
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading} data-testid="receipt-submit-button">
