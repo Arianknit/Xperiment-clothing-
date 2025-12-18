@@ -742,7 +742,8 @@ function App() {
       setIroningReceiptForm({
         ironing_order_id: "",
         receipt_date: new Date().toISOString().split('T')[0],
-        received_distribution: {}
+        received_distribution: {},
+        mistake_distribution: {}
       });
       setSelectedIroningOrder(null);
       fetchIroningOrders();
