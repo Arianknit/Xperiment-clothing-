@@ -3716,19 +3716,7 @@ async def get_fabric_inventory_report(
                 </tr>
             </thead>
             <tbody>
-                {''.join([f"""
-                <tr>
-                    <td><strong>{l.get('lot_number', 'N/A')}</strong></td>
-                    <td>{l.get('supplier_name', 'N/A')}</td>
-                    <td>{l.get('fabric_type', 'N/A')}</td>
-                    <td>{l.get('color', 'N/A')}</td>
-                    <td>{len(l.get('rolls', []))}</td>
-                    <td>{l.get('total_quantity', 0):.2f}</td>
-                    <td>{l.get('total_quantity', 0) - l.get('remaining_quantity', 0):.2f}</td>
-                    <td><strong>{l.get('remaining_quantity', 0):.2f}</strong></td>
-                    <td><span class="{'in-stock' if l.get('remaining_quantity', 0) > 0 else 'exhausted'}">{'In Stock' if l.get('remaining_quantity', 0) > 0 else 'Exhausted'}</span></td>
-                </tr>
-                """ for l in lots]) if lots else '<tr><td colspan="9" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+                {generate_fabric_rows(lots) if lots else '<tr><td colspan="9" style="text-align: center; padding: 20px;">No records found</td></tr>'}
             </tbody>
         </table>
         
