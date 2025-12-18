@@ -173,8 +173,14 @@ function App() {
     catalog_name: "",
     catalog_code: "",
     description: "",
+    image_url: "",
     lot_numbers: []
   });
+  const [catalogImageFile, setCatalogImageFile] = useState(null);
+  const [catalogImagePreview, setCatalogImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [viewImageDialog, setViewImageDialog] = useState(false);
+  const [viewImageUrl, setViewImageUrl] = useState(null);
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState(null);
