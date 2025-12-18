@@ -287,3 +287,26 @@
 3. ✅ Frontend: Image thumbnail on catalog card - working
 4. ✅ Frontend: Full view dialog on image click - working
 
+
+## All 3 Tasks Implementation
+
+### Task 1 (P1): Fabric Return - Already implemented
+- Backend endpoint: POST /api/fabric-lots/{lot_id}/return
+- Frontend: Return Fabric dialog with roll selection
+- Status: WORKING
+
+### Task 2 (P2): Unit Payment Frontend UI
+- Added "Pay Unit" button in Outsourcing tab
+- Dialog with unit dropdown and pending bills display
+- Backend endpoints: GET /api/units/{unit_name}/pending-bills, POST /api/units/payment
+- Shows breakdown: Outsourcing pending, Ironing pending, Total
+- Payment methods: Cash, Bank Transfer, UPI, Cheque
+- Status: WORKING
+
+### Task 3 (P3): Mistake Tracking in Receipts
+- Added mistake_distribution field to OutsourcingReceipt and IroningReceipt models
+- Backend calculates mistake_debit_amount
+- Frontend shows "Mistakes" input section in receipt dialogs
+- Displays total mistakes and debit amount
+- Status: WORKING
+
