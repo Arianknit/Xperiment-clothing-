@@ -1291,7 +1291,7 @@ ${sizeDetails}
 
 ${order.notes ? `📝 Notes: ${order.notes}` : ''}
 ━━━━━━━━━━━━━━━━━
-_Garment Manufacturing Pro_`;
+_Arian Knit Fab_`;
   };
 
   const generateReminderMessage = (order) => {
@@ -1308,7 +1308,7 @@ _Garment Manufacturing Pro_`;
 
 🙏 Please arrange delivery at the earliest.
 ━━━━━━━━━━━━━━━━━
-_Garment Manufacturing Pro_`;
+_Arian Knit Fab_`;
   };
 
   const generatePaymentMessage = (unitName, amount, method, pendingAmount) => {
@@ -1322,7 +1322,7 @@ _Garment Manufacturing Pro_`;
 ${pendingAmount > 0 ? `⏳ *Remaining Balance:* ₹${pendingAmount}` : '✅ *All dues cleared!*'}
 ━━━━━━━━━━━━━━━━━
 Thank you for your service!
-_Garment Manufacturing Pro_`;
+_Arian Knit Fab_`;
   };
 
   const generatePaymentReminderMessage = (unitName, totalPending, billsCount, bills) => {
@@ -1342,7 +1342,7 @@ ${billDetails}${bills.length > 5 ? `\n... and ${bills.length - 5} more` : ''}
 
 🙏 Please arrange payment at the earliest.
 ━━━━━━━━━━━━━━━━━
-_Garment Manufacturing Pro_`;
+_Arian Knit Fab_`;
   };
 
   const openWhatsApp = (phone, message) => {
@@ -1574,7 +1574,7 @@ _Garment Manufacturing Pro_`;
             <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-4 rounded-2xl shadow-lg inline-block mx-auto mb-4">
               <Factory className="h-10 w-10 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold text-slate-800">Garment Manufacturing Pro</CardTitle>
+            <CardTitle className="text-2xl font-bold text-slate-800">Arian Knit Fab Production Pro</CardTitle>
             <CardDescription>Sign in to continue</CardDescription>
           </CardHeader>
           <CardContent>
@@ -1656,7 +1656,7 @@ _Garment Manufacturing Pro_`;
               </div>
               <div>
                 <h1 className="text-lg md:text-2xl font-bold text-slate-800" data-testid="app-title">
-                  {isMobile ? 'GarmentPro' : 'Garment Manufacturing Pro'}
+                  {isMobile ? 'Arian Knit' : 'Arian Knit Fab Production Pro'}
                 </h1>
                 <p className="text-xs md:text-sm text-slate-500 hidden sm:block">Complete Production Management System</p>
               </div>
