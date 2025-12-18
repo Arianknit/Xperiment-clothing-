@@ -4617,11 +4617,18 @@ _Arian Knit Fab_`;
                         </div>
 
                         <div className="bg-slate-50 p-3 rounded-lg border">
-                          <p className="text-xs text-slate-600 mb-2">Lot Numbers:</p>
+                          <p className="text-xs text-slate-600 mb-2">Lot Numbers with Colors:</p>
                           <div className="flex flex-wrap gap-2">
-                            {catalog.lot_numbers.map((lot) => (
-                              <Badge key={lot} variant="outline" className="bg-white">{lot}</Badge>
-                            ))}
+                            {catalog.lot_numbers.map((lotNum) => {
+                              const cuttingOrder = cuttingOrders.find(co => co.lot_number === lotNum);
+                              const color = cuttingOrder?.color || 'N/A';
+                              return (
+                                <Badge key={lotNum} variant="outline" className="bg-white flex items-center gap-1">
+                                  <span className="font-semibold">{lotNum}</span>
+                                  <span className="text-purple-600">🎨 {color}</span>
+                                </Badge>
+                              );
+                            })}
                           </div>
                         </div>
 
