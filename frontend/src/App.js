@@ -3114,6 +3114,29 @@ _Garment Manufacturing Pro_`;
                             ))}
                           </div>
                         )}
+                        
+                        {/* Send Payment Reminder via WhatsApp */}
+                        {pendingBills.total_pending > 0 && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="w-full border-green-500 text-green-600 hover:bg-green-50 mt-2"
+                            onClick={() => {
+                              const unit = outsourcingUnits.find(u => u.unit_name === unitPaymentForm.unit_name);
+                              openWhatsAppDialog('payment_reminder', {
+                                unitName: unitPaymentForm.unit_name,
+                                totalPending: pendingBills.total_pending,
+                                billsCount: pendingBills.bills_count,
+                                bills: pendingBills.bills
+                              }, unit?.phone || '');
+                            }}
+                            data-testid="whatsapp-payment-reminder"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Send Payment Reminder via WhatsApp
+                          </Button>
+                        )}
                       </div>
                     )}
                     
