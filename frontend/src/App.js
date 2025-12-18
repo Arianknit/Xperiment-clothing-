@@ -2338,85 +2338,92 @@ function App() {
                           <Input id="dc-date" type="date" value={outsourcingForm.dc_date} onChange={(e) => setOutsourcingForm({...outsourcingForm, dc_date: e.target.value})} required data-testid="dc-date-input" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="cutting-order">Select Cutting Order</Label>
-                          <Select value={outsourcingForm.cutting_order_id} onValueChange={(value) => {
-                            const selectedOrder = availableCuttingOrders.find(o => o.id === value);
-                            if (selectedOrder) {
-                              setOutsourcingForm({
-                                ...outsourcingForm,
-                                cutting_order_id: value,
-                                lot_number: selectedOrder.lot_number,
-                                category: selectedOrder.category,
-                                style_type: selectedOrder.style_type,
-                                size_distribution: selectedOrder.size_distribution
-                              });
-                            }
-                          }} required disabled={!!editingOutsourcingOrder}>
-                            <SelectTrigger id="cutting-order" data-testid="cutting-order-select">
-                              <SelectValue placeholder="Choose order" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableCuttingOrders.length === 0 && (
-                                <div className="p-4 text-center text-slate-500 text-sm">
-                                  No cutting orders available. All lots have been sent to ironing.
-                                </div>
-                              )}
-                              {availableCuttingOrders.map((order) => (
-                                <SelectItem key={order.id} value={order.id}>
-                                  <div className="flex flex-col py-1">
-                                    <div className="font-semibold text-slate-900">
-                                      {order.cutting_lot_number || order.lot_number} - {order.style_type}
+                          <Label>Select Cutting Lots (Multiple)</Label>
+                          <div className="border rounded-lg p-3 max-h-60 overflow-y-auto bg-slate-50">
+                            {availableCuttingOrders.length === 0 ? (
+                              <div className="p-4 text-center text-slate-500 text-sm">
+                                No cutting orders available. All lots have been sent to ironing.
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {availableCuttingOrders.map((order) => {
+                                  const isSelected = outsourcingForm.cutting_order_ids.includes(order.id);
+                                  const hasOperation = order.completed_operations?.includes(outsourcingForm.operation_type);
+                                  return (
+                                    <div 
+                                      key={order.id}
+                                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                        isSelected 
+                                          ? 'bg-indigo-100 border-indigo-500 ring-2 ring-indigo-300' 
+                                          : hasOperation 
+                                            ? 'bg-red-50 border-red-200 opacity-60 cursor-not-allowed'
+                                            : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
+                                      }`}
+                                      onClick={() => {
+                                        if (editingOutsourcingOrder || hasOperation) return;
+                                        const newIds = isSelected
+                                          ? outsourcingForm.cutting_order_ids.filter(id => id !== order.id)
+                                          : [...outsourcingForm.cutting_order_ids, order.id];
+                                        setOutsourcingForm({...outsourcingForm, cutting_order_ids: newIds});
+                                      }}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <div className="font-semibold text-slate-900 flex items-center gap-2">
+                                            <input 
+                                              type="checkbox" 
+                                              checked={isSelected} 
+                                              disabled={hasOperation || !!editingOutsourcingOrder}
+                                              onChange={() => {}}
+                                              className="rounded border-slate-300"
+                                            />
+                                            {order.cutting_lot_number || order.lot_number} - {order.style_type}
+                                          </div>
+                                          <div className="text-xs text-slate-600 mt-1 ml-6">
+                                            <span className="font-medium">{order.category}</span>
+                                            {order.color && <span> • {order.color}</span>}
+                                            <span> • {order.total_quantity} pcs</span>
+                                          </div>
+                                        </div>
+                                        {hasOperation && (
+                                          <Badge className="bg-red-100 text-red-700 text-xs">
+                                            {outsourcingForm.operation_type} Done
+                                          </Badge>
+                                        )}
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-slate-600 mt-1">
-                                      <span className="font-medium">{order.category}</span>
-                                      {order.color && <span> • Color: {order.color}</span>}
-                                      {order.lot_number && order.lot_number !== 'N/A' && <span> • Fabric Lot: {order.lot_number}</span>}
-                                      <span> • {order.total_quantity} pcs</span>
-                                    </div>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          {outsourcingForm.cutting_order_ids.length > 0 && (
+                            <div className="bg-indigo-50 p-2 rounded border border-indigo-200">
+                              <p className="text-sm font-semibold text-indigo-700">
+                                ✓ {outsourcingForm.cutting_order_ids.length} lot(s) selected
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       {(() => {
-                        // Check if selected operation already exists on selected cutting order
-                        const selectedOrder = availableCuttingOrders.find(o => o.id === outsourcingForm.cutting_order_id);
-                        const isDuplicate = selectedOrder && outsourcingForm.operation_type && 
-                                          selectedOrder.completed_operations && 
-                                          selectedOrder.completed_operations.includes(outsourcingForm.operation_type);
+                        // Check for duplicates across all selected lots
+                        const duplicateLots = outsourcingForm.cutting_order_ids
+                          .map(id => availableCuttingOrders.find(o => o.id === id))
+                          .filter(order => order?.completed_operations?.includes(outsourcingForm.operation_type));
                         
-                        if (isDuplicate) {
-                          // Find the existing outsourcing order details
-                          const existingOrder = outsourcingOrders.find(
-                            o => o.cutting_order_id === outsourcingForm.cutting_order_id && 
-                                 o.operation_type === outsourcingForm.operation_type
-                          );
-                          
+                        if (duplicateLots.length > 0) {
                           return (
                             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-                              <div className="flex items-start">
-                                <svg className="h-5 w-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                </svg>
-                                <div className="ml-3">
-                                  <h3 className="text-sm font-semibold text-red-800">⚠️ Duplicate Operation Detected!</h3>
-                                  <p className="text-sm text-red-700 mt-1">
-                                    Lot <strong>{selectedOrder.cutting_lot_number}</strong> has already been sent for <strong>{outsourcingForm.operation_type}</strong> operation.
-                                  </p>
-                                  {existingOrder && (
-                                    <div className="text-xs text-red-600 mt-2 space-y-1">
-                                      <p>• Previously sent to: <strong>{existingOrder.unit_name}</strong></p>
-                                      <p>• Date: <strong>{new Date(existingOrder.dc_date).toLocaleDateString()}</strong></p>
-                                      <p>• DC Number: <strong>{existingOrder.dc_number}</strong></p>
-                                    </div>
-                                  )}
-                                  <p className="text-sm text-red-800 font-semibold mt-2">
-                                    ❌ Cannot send to the same operation again. Please select a different operation or lot.
-                                  </p>
-                                </div>
-                              </div>
+                              <h3 className="text-sm font-semibold text-red-800">⚠️ Duplicate Operation Detected!</h3>
+                              <p className="text-sm text-red-700 mt-1">
+                                The following lots already have <strong>{outsourcingForm.operation_type}</strong> operation:
+                              </p>
+                              <ul className="list-disc list-inside text-sm text-red-600 mt-1">
+                                {duplicateLots.map(lot => (
+                                  <li key={lot.id}>{lot.cutting_lot_number}</li>
+                                ))}
+                              </ul>
                             </div>
                           );
                         }
