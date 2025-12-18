@@ -1663,6 +1663,17 @@ _Garment Manufacturing Pro_`;
                   {currentUser?.role}
                 </Badge>
               </div>
+              {currentUser?.role === 'admin' && (
+                <Button 
+                  onClick={() => { fetchAllUsers(); setUsersDialogOpen(true); }}
+                  variant="outline"
+                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                  data-testid="manage-users-button"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Users
+                </Button>
+              )}
               <Button 
                 onClick={handleGenerateBillReport}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
