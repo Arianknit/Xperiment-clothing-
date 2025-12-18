@@ -4140,7 +4140,7 @@ _Garment Manufacturing Pro_`;
               </div>
 
               <div className="space-y-4">
-                {catalogs.map((catalog) => (
+                {filteredCatalogs.map((catalog) => (
                   <Card key={catalog.id} className="shadow-lg border-l-4 border-l-indigo-500" data-testid={`catalog-card-${catalog.id}`}>
                     <CardContent className="pt-6">
                       <div className="space-y-4">
