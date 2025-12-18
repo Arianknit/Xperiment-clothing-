@@ -1573,7 +1573,7 @@ function App() {
                   <DialogHeader>
                     <DialogTitle>⚖️ Add Roll Weights - {selectedLotForWeights?.lot_number}</DialogTitle>
                     <DialogDescription>
-                      Enter the cumulative scale reading after placing each roll on the scale. The system will calculate individual roll weights.
+                      Enter the cumulative scale reading after placing each roll on the scale. Use "Restart Scale" when scale capacity is reached.
                     </DialogDescription>
                   </DialogHeader>
                   {selectedLotForWeights && (
@@ -1581,68 +1581,85 @@ function App() {
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <h4 className="font-semibold text-blue-900 mb-2">📝 How it works:</h4>
                         <ul className="text-sm text-blue-800 space-y-1">
-                          <li>1️⃣ Place Roll 1 on scale → Enter the scale reading (e.g., 22 kg)</li>
-                          <li>2️⃣ Add Roll 2 (keep Roll 1 on scale) → Enter scale reading (e.g., 45 kg)</li>
-                          <li>3️⃣ Add Roll 3 (keep Rolls 1 & 2 on scale) → Enter scale reading (e.g., 70 kg)</li>
-                          <li>✅ System calculates: Roll 1 = 22kg, Roll 2 = 23kg, Roll 3 = 25kg</li>
+                          <li>1️⃣ Place Roll 1 on scale → Enter reading (e.g., 22 kg)</li>
+                          <li>2️⃣ Add Roll 2 on top → Enter reading (e.g., 45 kg)</li>
+                          <li>🔄 <strong>Scale full?</strong> Click "Restart Scale", remove all rolls, weigh fresh</li>
+                          <li>✅ System calculates individual weights automatically</li>
                         </ul>
                       </div>
                       
                       <div className="space-y-3">
                         {selectedLotForWeights.roll_numbers.map((rollNumber, index) => (
-                          <div key={index} className="bg-slate-50 p-4 rounded-lg border">
+                          <div key={index} className={`p-4 rounded-lg border ${restartPoints.includes(index) ? 'bg-amber-50 border-amber-300' : 'bg-slate-50'}`}>
+                            {/* Restart indicator */}
+                            {restartPoints.includes(index) && (
+                              <div className="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-1 rounded mb-2 inline-block">
+                                🔄 Scale Restarted - Fresh Weight
+                              </div>
+                            )}
+                            
                             <div className="flex items-center justify-between mb-2">
                               <div>
                                 <span className="font-semibold text-slate-800">Roll {index + 1}:</span>
                                 <span className="ml-2 text-sm font-mono text-purple-600">{rollNumber}</span>
                               </div>
-                              {index > 0 && scaleReadings[index] && scaleReadings[index-1] && (
+                              {scaleReadings[index] && (
                                 <div className="text-right">
                                   <p className="text-xs text-slate-500">Calculated Weight</p>
                                   <p className="text-lg font-bold text-green-600">
-                                    {(parseFloat(scaleReadings[index]) - parseFloat(scaleReadings[index-1])).toFixed(2)} kg
-                                  </p>
-                                </div>
-                              )}
-                              {index === 0 && scaleReadings[0] && (
-                                <div className="text-right">
-                                  <p className="text-xs text-slate-500">Calculated Weight</p>
-                                  <p className="text-lg font-bold text-green-600">
-                                    {parseFloat(scaleReadings[0]).toFixed(2)} kg
+                                    {calculateRollWeight(index)} kg
                                   </p>
                                 </div>
                               )}
                             </div>
+                            
                             <div className="flex items-center gap-2">
                               <Input
                                 type="number"
                                 step="0.01"
-                                placeholder={`Scale reading after Roll ${index + 1}`}
-                                value={scaleReadings[index]}
+                                placeholder={restartPoints.includes(index) ? `Fresh weight of Roll ${index + 1}` : `Cumulative reading after Roll ${index + 1}`}
+                                value={scaleReadings[index] || ''}
                                 onChange={(e) => {
                                   const newReadings = [...scaleReadings];
                                   newReadings[index] = e.target.value;
                                   setScaleReadings(newReadings);
                                 }}
                                 className="flex-1"
-                                disabled={index > 0 && !scaleReadings[index - 1]}
                               />
                               <span className="text-slate-600">kg</span>
+                              
+                              {/* Restart Scale Button */}
+                              {index > 0 && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={restartPoints.includes(index) ? "default" : "outline"}
+                                  className={restartPoints.includes(index) ? "bg-amber-500 hover:bg-amber-600" : "border-amber-400 text-amber-600 hover:bg-amber-50"}
+                                  onClick={() => toggleRestartPoint(index)}
+                                >
+                                  🔄 {restartPoints.includes(index) ? "Restarted" : "Restart"}
+                                </Button>
+                              )}
                             </div>
-                            {index > 0 && !scaleReadings[index - 1] && (
-                              <p className="text-xs text-amber-600 mt-1">⚠️ Enter Roll {index} weight first</p>
-                            )}
                           </div>
                         ))}
                       </div>
 
                       <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold text-green-900">Total Weight:</span>
+                          <span className="font-semibold text-green-900">Total Weight (All Rolls):</span>
                           <span className="text-2xl font-bold text-green-600">
-                            {scaleReadings[scaleReadings.length - 1] || 0} kg
+                            {scaleReadings.reduce((total, reading, idx) => {
+                              const weight = calculateRollWeight(idx);
+                              return total + (weight ? parseFloat(weight) : 0);
+                            }, 0).toFixed(2)} kg
                           </span>
                         </div>
+                        {restartPoints.length > 0 && (
+                          <p className="text-xs text-green-700 mt-1">
+                            ℹ️ Scale restarted {restartPoints.length} time(s) at: Roll {restartPoints.map(p => p + 1).join(', Roll ')}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex justify-end gap-3 pt-4">
@@ -1653,6 +1670,7 @@ function App() {
                             setRollWeightsDialogOpen(false);
                             setSelectedLotForWeights(null);
                             setScaleReadings([]);
+                            setRestartPoints([]);
                           }}
                         >
                           Cancel
