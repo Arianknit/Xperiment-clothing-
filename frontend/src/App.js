@@ -4242,12 +4242,14 @@ _Garment Manufacturing Pro_`;
                 ))}
               </div>
 
-              {catalogs.length === 0 && (
+              {filteredCatalogs.length === 0 && (
                 <Card className="shadow-lg">
                   <CardContent className="flex flex-col items-center justify-center py-16">
                     <BookOpen className="h-16 w-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 text-lg">No catalogs created yet</p>
-                    <p className="text-slate-400 text-sm mt-2">Create a catalog by clubbing multiple cutting lots</p>
+                    <p className="text-slate-500 text-lg">
+                      {catalogs.length === 0 ? "No catalogs created yet" : "No matching catalogs found"}
+                    </p>
+                    {catalogs.length === 0 && <p className="text-slate-400 text-sm mt-2">Create a catalog by clubbing multiple cutting lots</p>}
                   </CardContent>
                 </Card>
               )}
