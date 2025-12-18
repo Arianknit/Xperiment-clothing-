@@ -3640,6 +3640,129 @@ async def get_catalog_dispatches(catalog_id: str):
 
 
 # Reports Endpoints
+@api_router.get("/reports/fabric-inventory", response_class=HTMLResponse)
+async def get_fabric_inventory_report(
+    status: str = None,
+    supplier: str = None
+):
+    """Generate fabric inventory report"""
+    lots = await db.fabric_lots.find({}, {"_id": 0}).to_list(1000)
+    
+    # Apply filters
+    if status == "in_stock":
+        lots = [l for l in lots if l.get('remaining_quantity', 0) > 0]
+    elif status == "exhausted":
+        lots = [l for l in lots if l.get('remaining_quantity', 0) <= 0]
+    
+    if supplier:
+        lots = [l for l in lots if supplier.lower() in l.get('supplier_name', '').lower()]
+    
+    # Calculate totals
+    total_lots = len(lots)
+    total_rolls = sum(len(l.get('rolls', [])) for l in lots)
+    total_quantity = sum(l.get('total_quantity', 0) for l in lots)
+    total_remaining = sum(l.get('remaining_quantity', 0) for l in lots)
+    total_used = total_quantity - total_remaining
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Fabric Inventory Report</title>
+        <style>
+            @media print {{ @page {{ margin: 1cm; }} body {{ margin: 0; }} .no-print {{ display: none; }} }}
+            body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }}
+            .header {{ text-align: center; border-bottom: 3px solid #8B5CF6; padding-bottom: 20px; margin-bottom: 30px; }}
+            .header h1 {{ margin: 0; color: #8B5CF6; font-size: 28px; }}
+            .filters {{ background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th {{ background: #8B5CF6; color: white; padding: 12px; text-align: left; font-size: 12px; }}
+            td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }}
+            tr:hover {{ background: #f5f5f5; }}
+            .in-stock {{ background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-weight: bold; }}
+            .exhausted {{ background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-weight: bold; }}
+            .summary {{ background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }}
+            .summary-item {{ text-align: center; }}
+            .summary-label {{ font-size: 13px; opacity: 0.9; }}
+            .summary-value {{ font-size: 24px; font-weight: bold; margin-top: 5px; }}
+            .print-btn {{ background: #8B5CF6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }}
+        </style>
+    </head>
+    <body>
+        <button class="print-btn no-print" onclick="window.print()">🖨️ Print Report</button>
+        
+        <div class="header">
+            <h1>📦 FABRIC INVENTORY REPORT</h1>
+            <p style="margin: 10px 0 0 0; color: #666;">Arian Knit Fab | Generated: {datetime.now(timezone.utc).strftime('%d %B %Y, %I:%M %p')}</p>
+        </div>
+        
+        <div class="filters">
+            <strong>Filters:</strong> Status: {status or 'All'} | Supplier: {supplier or 'All'}
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Lot Number</th>
+                    <th>Supplier</th>
+                    <th>Fabric Type</th>
+                    <th>Color</th>
+                    <th>Rolls</th>
+                    <th>Total Qty (kg)</th>
+                    <th>Used (kg)</th>
+                    <th>Remaining (kg)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join([f"""
+                <tr>
+                    <td><strong>{l.get('lot_number', 'N/A')}</strong></td>
+                    <td>{l.get('supplier_name', 'N/A')}</td>
+                    <td>{l.get('fabric_type', 'N/A')}</td>
+                    <td>{l.get('color', 'N/A')}</td>
+                    <td>{len(l.get('rolls', []))}</td>
+                    <td>{l.get('total_quantity', 0):.2f}</td>
+                    <td>{l.get('total_quantity', 0) - l.get('remaining_quantity', 0):.2f}</td>
+                    <td><strong>{l.get('remaining_quantity', 0):.2f}</strong></td>
+                    <td><span class="{'in-stock' if l.get('remaining_quantity', 0) > 0 else 'exhausted'}">{'In Stock' if l.get('remaining_quantity', 0) > 0 else 'Exhausted'}</span></td>
+                </tr>
+                """ for l in lots]) if lots else '<tr><td colspan="9" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            <h3 style="margin: 0 0 20px 0; text-align: center;">INVENTORY SUMMARY</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Lots</div>
+                    <div class="summary-value">{total_lots}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Rolls</div>
+                    <div class="summary-value">{total_rolls}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Quantity</div>
+                    <div class="summary-value">{total_quantity:.2f} kg</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Used</div>
+                    <div class="summary-value">{total_used:.2f} kg</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Remaining</div>
+                    <div class="summary-value">{total_remaining:.2f} kg</div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
 @api_router.get("/reports/cutting", response_class=HTMLResponse)
 async def get_cutting_report(
     start_date: str = None,
@@ -3650,6 +3773,35 @@ async def get_cutting_report(
     
     # Get all cutting orders first (dates are stored as strings)
     orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get outsourcing and ironing data for status tracking
+    outsourcing_orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
+    ironing_orders = await db.ironing_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Build status lookup for each cutting lot
+    lot_status = {}
+    for o in outsourcing_orders:
+        lot_nums = o.get('lot_details', [])
+        for lot in lot_nums:
+            lot_num = lot.get('cutting_lot_number') or o.get('cutting_lot_number')
+            if lot_num:
+                current = lot_status.get(lot_num, {'outsourcing': [], 'ironing': None})
+                current['outsourcing'].append({
+                    'operation': o.get('operation_type'),
+                    'status': o.get('status'),
+                    'unit': o.get('unit_name')
+                })
+                lot_status[lot_num] = current
+    
+    for i in ironing_orders:
+        lot_num = i.get('cutting_lot_number')
+        if lot_num:
+            if lot_num not in lot_status:
+                lot_status[lot_num] = {'outsourcing': [], 'ironing': None}
+            lot_status[lot_num]['ironing'] = {
+                'status': i.get('status'),
+                'unit': i.get('unit_name')
+            }
     
     # Apply filters in Python since dates are strings
     if start_date and end_date:
