@@ -2224,6 +2224,18 @@ _Garment Manufacturing Pro_`;
                               <Barcode className="h-4 w-4 mr-1" />
                               Barcode
                             </Button>
+                            {currentUser?.role === 'admin' && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 text-xs text-red-600 hover:bg-red-50"
+                                onClick={() => handleDeleteFabricLot(lot.id, lot.lot_number)}
+                                data-testid={`delete-fabric-lot-${lot.id}`}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            )}
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
