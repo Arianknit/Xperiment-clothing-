@@ -3623,12 +3623,15 @@ _Garment Manufacturing Pro_`;
                     ? outsourcingOrders.find(o => o.id === receipt.outsourcing_order_id)
                     : ironingOrders.find(o => o.id === receipt.ironing_order_id);
                   return (
-                  <Card key={receipt.id} className="shadow-lg" data-testid={`receipt-card-${receipt.id}`}>
+                  <Card key={`${receipt.type}-${receipt.id}`} className="shadow-lg" data-testid={`receipt-card-${receipt.id}`}>
                     <CardContent className="pt-6">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                          <h3 className="text-xl font-bold text-slate-800">{receipt.dc_number}</h3>
-                          <Badge className="bg-purple-100 text-purple-800 border">{receipt.operation_type}</Badge>
+                          <h3 className="text-xl font-bold text-slate-800">{order?.dc_number || receipt.dc_number}</h3>
+                          <Badge className={receipt.type === 'Outsourcing' ? "bg-purple-100 text-purple-800 border" : "bg-blue-100 text-blue-800 border"}>
+                            {receipt.type}
+                          </Badge>
+                          {receipt.type === 'Outsourcing' && <Badge className="bg-slate-100 text-slate-700 border">{order?.operation_type}</Badge>}
                           {receipt.total_shortage > 0 && (
                             <Badge className="bg-red-100 text-red-800 border border-red-200 flex items-center gap-1">
                               <AlertCircle className="h-3 w-3" />
