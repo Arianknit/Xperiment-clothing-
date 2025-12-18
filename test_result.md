@@ -23,7 +23,7 @@
 
 **Test Date:** 2024-12-19  
 **Test File:** `/app/backend/tests/test_fabric_quantity.py`  
-**API Base URL:** `https://garmentops-2.preview.emergentagent.com/api`
+**API Base URL:** `https://fabrictrack-5.preview.emergentagent.com/api`
 
 #### Test Results Summary:
 - **Total Tests:** 5
@@ -314,7 +314,7 @@
 
 **Test Date:** 2024-12-19  
 **Test File:** `/app/backend/tests/test_all_features.py`  
-**API Base URL:** `https://garmentops-2.preview.emergentagent.com/api`
+**API Base URL:** `https://fabrictrack-5.preview.emergentagent.com/api`
 
 ### Test Results Summary:
 - **Total Tests:** 9
@@ -444,7 +444,7 @@
 
 **Test Date:** 2024-12-18  
 **Test Environment:** Frontend UI Testing with Playwright  
-**Frontend URL:** `https://garmentops-2.preview.emergentagent.com`
+**Frontend URL:** `https://fabrictrack-5.preview.emergentagent.com`
 
 ### Test Results Summary:
 - **Total Tests:** 5 test scenarios
@@ -556,7 +556,7 @@
 
 **Test Date:** 2024-12-18  
 **Test Environment:** Frontend UI Testing with Playwright  
-**Frontend URL:** `https://garmentops-2.preview.emergentagent.com`
+**Frontend URL:** `https://fabrictrack-5.preview.emergentagent.com`
 
 ### Backend Changes
 - Updated OutsourcingOrder model to support:

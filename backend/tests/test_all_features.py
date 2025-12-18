@@ -11,7 +11,7 @@ import sys
 import os
 
 # Get backend URL from environment
-BACKEND_URL = "https://garmentops-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://fabrictrack-5.preview.emergentagent.com/api"
 
 class AllFeaturesTester:
     def __init__(self):
