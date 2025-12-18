@@ -449,7 +449,112 @@ async def generate_cutting_lot_number():
     return f"cut {str(count + 1).zfill(3)}"
 
 
-# Fabric Lot Routes
+# ==================== AUTH ROUTES ====================
+
+@api_router.post("/auth/register")
+async def register_user(user_data: UserCreate):
+    """Register a new user (admin only for first user, then requires admin)"""
+    # Check if any users exist
+    user_count = await db.users.count_documents({})
+    
+    # Check if username already exists
+    existing = await db.users.find_one({"username": user_data.username})
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # First user is automatically admin
+    role = "admin" if user_count == 0 else user_data.role
+    
+    user = User(
+        username=user_data.username,
+        password_hash=hash_password(user_data.password),
+        full_name=user_data.full_name,
+        role=role
+    )
+    
+    doc = user.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.users.insert_one(doc)
+    
+    return {
+        "message": "User registered successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "full_name": user.full_name,
+            "role": role
+        }
+    }
+
+@api_router.post("/auth/login")
+async def login_user(credentials: UserLogin):
+    """Login and get JWT token"""
+    user = await db.users.find_one({"username": credentials.username}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    if not verify_password(credentials.password, user['password_hash']):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    if not user.get('is_active', True):
+        raise HTTPException(status_code=401, detail="Account is disabled")
+    
+    # Update last login
+    await db.users.update_one(
+        {"id": user['id']},
+        {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    token = create_token(user['id'], user['username'], user['role'])
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user['id'],
+            "username": user['username'],
+            "full_name": user['full_name'],
+            "role": user['role']
+        }
+    }
+
+@api_router.get("/auth/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current logged in user info"""
+    return {
+        "id": current_user['id'],
+        "username": current_user['username'],
+        "full_name": current_user['full_name'],
+        "role": current_user['role']
+    }
+
+@api_router.get("/auth/users")
+async def get_all_users(current_user: dict = Depends(get_current_user)):
+    """Get all users (admin only)"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(100)
+    return users
+
+@api_router.put("/auth/users/{user_id}/toggle-status")
+async def toggle_user_status(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Enable/disable a user (admin only)"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    new_status = not user.get('is_active', True)
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": new_status}})
+    
+    return {"message": f"User {'enabled' if new_status else 'disabled'} successfully"}
+
+
+# ==================== FABRIC LOT ROUTES ====================
+
 @api_router.post("/fabric-lots", response_model=FabricLot)
 async def create_fabric_lot(lot: FabricLotCreate):
     lot_dict = lot.model_dump()
