@@ -2541,7 +2541,14 @@ function App() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="operation-type">Operation Type</Label>
-                          <Select value={outsourcingForm.operation_type} onValueChange={(value) => setOutsourcingForm({...outsourcingForm, operation_type: value})} required>
+                          <Select 
+                            value={outsourcingForm.operation_type} 
+                            onValueChange={(value) => {
+                              setOutsourcingForm({...outsourcingForm, operation_type: value, unit_name: ""});
+                              fetchUnitsByOperation(value);
+                            }} 
+                            required
+                          >
                             <SelectTrigger id="operation-type" data-testid="operation-type-select">
                               <SelectValue />
                             </SelectTrigger>
