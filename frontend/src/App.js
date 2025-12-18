@@ -2329,6 +2329,48 @@ _Garment Manufacturing Pro_`;
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold text-slate-800">Cutting Operations</h2>
+              </div>
+              
+              {/* Search and Filter Bar */}
+              <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm border">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search by lot #, master name, style, color..." 
+                    value={cuttingSearch}
+                    onChange={(e) => setCuttingSearch(e.target.value)}
+                    className="pl-10"
+                    data-testid="cutting-search"
+                  />
+                </div>
+                <Select value={cuttingCategoryFilter} onValueChange={setCuttingCategoryFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="Kids">Kids</SelectItem>
+                    <SelectItem value="Mens">Mens</SelectItem>
+                    <SelectItem value="Women">Women</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(cuttingSearch || cuttingCategoryFilter !== "all") && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => { setCuttingSearch(""); setCuttingCategoryFilter("all"); }}
+                    className="text-slate-500"
+                  >
+                    <X className="h-4 w-4 mr-1" /> Clear
+                  </Button>
+                )}
+                <span className="text-sm text-slate-500">
+                  Showing {filteredCuttingOrders.length} of {cuttingOrders.length}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end">
                 <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_master_name: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {}, bundle_distribution: { 'Front': 0, 'Back': 0, 'Sleeve': 0, 'Rib': 0, 'Patti': 0, 'Collar': 0, 'Front L Panel': 0, 'Front R Panel': 0, 'Back L Panel': 0, 'Back R Panel': 0 } }); }} data-testid="add-cutting-button">
