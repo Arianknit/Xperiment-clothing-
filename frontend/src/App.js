@@ -135,7 +135,7 @@ function App() {
   // Outsourcing order form state
   const [outsourcingForm, setOutsourcingForm] = useState({
     dc_date: new Date().toISOString().split('T')[0],
-    cutting_order_id: "",
+    cutting_order_ids: [],
     lot_number: "",
     category: "Kids",
     style_type: "",
