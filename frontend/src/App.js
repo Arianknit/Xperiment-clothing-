@@ -2440,7 +2440,8 @@ function App() {
                     <DialogTrigger asChild>
                       <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { 
                         setEditingOutsourcingOrder(null); 
-                        setOutsourcingForm({ dc_date: new Date().toISOString().split('T')[0], cutting_order_ids: [], operation_type: "Printing", unit_name: "", rate_per_pcs: "", notes: "" }); 
+                        setOutsourcingForm({ dc_date: new Date().toISOString().split('T')[0], cutting_order_ids: [], operation_type: "Printing", unit_name: "", rate_per_pcs: "", notes: "" });
+                        fetchUnitsByOperation("Printing"); 
                         fetchAvailableCuttingOrders();
                       }} data-testid="add-outsourcing-button">
                         <Plus className="h-4 w-4 mr-2" />
