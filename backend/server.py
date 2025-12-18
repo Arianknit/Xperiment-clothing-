@@ -3846,6 +3846,12 @@ async def get_cutting_report(
             th {{ background: #4F46E5; color: white; padding: 12px; text-align: left; font-size: 12px; }}
             td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }}
             tr:hover {{ background: #f5f5f5; }}
+            .status-badge {{ padding: 4px 8px; border-radius: 4px; font-size: 10px; margin: 2px; display: inline-block; }}
+            .status-cutting {{ background: #FEF3C7; color: #92400E; }}
+            .status-outsourcing {{ background: #DBEAFE; color: #1E40AF; }}
+            .status-received {{ background: #D1FAE5; color: #065F46; }}
+            .status-ironing {{ background: #FDE68A; color: #92400E; }}
+            .status-complete {{ background: #10B981; color: white; }}
             .summary {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; }}
             .summary-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }}
             .summary-item {{ text-align: center; }}
