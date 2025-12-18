@@ -2414,6 +2414,18 @@ function App() {
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
+                    className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                    onClick={() => {
+                      fetchOutsourcingUnits();
+                      setUnitsDialogOpen(true);
+                    }}
+                    data-testid="manage-units-button"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Units
+                  </Button>
+                  <Button 
+                    variant="outline" 
                     className="border-green-500 text-green-600 hover:bg-green-50"
                     onClick={() => {
                       fetchAvailableUnits();
