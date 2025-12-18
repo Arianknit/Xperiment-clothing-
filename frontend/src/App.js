@@ -68,6 +68,7 @@ function App() {
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
   const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
   const [scaleReadings, setScaleReadings] = useState([]);
+  const [restartPoints, setRestartPoints] = useState([]);  // Indices where scale was restarted
   const [returnFabricDialogOpen, setReturnFabricDialogOpen] = useState(false);
   const [selectedLotForReturn, setSelectedLotForReturn] = useState(null);
   const [returnForm, setReturnForm] = useState({
