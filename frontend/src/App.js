@@ -2463,25 +2463,42 @@ function App() {
                           data-testid="outsourcing-notes-input"
                         />
                       </div>
-                      {outsourcingForm.cutting_order_id && (
+                      {outsourcingForm.cutting_order_ids.length > 0 && (
                         <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                          <h4 className="font-semibold text-slate-700">Size Distribution</h4>
-                          <div className="grid grid-cols-4 gap-2">
-                            {Object.entries(outsourcingForm.size_distribution).map(([size, qty]) => (
-                              qty > 0 && (
-                                <div key={size} className="bg-white px-3 py-2 rounded border">
-                                  <span className="text-xs font-semibold text-slate-700">{size}:</span>
-                                  <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
+                          <h4 className="font-semibold text-slate-700">Combined Size Distribution</h4>
+                          {(() => {
+                            // Calculate combined size distribution from selected lots
+                            const combinedSizes = {};
+                            outsourcingForm.cutting_order_ids.forEach(id => {
+                              const order = availableCuttingOrders.find(o => o.id === id);
+                              if (order?.size_distribution) {
+                                Object.entries(order.size_distribution).forEach(([size, qty]) => {
+                                  combinedSizes[size] = (combinedSizes[size] || 0) + qty;
+                                });
+                              }
+                            });
+                            const totalQty = Object.values(combinedSizes).reduce((a, b) => a + b, 0);
+                            return (
+                              <>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {Object.entries(combinedSizes).map(([size, qty]) => (
+                                    qty > 0 && (
+                                      <div key={size} className="bg-white px-3 py-2 rounded border">
+                                        <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                        <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
+                                      </div>
+                                    )
+                                  ))}
                                 </div>
-                              )
-                            ))}
-                          </div>
-                          <div className="pt-2 border-t border-indigo-200">
-                            <p className="text-sm text-slate-600">Total: {getTotalQty(outsourcingForm.size_distribution)} pcs</p>
-                            {outsourcingForm.rate_per_pcs && (
-                              <p className="text-lg font-bold text-indigo-600">Total Amount: ₹{(getTotalQty(outsourcingForm.size_distribution) * parseFloat(outsourcingForm.rate_per_pcs || 0)).toFixed(2)}</p>
-                            )}
-                          </div>
+                                <div className="pt-2 border-t border-indigo-200">
+                                  <p className="text-sm text-slate-600">Total: {totalQty} pcs from {outsourcingForm.cutting_order_ids.length} lot(s)</p>
+                                  {outsourcingForm.rate_per_pcs && (
+                                    <p className="text-lg font-bold text-indigo-600">Total Amount: ₹{(totalQty * parseFloat(outsourcingForm.rate_per_pcs || 0)).toFixed(2)}</p>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
                       <div className="flex justify-end gap-3 pt-4">
@@ -2491,16 +2508,12 @@ function App() {
                           className="bg-indigo-600 hover:bg-indigo-700" 
                           disabled={
                             loading || 
-                            !outsourcingForm.cutting_order_id || 
-                            (() => {
-                              const selectedOrder = availableCuttingOrders.find(o => o.id === outsourcingForm.cutting_order_id);
-                              return selectedOrder && outsourcingForm.operation_type && 
-                                     selectedOrder.completed_operations && 
-                                     selectedOrder.completed_operations.includes(outsourcingForm.operation_type);
-                            })()
+                            outsourcingForm.cutting_order_ids.length === 0 ||
+                            !outsourcingForm.unit_name ||
+                            !outsourcingForm.rate_per_pcs
                           } 
                           data-testid="outsourcing-submit-button">
-                          {loading ? "Saving..." : editingOutsourcingOrder ? "Update Order" : "Create DC"}
+                          {loading ? "Saving..." : editingOutsourcingOrder ? "Update Order" : `Create DC (${outsourcingForm.cutting_order_ids.length} Lots)`}
                         </Button>
                       </div>
                     </form>
