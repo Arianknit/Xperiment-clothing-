@@ -855,8 +855,10 @@ function App() {
       operation_type: order.operation_type,
       unit_name: order.unit_name,
       rate_per_pcs: order.rate_per_pcs.toString(),
-      notes: order.notes || ""
+      notes: order.notes || "",
+      size_distribution: order.size_distribution || {}
     });
+    fetchUnitsByOperation(order.operation_type);
     setOutsourcingDialogOpen(true);
   };
 
