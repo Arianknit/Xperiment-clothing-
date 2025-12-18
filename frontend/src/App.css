@@ -56,3 +56,70 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px;
+  }
+  
+  /* Better tap targets */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+}
+
+/* Safe area for notched phones */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+/* PWA standalone mode adjustments */
+@media all and (display-mode: standalone) {
+  header {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+}
+
+/* Barcode scanner styles */
+#barcode-scanner video {
+  width: 100% !important;
+  border-radius: 8px;
+}
+
+#barcode-scanner {
+  position: relative;
+}
+
+/* Mobile card improvements */
+@media (max-width: 640px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .gap-4 {
+    gap: 0.75rem;
+  }
+}
+
+/* Smooth transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Print styles for DC */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
