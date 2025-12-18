@@ -760,14 +760,11 @@ function App() {
     setEditingOutsourcingOrder(order);
     setOutsourcingForm({
       dc_date: new Date(order.dc_date).toISOString().split('T')[0],
-      cutting_order_id: order.cutting_order_id,
-      lot_number: order.lot_number,
-      category: order.category,
-      style_type: order.style_type,
+      cutting_order_ids: order.cutting_order_ids || [order.cutting_order_id],
       operation_type: order.operation_type,
       unit_name: order.unit_name,
       rate_per_pcs: order.rate_per_pcs.toString(),
-      size_distribution: order.size_distribution
+      notes: order.notes || ""
     });
     setOutsourcingDialogOpen(true);
   };
