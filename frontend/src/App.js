@@ -144,7 +144,8 @@ function App() {
   const [receiptForm, setReceiptForm] = useState({
     outsourcing_order_id: "",
     receipt_date: new Date().toISOString().split('T')[0],
-    received_distribution: {}
+    received_distribution: {},
+    mistake_distribution: {}
   });
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [selectedOutsourcingOrder, setSelectedOutsourcingOrder] = useState(null);
@@ -163,7 +164,8 @@ function App() {
   const [ironingReceiptForm, setIroningReceiptForm] = useState({
     ironing_order_id: "",
     receipt_date: new Date().toISOString().split('T')[0],
-    received_distribution: {}
+    received_distribution: {},
+    mistake_distribution: {}
   });
   const [ironingReceiptDialogOpen, setIroningReceiptDialogOpen] = useState(false);
   const [selectedIroningOrder, setSelectedIroningOrder] = useState(null);
