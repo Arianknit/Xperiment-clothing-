@@ -849,6 +849,60 @@ function App() {
     }
   };
 
+  // Fetch unique units for payment
+  const fetchAvailableUnits = async () => {
+    try {
+      const [outsourcingRes, ironingRes] = await Promise.all([
+        axios.get(`${API}/outsourcing-orders`),
+        axios.get(`${API}/ironing-orders`)
+      ]);
+      const outsourcingUnits = outsourcingRes.data.map(o => o.unit_name);
+      const ironingUnits = ironingRes.data.map(o => o.unit_name);
+      const allUnits = [...new Set([...outsourcingUnits, ...ironingUnits])].filter(Boolean);
+      setAvailableUnits(allUnits);
+    } catch (error) {
+      console.error("Error fetching units:", error);
+    }
+  };
+
+  const fetchPendingBills = async (unitName) => {
+    if (!unitName) {
+      setPendingBills(null);
+      return;
+    }
+    try {
+      const response = await axios.get(`${API}/units/${encodeURIComponent(unitName)}/pending-bills`);
+      setPendingBills(response.data);
+    } catch (error) {
+      console.error("Error fetching pending bills:", error);
+      toast.error("Failed to fetch pending bills");
+    }
+  };
+
+  const handleUnitPaymentSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/units/payment`, {
+        unit_name: unitPaymentForm.unit_name,
+        amount: parseFloat(unitPaymentForm.amount),
+        payment_method: unitPaymentForm.payment_method,
+        notes: unitPaymentForm.notes
+      });
+      toast.success(`Payment of ₹${unitPaymentForm.amount} recorded for ${unitPaymentForm.unit_name}`);
+      setUnitPaymentDialogOpen(false);
+      setUnitPaymentForm({ unit_name: "", amount: "", payment_method: "Cash", notes: "" });
+      setPendingBills(null);
+      fetchOutsourcingOrders();
+      fetchIroningOrders();
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast.error(error.response?.data?.detail || "Failed to record payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDispatchSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
