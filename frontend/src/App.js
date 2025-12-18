@@ -3652,11 +3652,12 @@ _Garment Manufacturing Pro_`;
                     </div>
                     
                     <div className="space-y-2">
-                      <Label>Notes (Optional)</Label>
+                      <Label>Notes {unitPaymentForm.transaction_type === 'debit' ? '(Required)' : '(Optional)'}</Label>
                       <Input 
                         value={unitPaymentForm.notes}
                         onChange={(e) => setUnitPaymentForm({...unitPaymentForm, notes: e.target.value})}
-                        placeholder="Add payment notes"
+                        placeholder={unitPaymentForm.transaction_type === 'debit' ? 'Enter reason for debit...' : 'Add payment notes'}
+                        required={unitPaymentForm.transaction_type === 'debit'}
                       />
                     </div>
                     
@@ -3664,10 +3665,10 @@ _Garment Manufacturing Pro_`;
                       <Button type="button" variant="outline" onClick={() => setUnitPaymentDialogOpen(false)}>Cancel</Button>
                       <Button 
                         type="submit" 
-                        className="bg-green-600 hover:bg-green-700"
-                        disabled={loading || !unitPaymentForm.unit_name || !unitPaymentForm.amount}
+                        className={unitPaymentForm.transaction_type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}
+                        disabled={loading || !unitPaymentForm.unit_name || !unitPaymentForm.amount || (unitPaymentForm.transaction_type === 'debit' && !unitPaymentForm.notes)}
                       >
-                        {loading ? "Processing..." : "Record Payment"}
+                        {loading ? "Processing..." : unitPaymentForm.transaction_type === 'credit' ? '💰 Record Payment' : '📝 Record Debit'}
                       </Button>
                     </div>
                   </form>
