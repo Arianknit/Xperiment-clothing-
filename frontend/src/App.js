@@ -1795,47 +1795,6 @@ _Garment Manufacturing Pro_`;
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold text-slate-800">Fabric Lot Inventory</h2>
-              </div>
-              
-              {/* Search and Filter Bar */}
-              <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm border">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search by lot #, supplier, color, fabric type..." 
-                    value={fabricSearch}
-                    onChange={(e) => setFabricSearch(e.target.value)}
-                    className="pl-10"
-                    data-testid="fabric-search"
-                  />
-                </div>
-                <Select value={fabricStatusFilter} onValueChange={setFabricStatusFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="in_stock">In Stock</SelectItem>
-                    <SelectItem value="exhausted">Exhausted</SelectItem>
-                  </SelectContent>
-                </Select>
-                {(fabricSearch || fabricStatusFilter !== "all") && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => { setFabricSearch(""); setFabricStatusFilter("all"); }}
-                    className="text-slate-500"
-                  >
-                    <X className="h-4 w-4 mr-1" /> Clear
-                  </Button>
-                )}
-                <span className="text-sm text-slate-500">
-                  Showing {filteredFabricLots.length} of {fabricLots.length}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-end">
                 <Dialog open={lotDialogOpen} onOpenChange={setLotDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" data-testid="add-lot-button">
