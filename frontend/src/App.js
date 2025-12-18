@@ -802,6 +802,31 @@ function App() {
     return <Badge className={`${variants[status]} border`} data-testid={`payment-status-${status.toLowerCase()}`}>{status}</Badge>;
   };
 
+  // Admin-only delete functions
+  const handleDeleteFabricLot = async (lotId, lotNumber) => {
+    if (!window.confirm(`Are you sure you want to delete fabric lot "${lotNumber}"? This action cannot be undone.`)) return;
+    
+    try {
+      await axios.delete(`${API}/fabric-lots/${lotId}`);
+      toast.success("Fabric lot deleted successfully");
+      fetchFabricLots();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete fabric lot");
+    }
+  };
+
+  const handleDeleteOutsourcingOrder = async (orderId, dcNumber) => {
+    if (!window.confirm(`Are you sure you want to delete outsourcing order "${dcNumber}"? This action cannot be undone.`)) return;
+    
+    try {
+      await axios.delete(`${API}/outsourcing-orders/${orderId}`);
+      toast.success("Outsourcing order deleted successfully");
+      fetchOutsourcingOrders();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete outsourcing order");
+    }
+  };
+
   const handleDeleteCuttingOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this cutting order?")) return;
     
