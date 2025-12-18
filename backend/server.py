@@ -297,6 +297,8 @@ class OutsourcingOrderUpdate(BaseModel):
     unit_name: Optional[str] = None
     rate_per_pcs: Optional[float] = None
     size_distribution: Optional[Dict[str, int]] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None  # Allow updating status
 
 class OutsourcingReceipt(BaseModel):
     model_config = ConfigDict(extra="ignore")
