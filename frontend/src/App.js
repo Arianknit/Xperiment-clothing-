@@ -3254,6 +3254,18 @@ _Garment Manufacturing Pro_`;
                           </div>
                         </div>
                         <div className="ml-4 flex gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => {
+                              const unit = outsourcingUnits.find(u => u.unit_name === order.unit_name);
+                              openWhatsAppDialog('dc', order, unit?.phone || '');
+                            }}
+                            className="h-8 w-8 text-green-600 hover:bg-green-50"
+                            title="Send DC via WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => openEditOutsourcingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-outsourcing-order-${order.id}`}>
                             <Pencil className="h-4 w-4" />
                           </Button>
