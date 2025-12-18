@@ -1022,60 +1022,72 @@ async def delete_cutting_order(order_id: str):
 # Outsourcing Order Routes
 @api_router.post("/outsourcing-orders", response_model=OutsourcingOrder)
 async def create_outsourcing_order(order: OutsourcingOrderCreate):
+    """Create a new outsourcing order with multiple cutting lots"""
     order_dict = order.model_dump()
     
-    # Get cutting order to retrieve cutting_lot_number, color, and check operations
-    cutting_order = await db.cutting_orders.find_one({"id": order_dict['cutting_order_id']}, {"_id": 0})
-    if cutting_order:
-        order_dict['cutting_lot_number'] = cutting_order.get('cutting_lot_number', '')
-        order_dict['color'] = cutting_order.get('color', '')
-        
+    cutting_order_ids = order_dict['cutting_order_ids']
+    operation_type = order_dict['operation_type']
+    
+    if not cutting_order_ids:
+        raise HTTPException(status_code=400, detail="At least one cutting lot must be selected")
+    
+    # Fetch all cutting orders
+    cutting_orders = await db.cutting_orders.find(
+        {"id": {"$in": cutting_order_ids}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    if not cutting_orders:
+        raise HTTPException(status_code=404, detail="No valid cutting orders found")
+    
+    # Check for duplicate operations and collect data
+    cutting_lot_numbers = []
+    lot_numbers = set()
+    colors = set()
+    categories = set()
+    style_types = set()
+    combined_size_distribution = {}
+    
+    for cutting_order in cutting_orders:
         # Check if this operation has already been done on this cutting lot
         completed_operations = cutting_order.get('completed_operations', [])
-        operation_type = order_dict['operation_type']
         
         if operation_type in completed_operations:
-            # Find the existing outsourcing order with this operation
             existing_order = await db.outsourcing_orders.find_one(
-                {
-                    "cutting_order_id": order_dict['cutting_order_id'],
-                    "operation_type": operation_type
-                },
+                {"cutting_order_id": cutting_order['id'], "operation_type": operation_type},
                 {"_id": 0}
             )
-            
+            error_msg = f"Lot {cutting_order.get('cutting_lot_number', 'N/A')} has already been sent for '{operation_type}'."
             if existing_order:
-                # Format date for display
-                dc_date_str = existing_order.get('dc_date', '')
-                if isinstance(dc_date_str, str):
-                    try:
-                        dc_date_obj = datetime.fromisoformat(dc_date_str)
-                        dc_date_formatted = dc_date_obj.strftime("%d-%b-%Y")
-                    except:
-                        dc_date_formatted = dc_date_str
-                else:
-                    dc_date_formatted = dc_date_str.strftime("%d-%b-%Y") if dc_date_str else "Unknown"
-                
-                error_message = (
-                    f"Lot {cutting_order.get('cutting_lot_number', 'N/A')} has already been sent for '{operation_type}' operation.\n"
-                    f"Previously sent to: {existing_order.get('unit_name', 'Unknown Unit')}\n"
-                    f"Date: {dc_date_formatted}\n"
-                    f"DC Number: {existing_order.get('dc_number', 'N/A')}\n"
-                    f"Cannot send to the same operation again."
-                )
-            else:
-                error_message = f"Operation '{operation_type}' has already been completed for cutting lot {cutting_order.get('cutting_lot_number', 'N/A')}."
-            
-            raise HTTPException(status_code=400, detail=error_message)
-    else:
-        order_dict['cutting_lot_number'] = ''
-        order_dict['color'] = ''
+                error_msg += f" Previously sent to: {existing_order.get('unit_name', 'Unknown Unit')}"
+            raise HTTPException(status_code=400, detail=error_msg)
+        
+        cutting_lot_numbers.append(cutting_order.get('cutting_lot_number', ''))
+        lot_numbers.add(cutting_order.get('lot_number', ''))
+        colors.add(cutting_order.get('color', ''))
+        categories.add(cutting_order.get('category', ''))
+        style_types.add(cutting_order.get('style_type', ''))
+        
+        # Combine size distributions
+        for size, qty in cutting_order.get('size_distribution', {}).items():
+            combined_size_distribution[size] = combined_size_distribution.get(size, 0) + qty
     
     # Generate DC number
     order_dict['dc_number'] = generate_dc_number()
     
+    # Store both single (for backward compatibility) and multiple IDs
+    order_dict['cutting_order_id'] = cutting_order_ids[0]
+    order_dict['cutting_order_ids'] = cutting_order_ids
+    order_dict['cutting_lot_number'] = ', '.join(cutting_lot_numbers)
+    order_dict['cutting_lot_numbers'] = cutting_lot_numbers
+    order_dict['lot_number'] = ', '.join(lot_numbers)
+    order_dict['color'] = ', '.join(filter(None, colors))
+    order_dict['category'] = ', '.join(categories)
+    order_dict['style_type'] = ', '.join(style_types)
+    order_dict['size_distribution'] = combined_size_distribution
+    
     # Calculate total quantity
-    total_quantity = sum(order_dict['size_distribution'].values())
+    total_quantity = sum(combined_size_distribution.values())
     order_dict['total_quantity'] = total_quantity
     
     # Calculate total amount
@@ -1098,11 +1110,12 @@ async def create_outsourcing_order(order: OutsourcingOrderCreate):
     
     await db.outsourcing_orders.insert_one(doc)
     
-    # Mark this operation as completed on the cutting order
-    await db.cutting_orders.update_one(
-        {"id": order_dict['cutting_order_id']},
-        {"$addToSet": {"completed_operations": operation_type}}
-    )
+    # Mark this operation as completed on ALL selected cutting orders
+    for cutting_order_id in cutting_order_ids:
+        await db.cutting_orders.update_one(
+            {"id": cutting_order_id},
+            {"$addToSet": {"completed_operations": operation_type}}
+        )
     
     return order_obj
 
