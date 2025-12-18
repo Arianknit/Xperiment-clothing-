@@ -903,6 +903,42 @@ function App() {
     }
   };
 
+  const openEditFabricLot = (lot) => {
+    setEditingFabricLot(lot);
+    setEditFabricForm({
+      fabric_type: lot.fabric_type || "",
+      supplier_name: lot.supplier_name || "",
+      color: lot.color || "",
+      rate_per_kg: lot.rate_per_kg || "",
+      remaining_quantity: lot.remaining_quantity || "",
+      remaining_rib_quantity: lot.remaining_rib_quantity || ""
+    });
+    setEditFabricDialogOpen(true);
+  };
+
+  const handleEditFabricLot = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.put(`${API}/fabric-lots/${editingFabricLot.id}`, {
+        fabric_type: editFabricForm.fabric_type,
+        supplier_name: editFabricForm.supplier_name,
+        color: editFabricForm.color,
+        rate_per_kg: parseFloat(editFabricForm.rate_per_kg),
+        remaining_quantity: parseFloat(editFabricForm.remaining_quantity),
+        remaining_rib_quantity: parseFloat(editFabricForm.remaining_rib_quantity)
+      });
+      toast.success("Fabric lot updated successfully");
+      setEditFabricDialogOpen(false);
+      setEditingFabricLot(null);
+      fetchFabricLots();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update fabric lot");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteOutsourcingOrder = async (orderId, dcNumber) => {
     if (!window.confirm(`Are you sure you want to delete outsourcing order "${dcNumber}"? This action cannot be undone.`)) return;
     
