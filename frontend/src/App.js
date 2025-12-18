@@ -777,12 +777,46 @@ function App() {
     }
   };
 
+  const handleCatalogImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please upload JPEG, PNG, or WebP image.');
+        return;
+      }
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File too large. Maximum size is 5MB.');
+        return;
+      }
+      setCatalogImageFile(file);
+      setCatalogImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleCatalogSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      await axios.post(`${API}/catalogs`, catalogForm);
+      let imageUrl = catalogForm.image_url;
+      
+      // Upload image if selected
+      if (catalogImageFile) {
+        setUploadingImage(true);
+        const formData = new FormData();
+        formData.append('file', catalogImageFile);
+        
+        const uploadResponse = await axios.post(`${API}/upload/catalog-image`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        imageUrl = uploadResponse.data.image_url;
+        setUploadingImage(false);
+      }
+      
+      await axios.post(`${API}/catalogs`, { ...catalogForm, image_url: imageUrl });
       toast.success("Catalog created successfully");
       
       setCatalogDialogOpen(false);
