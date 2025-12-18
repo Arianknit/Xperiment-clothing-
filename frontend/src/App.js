@@ -46,6 +46,15 @@ const BUNDLE_TYPES = ['Front', 'Back', 'Sleeve', 'Rib', 'Patti', 'Collar', 'Fron
 const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker', 'Stitching'];
 
 function App() {
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const [registerForm, setRegisterForm] = useState({ username: "", password: "", full_name: "", role: "user" });
+  const [showRegister, setShowRegister] = useState(false);
+  const [authError, setAuthError] = useState("");
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [fabricLots, setFabricLots] = useState([]);
   const [cuttingOrders, setCuttingOrders] = useState([]);
