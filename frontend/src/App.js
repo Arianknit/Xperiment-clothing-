@@ -4541,7 +4541,51 @@ _Arian Knit Fab_`;
             <div className="space-y-6">
               <h2 className="text-3xl font-bold text-slate-800">Reports</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Fabric Inventory Report Card */}
+                <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-purple-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-purple-700">
+                      <Package className="h-5 w-5" />
+                      Fabric Inventory
+                    </CardTitle>
+                    <CardDescription>View fabric stock report</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fabric-status-filter" className="text-xs">Status</Label>
+                      <Select defaultValue="all" onValueChange={(value) => document.getElementById('fabric-status-filter').setAttribute('data-value', value === 'all' ? '' : value)}>
+                        <SelectTrigger id="fabric-status-filter" className="h-9" data-value="">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="in_stock">In Stock</SelectItem>
+                          <SelectItem value="exhausted">Exhausted</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fabric-supplier-filter" className="text-xs">Supplier (Optional)</Label>
+                      <Input id="fabric-supplier-filter" placeholder="Enter supplier name" className="h-9" />
+                    </div>
+                    <Button 
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      onClick={() => {
+                        const status = document.getElementById('fabric-status-filter').getAttribute('data-value');
+                        const supplier = document.getElementById('fabric-supplier-filter').value;
+                        let url = `${API}/reports/fabric-inventory?`;
+                        if (status) url += `status=${status}&`;
+                        if (supplier) url += `supplier=${supplier}&`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Report
+                    </Button>
+                  </CardContent>
+                </Card>
+
                 {/* Cutting Report Card */}
                 <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-blue-500">
                   <CardHeader>
@@ -4549,7 +4593,7 @@ _Arian Knit Fab_`;
                       <Scissors className="h-5 w-5" />
                       Cutting Report
                     </CardTitle>
-                    <CardDescription>View cutting operations with filters</CardDescription>
+                    <CardDescription>View cutting with lot status tracking</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
