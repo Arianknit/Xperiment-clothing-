@@ -986,7 +986,8 @@ function App() {
     setReceiptForm({
       outsourcing_order_id: order.id,
       receipt_date: new Date().toISOString().split('T')[0],
-      received_distribution: {}
+      received_distribution: {},
+      mistake_distribution: {}
     });
     setReceiptDialogOpen(true);
   };
