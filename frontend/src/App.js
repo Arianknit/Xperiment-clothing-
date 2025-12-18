@@ -1209,18 +1209,20 @@ function App() {
       await axios.post(`${API}/units/payment`, {
         unit_name: unitPaymentForm.unit_name,
         amount: parseFloat(unitPaymentForm.amount),
+        transaction_type: unitPaymentForm.transaction_type,
         payment_method: unitPaymentForm.payment_method,
         notes: unitPaymentForm.notes
       });
-      toast.success(`Payment of ₹${unitPaymentForm.amount} recorded for ${unitPaymentForm.unit_name}`);
+      const actionText = unitPaymentForm.transaction_type === 'debit' ? 'Debit' : 'Payment';
+      toast.success(`${actionText} of ₹${unitPaymentForm.amount} recorded for ${unitPaymentForm.unit_name}`);
       setUnitPaymentDialogOpen(false);
-      setUnitPaymentForm({ unit_name: "", amount: "", payment_method: "Cash", notes: "" });
+      setUnitPaymentForm({ unit_name: "", amount: "", transaction_type: "credit", payment_method: "Cash", notes: "" });
       setPendingBills(null);
       fetchOutsourcingOrders();
       fetchIroningOrders();
     } catch (error) {
-      console.error("Error recording payment:", error);
-      toast.error(error.response?.data?.detail || "Failed to record payment");
+      console.error("Error recording transaction:", error);
+      toast.error(error.response?.data?.detail || "Failed to record transaction");
     } finally {
       setLoading(false);
     }
