@@ -1076,6 +1076,12 @@ async def create_outsourcing_receipt(receipt: OutsourcingReceiptCreate):
     
     receipt_dict['shortage_distribution'] = shortage_distribution
     
+    # Handle mistakes (if provided)
+    mistake_distribution = receipt_dict.get('mistake_distribution', {})
+    total_mistakes = sum(mistake_distribution.values()) if mistake_distribution else 0
+    receipt_dict['mistake_distribution'] = mistake_distribution
+    receipt_dict['total_mistakes'] = total_mistakes
+    
     # Calculate totals
     total_sent = sum(outsourcing_order['size_distribution'].values())
     total_received = sum(receipt_dict['received_distribution'].values())
@@ -1088,6 +1094,10 @@ async def create_outsourcing_receipt(receipt: OutsourcingReceiptCreate):
     # Calculate shortage debit amount
     shortage_debit_amount = total_shortage * receipt_dict['rate_per_pcs']
     receipt_dict['shortage_debit_amount'] = round(shortage_debit_amount, 2)
+    
+    # Calculate mistake debit amount
+    mistake_debit_amount = total_mistakes * receipt_dict['rate_per_pcs']
+    receipt_dict['mistake_debit_amount'] = round(mistake_debit_amount, 2)
     
     receipt_obj = OutsourcingReceipt(**receipt_dict)
     
