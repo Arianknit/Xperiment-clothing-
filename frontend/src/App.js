@@ -2184,7 +2184,7 @@ _Garment Manufacturing Pro_`;
                 </DialogContent>
               </Dialog>
               <div className="grid grid-cols-1 gap-4">
-                {fabricLots.map((lot) => (
+                {filteredFabricLots.map((lot) => (
                   <Card key={lot.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`lot-card-${lot.id}`}>
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
