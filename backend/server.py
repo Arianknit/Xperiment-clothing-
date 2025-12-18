@@ -3640,6 +3640,47 @@ async def get_catalog_dispatches(catalog_id: str):
 
 
 # Reports Endpoints
+def generate_cutting_rows(orders, lot_status):
+    rows = []
+    for o in orders:
+        lot_num = o.get('cutting_lot_number', 'N/A')
+        date_str = o.get('cutting_date').strftime('%d %b %Y') if o.get('cutting_date') else 'N/A'
+        cutting_amt = o.get('total_cutting_amount', 0)
+        balance = o.get('balance', 0)
+        balance_color = 'green' if balance == 0 else 'red'
+        
+        # Build status badges
+        status_html = '<span class="status-badge status-cutting">✂️ Cut</span>'
+        
+        # Add outsourcing statuses
+        lot_info = lot_status.get(lot_num, {})
+        for os_item in lot_info.get('outsourcing', []):
+            badge_class = 'status-received' if os_item['status'] == 'Received' else 'status-outsourcing'
+            status_html += f'<span class="status-badge {badge_class}">{os_item["operation"]} ({os_item["status"]})</span>'
+        
+        # Add ironing status
+        ironing_info = lot_info.get('ironing')
+        if ironing_info:
+            ironing_status = ironing_info.get('status', 'N/A')
+            badge_class = 'status-complete' if ironing_status == 'Received' else 'status-ironing'
+            status_html += f'<span class="status-badge {badge_class}">🔥 Ironing ({ironing_status})</span>'
+        
+        rows.append(f"""
+        <tr>
+            <td><strong>{lot_num}</strong></td>
+            <td>{date_str}</td>
+            <td>{o.get('cutting_master_name', 'N/A')}</td>
+            <td>{o.get('category', 'N/A')}</td>
+            <td>{o.get('style_type', 'N/A')}</td>
+            <td><strong>{o.get('total_quantity', 0)}</strong></td>
+            <td>{status_html}</td>
+            <td>₹{cutting_amt:.2f}</td>
+            <td style="color: {balance_color};">₹{balance:.2f}</td>
+        </tr>
+        """)
+    return ''.join(rows)
+
+
 def generate_fabric_rows(lots):
     rows = []
     for l in lots:
