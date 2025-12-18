@@ -273,6 +273,24 @@ class OutsourcingOrderCreate(BaseModel):
     rate_per_pcs: float
     notes: Optional[str] = ""
 
+# Nominated Outsourcing Unit Model
+class OutsourcingUnit(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    unit_name: str
+    operations: List[str]  # List of operations this unit handles (Printing, Embroidery, etc.)
+    contact_person: Optional[str] = ""
+    phone: Optional[str] = ""
+    address: Optional[str] = ""
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class OutsourcingUnitCreate(BaseModel):
+    unit_name: str
+    operations: List[str]
+    contact_person: Optional[str] = ""
+    phone: Optional[str] = ""
+    address: Optional[str] = ""
+
 class OutsourcingOrderUpdate(BaseModel):
     dc_date: Optional[datetime] = None
     operation_type: Optional[str] = None
