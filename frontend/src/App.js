@@ -1837,6 +1837,7 @@ _Garment Manufacturing Pro_`;
               </div>
 
               <div className="flex items-center justify-end">
+                <Dialog open={lotDialogOpen} onOpenChange={setLotDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" data-testid="add-lot-button">
                       <Plus className="h-4 w-4 mr-2" />
