@@ -1130,6 +1130,124 @@ function App() {
     }
   };
 
+  // WhatsApp Functions
+  const formatPhoneForWhatsApp = (phone) => {
+    if (!phone) return '';
+    // Remove all non-digits
+    let cleaned = phone.replace(/\D/g, '');
+    // Add India country code if not present
+    if (cleaned.length === 10) {
+      cleaned = '91' + cleaned;
+    }
+    return cleaned;
+  };
+
+  const generateDCMessage = (order) => {
+    const lotDetails = order.lot_details?.length > 0 
+      ? order.lot_details.map(lot => 
+          `📦 ${lot.cutting_lot_number} (${lot.category}): ${lot.quantity} pcs`
+        ).join('\n')
+      : `📦 Lot: ${order.cutting_lot_number || 'N/A'}`;
+    
+    const sizeDetails = Object.entries(order.size_distribution || {})
+      .filter(([_, qty]) => qty > 0)
+      .map(([size, qty]) => `${size}: ${qty}`)
+      .join(' | ');
+
+    return `🏭 *DELIVERY CHALLAN*
+━━━━━━━━━━━━━━━━━
+📋 *DC Number:* ${order.dc_number}
+📅 *Date:* ${new Date(order.dc_date).toLocaleDateString('en-IN')}
+🔧 *Operation:* ${order.operation_type}
+
+${lotDetails}
+
+📊 *Size Distribution:*
+${sizeDetails}
+
+📦 *Total Qty:* ${order.total_quantity} pcs
+💰 *Rate:* ₹${order.rate_per_pcs}/pc
+💵 *Total Amount:* ₹${order.total_amount}
+
+${order.notes ? `📝 Notes: ${order.notes}` : ''}
+━━━━━━━━━━━━━━━━━
+_Garment Manufacturing Pro_`;
+  };
+
+  const generateReminderMessage = (order) => {
+    const daysPending = Math.floor((new Date() - new Date(order.dc_date)) / (1000 * 60 * 60 * 24));
+    return `⚠️ *REMINDER: Pending Order*
+━━━━━━━━━━━━━━━━━
+📋 *DC Number:* ${order.dc_number}
+📅 *Sent Date:* ${new Date(order.dc_date).toLocaleDateString('en-IN')}
+⏰ *Pending Since:* ${daysPending} days
+
+🔧 *Operation:* ${order.operation_type}
+📦 *Lot:* ${order.cutting_lot_number || order.lot_details?.[0]?.cutting_lot_number || 'N/A'}
+📦 *Quantity:* ${order.total_quantity} pcs
+
+🙏 Please arrange delivery at the earliest.
+━━━━━━━━━━━━━━━━━
+_Garment Manufacturing Pro_`;
+  };
+
+  const generatePaymentMessage = (unitName, amount, method, pendingAmount) => {
+    return `✅ *PAYMENT CONFIRMATION*
+━━━━━━━━━━━━━━━━━
+🏢 *Unit:* ${unitName}
+💰 *Amount Paid:* ₹${amount}
+💳 *Method:* ${method}
+📅 *Date:* ${new Date().toLocaleDateString('en-IN')}
+
+${pendingAmount > 0 ? `⏳ *Remaining Balance:* ₹${pendingAmount}` : '✅ *All dues cleared!*'}
+━━━━━━━━━━━━━━━━━
+Thank you for your service!
+_Garment Manufacturing Pro_`;
+  };
+
+  const openWhatsApp = (phone, message) => {
+    const formattedPhone = formatPhoneForWhatsApp(phone);
+    if (!formattedPhone) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${formattedPhone}?text=${encodedMessage}`, '_blank');
+    toast.success("WhatsApp opened!");
+  };
+
+  const handleWhatsAppSend = () => {
+    const phone = whatsappData.useUnitPhone ? whatsappData.unitPhone : whatsappData.phone;
+    let message = '';
+    
+    if (whatsappData.type === 'dc') {
+      message = generateDCMessage(whatsappData.data);
+    } else if (whatsappData.type === 'reminder') {
+      message = generateReminderMessage(whatsappData.data);
+    } else if (whatsappData.type === 'payment') {
+      message = generatePaymentMessage(
+        whatsappData.data.unitName,
+        whatsappData.data.amount,
+        whatsappData.data.method,
+        whatsappData.data.pendingAmount
+      );
+    }
+    
+    openWhatsApp(phone, message);
+    setWhatsappDialogOpen(false);
+  };
+
+  const openWhatsAppDialog = (type, data, unitPhone = '') => {
+    setWhatsappData({
+      type,
+      data,
+      phone: '',
+      unitPhone: unitPhone,
+      useUnitPhone: !!unitPhone
+    });
+    setWhatsappDialogOpen(true);
+  };
+
   const handleDeleteCatalog = async (catalogId) => {
     if (!window.confirm("Are you sure you want to delete this catalog?")) return;
     
