@@ -766,6 +766,49 @@ async def delete_fabric_lot(lot_id: str):
     }
 
 
+class FabricLotUpdate(BaseModel):
+    fabric_type: Optional[str] = None
+    supplier_name: Optional[str] = None
+    color: Optional[str] = None
+    rate_per_kg: Optional[float] = None
+    remaining_quantity: Optional[float] = None
+    remaining_rib_quantity: Optional[float] = None
+
+@api_router.put("/fabric-lots/{lot_id}")
+async def update_fabric_lot(lot_id: str, update_data: FabricLotUpdate, current_user: dict = Depends(get_current_user)):
+    """Update fabric lot details (Admin only)"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    fabric_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not fabric_lot:
+        raise HTTPException(status_code=404, detail="Fabric lot not found")
+    
+    # Build update dict with only provided fields
+    update_dict = {}
+    if update_data.fabric_type is not None:
+        update_dict['fabric_type'] = update_data.fabric_type
+    if update_data.supplier_name is not None:
+        update_dict['supplier_name'] = update_data.supplier_name
+    if update_data.color is not None:
+        update_dict['color'] = update_data.color
+    if update_data.rate_per_kg is not None:
+        update_dict['rate_per_kg'] = update_data.rate_per_kg
+        # Recalculate total amount
+        update_dict['total_amount'] = round(update_data.rate_per_kg * fabric_lot.get('quantity', 0), 2)
+    if update_data.remaining_quantity is not None:
+        update_dict['remaining_quantity'] = update_data.remaining_quantity
+    if update_data.remaining_rib_quantity is not None:
+        update_dict['remaining_rib_quantity'] = update_data.remaining_rib_quantity
+    
+    if update_dict:
+        update_dict['updated_by'] = current_user['username']
+        await db.fabric_lots.update_one({"id": lot_id}, {"$set": update_dict})
+    
+    updated_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
+    return updated_lot
+
+
 class RollWeightsUpdate(BaseModel):
     scale_readings: List[float]  # Cumulative scale readings after each roll
     restart_points: Optional[List[int]] = []  # Indices where scale was restarted (new roll placed fresh)
