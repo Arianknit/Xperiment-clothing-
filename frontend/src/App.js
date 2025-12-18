@@ -2587,7 +2587,7 @@ _Garment Manufacturing Pro_`;
               </div>
 
               <div className="space-y-4">
-                {cuttingOrders.map((order) => (
+                {filteredCuttingOrders.map((order) => (
                   <Card key={order.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`cutting-order-card-${order.id}`}>
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
