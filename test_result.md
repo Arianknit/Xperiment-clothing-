@@ -189,3 +189,26 @@ Date: 2025-12-18
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
 - **Viewport:** Desktop (1920x1080)
+## Test Session: Lot-Wise Catalog Dispatch Feature
+Date: 2025-12-18
+
+### Feature Description:
+The lot-wise catalog dispatch feature allows users to:
+1. Dispatch quantities from a specific lot within a catalog
+2. Enter customer name and bora number for each dispatch
+3. Select which lot to dispatch from
+4. Enter size-wise quantities for dispatch
+5. View lot color alongside lot number in dispatch dialog
+
+### Test Scenarios:
+1. Open dispatch dialog for a catalog - verify all fields are present
+2. Fill customer name and bora number
+3. Select a lot and verify size inputs appear with available quantities
+4. Enter dispatch quantities and verify total dispatch calculation
+5. Submit dispatch and verify success
+6. Verify catalog stock is updated after dispatch
+
+### Test Environment:
+- URL: https://producpro.preview.emergentagent.com
+- Login: admin/admin
+- Browser: Playwright automation testing
