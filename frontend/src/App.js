@@ -54,6 +54,11 @@ function App() {
   const [registerForm, setRegisterForm] = useState({ username: "", password: "", full_name: "", role: "user" });
   const [showRegister, setShowRegister] = useState(false);
   const [authError, setAuthError] = useState("");
+  
+  // User Management state (Admin only)
+  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [newUserForm, setNewUserForm] = useState({ username: "", password: "", full_name: "", role: "user" });
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [fabricLots, setFabricLots] = useState([]);
