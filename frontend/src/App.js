@@ -2615,6 +2615,47 @@ function App() {
                         <Label htmlFor="catalog-description">Description (Optional)</Label>
                         <Input id="catalog-description" value={catalogForm.description} onChange={(e) => setCatalogForm({...catalogForm, description: e.target.value})} placeholder="Add description" data-testid="catalog-description-input" />
                       </div>
+                      
+                      {/* Image Upload Section */}
+                      <div className="space-y-2">
+                        <Label>Product Image (Optional)</Label>
+                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 hover:border-indigo-400 transition-colors">
+                          {catalogImagePreview ? (
+                            <div className="relative">
+                              <img 
+                                src={catalogImagePreview} 
+                                alt="Preview" 
+                                className="w-full h-40 object-cover rounded-lg"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-2 right-2"
+                                onClick={() => {
+                                  setCatalogImageFile(null);
+                                  setCatalogImagePreview(null);
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center cursor-pointer py-4">
+                              <ImageIcon className="h-10 w-10 text-slate-400 mb-2" />
+                              <span className="text-sm text-slate-600">Click to upload product image</span>
+                              <span className="text-xs text-slate-400 mt-1">JPEG, PNG, WebP (max 5MB)</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/jpg"
+                                onChange={handleCatalogImageChange}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                      
                       <div className="space-y-2">
                         <Label>Select Cutting Lots</Label>
                         <div className="border rounded-lg p-3 max-h-60 overflow-y-auto bg-slate-50">
