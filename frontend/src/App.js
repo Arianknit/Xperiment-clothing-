@@ -246,6 +246,7 @@ function App() {
   const [unitPaymentForm, setUnitPaymentForm] = useState({
     unit_name: "",
     amount: "",
+    transaction_type: "credit",  // "credit" for payment, "debit" for charge
     payment_method: "Cash",
     notes: ""
   });
