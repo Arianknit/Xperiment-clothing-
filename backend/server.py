@@ -1048,6 +1048,7 @@ async def create_outsourcing_order(order: OutsourcingOrderCreate):
     categories = set()
     style_types = set()
     combined_size_distribution = {}
+    lot_details = []  # Store individual lot details
     
     for cutting_order in cutting_orders:
         # Check if this operation has already been done on this cutting lot
@@ -1069,12 +1070,26 @@ async def create_outsourcing_order(order: OutsourcingOrderCreate):
         categories.add(cutting_order.get('category', ''))
         style_types.add(cutting_order.get('style_type', ''))
         
+        # Store individual lot details
+        lot_size_dist = cutting_order.get('size_distribution', {})
+        lot_details.append({
+            "cutting_order_id": cutting_order['id'],
+            "cutting_lot_number": cutting_order.get('cutting_lot_number', ''),
+            "lot_number": cutting_order.get('lot_number', ''),
+            "category": cutting_order.get('category', ''),
+            "style_type": cutting_order.get('style_type', ''),
+            "color": cutting_order.get('color', ''),
+            "size_distribution": lot_size_dist,
+            "quantity": sum(lot_size_dist.values())
+        })
+        
         # Combine size distributions
-        for size, qty in cutting_order.get('size_distribution', {}).items():
+        for size, qty in lot_size_dist.items():
             combined_size_distribution[size] = combined_size_distribution.get(size, 0) + qty
     
     # Generate DC number
     order_dict['dc_number'] = generate_dc_number()
+    order_dict['lot_details'] = lot_details
     
     # Store both single (for backward compatibility) and multiple IDs
     order_dict['cutting_order_id'] = cutting_order_ids[0]
