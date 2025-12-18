@@ -2553,8 +2553,48 @@ function App() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="unit-name">Unit Name</Label>
-                          <Input id="unit-name" value={outsourcingForm.unit_name} onChange={(e) => setOutsourcingForm({...outsourcingForm, unit_name: e.target.value})} placeholder="Unit Name" required data-testid="unit-name-input" />
+                          <Label htmlFor="unit-name">Select Unit</Label>
+                          {filteredUnits.length > 0 ? (
+                            <Select 
+                              value={outsourcingForm.unit_name} 
+                              onValueChange={(value) => setOutsourcingForm({...outsourcingForm, unit_name: value})}
+                            >
+                              <SelectTrigger id="unit-name" data-testid="unit-name-select">
+                                <SelectValue placeholder="Select nominated unit" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {filteredUnits.map((unit) => (
+                                  <SelectItem key={unit.id} value={unit.unit_name}>
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold">{unit.unit_name}</span>
+                                      {unit.contact_person && <span className="text-xs text-slate-500">{unit.contact_person} • {unit.phone}</span>}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <div className="space-y-2">
+                              <Input 
+                                id="unit-name" 
+                                value={outsourcingForm.unit_name} 
+                                onChange={(e) => setOutsourcingForm({...outsourcingForm, unit_name: e.target.value})} 
+                                placeholder="Enter unit name" 
+                                required 
+                                data-testid="unit-name-input" 
+                              />
+                              <p className="text-xs text-amber-600">
+                                ⚠️ No nominated units for {outsourcingForm.operation_type}. 
+                                <button 
+                                  type="button" 
+                                  onClick={() => setUnitsDialogOpen(true)} 
+                                  className="text-indigo-600 hover:underline ml-1"
+                                >
+                                  Add Unit
+                                </button>
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-2">
