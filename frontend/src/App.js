@@ -1205,6 +1205,26 @@ Thank you for your service!
 _Garment Manufacturing Pro_`;
   };
 
+  const generatePaymentReminderMessage = (unitName, totalPending, billsCount, bills) => {
+    const billDetails = bills.slice(0, 5).map(bill => 
+      `• ${bill.dc_number} (${bill.type}): ₹${bill.balance}`
+    ).join('\n');
+    
+    return `💰 *PAYMENT REMINDER*
+━━━━━━━━━━━━━━━━━
+🏢 *Unit:* ${unitName}
+📅 *Date:* ${new Date().toLocaleDateString('en-IN')}
+
+⏳ *Total Pending:* ₹${totalPending}
+📋 *Bills:* ${billsCount}
+
+${billDetails}${bills.length > 5 ? `\n... and ${bills.length - 5} more` : ''}
+
+🙏 Please arrange payment at the earliest.
+━━━━━━━━━━━━━━━━━
+_Garment Manufacturing Pro_`;
+  };
+
   const openWhatsApp = (phone, message) => {
     const formattedPhone = formatPhoneForWhatsApp(phone);
     if (!formattedPhone) {
