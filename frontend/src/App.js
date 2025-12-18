@@ -1279,14 +1279,25 @@ function App() {
     setLoading(true);
     
     try {
+      // Get the color from the selected lot
+      const cuttingOrder = cuttingOrders.find(co => co.lot_number === selectedDispatchLot);
+      const color = cuttingOrder?.color || 'N/A';
+      
       await axios.post(`${API}/catalogs/${selectedCatalog.id}/dispatch`, {
-        dispatch_quantity: dispatchForm
+        dispatch_quantity: dispatchForm.size_quantities,
+        customer_name: dispatchForm.customer_name,
+        dispatch_date: new Date().toISOString(),
+        bora_number: dispatchForm.bora_number,
+        color: color,
+        lot_number: selectedDispatchLot,
+        notes: dispatchForm.notes || null
       });
       toast.success("Dispatch recorded successfully");
       
       setDispatchDialogOpen(false);
-      setDispatchForm({});
+      setDispatchForm({ customer_name: '', bora_number: '', notes: '', size_quantities: {} });
       setSelectedCatalog(null);
+      setSelectedDispatchLot(null);
       fetchCatalogs();
     } catch (error) {
       console.error("Error recording dispatch:", error);
