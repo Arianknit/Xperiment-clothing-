@@ -3805,7 +3805,7 @@ async def get_fabric_inventory_report(
                 </tr>
             </thead>
             <tbody>
-                {generate_fabric_rows(lots) if lots else '<tr><td colspan="9" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+                {generate_fabric_rows(lots, fabric_usage) if lots else '<tr><td colspan="9" style="text-align: center; padding: 20px;">No records found</td></tr>'}
             </tbody>
         </table>
         
