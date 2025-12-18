@@ -3732,9 +3732,17 @@ async def get_fabric_inventory_report(
     # Calculate totals
     total_lots = len(lots)
     total_rolls = sum(len(l.get('rolls', [])) for l in lots)
-    total_quantity = sum(l.get('total_quantity', 0) for l in lots)
+    
+    # Calculate total quantity from rolls if not set
+    total_quantity = 0
+    for l in lots:
+        qty = l.get('total_quantity', 0)
+        if qty == 0:
+            qty = sum(r.get('weight', 0) for r in l.get('rolls', []))
+        total_quantity += qty
+    
     total_remaining = sum(l.get('remaining_quantity', 0) for l in lots)
-    total_used = total_quantity - total_remaining
+    total_used = max(0, total_quantity - total_remaining)
     
     html = f"""
     <!DOCTYPE html>
