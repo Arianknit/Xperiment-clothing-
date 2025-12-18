@@ -2142,7 +2142,6 @@ _Garment Manufacturing Pro_`;
                   )}
                 </DialogContent>
               </Dialog>
-              </div>
               
               {/* Search and Filter Bar */}
               <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm border">
