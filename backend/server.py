@@ -226,6 +226,7 @@ class OutsourcingReceiptCreate(BaseModel):
     outsourcing_order_id: str
     receipt_date: datetime
     received_distribution: Dict[str, int]
+    mistake_distribution: Optional[Dict[str, int]] = {}  # Mistakes in received goods
 
 class IroningOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
