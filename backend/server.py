@@ -2916,6 +2916,41 @@ async def get_lot_wise_report(order_id: str):
     return HTMLResponse(content=html_content)
 
 
+# Catalog Image Upload
+@api_router.post("/upload/catalog-image")
+async def upload_catalog_image(file: UploadFile = File(...)):
+    """Upload a catalog product image"""
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/jpg"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed types: JPEG, PNG, WebP"
+        )
+    
+    # Validate file size (max 5MB)
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:  # 5MB
+        raise HTTPException(
+            status_code=400,
+            detail="File size too large. Maximum size is 5MB"
+        )
+    
+    # Generate unique filename
+    file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOADS_DIR / unique_filename
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    # Return the URL path
+    image_url = f"/api/uploads/{unique_filename}"
+    
+    return {"image_url": image_url, "filename": unique_filename}
+
+
 # Catalog Routes
 @api_router.post("/catalogs", response_model=Catalog)
 async def create_catalog(catalog: CatalogCreate):
