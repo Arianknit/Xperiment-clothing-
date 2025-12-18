@@ -256,6 +256,7 @@ function App() {
       fetchCuttingOrders();
       fetchOutsourcingOrders();
       fetchOutsourcingReceipts();
+      fetchOutsourcingUnits();
       fetchIroningOrders();
       fetchIroningReceipts();
       fetchCatalogs();
