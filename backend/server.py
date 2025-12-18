@@ -727,23 +727,31 @@ async def delete_fabric_lot(lot_id: str):
 
 class RollWeightsUpdate(BaseModel):
     scale_readings: List[float]  # Cumulative scale readings after each roll
+    restart_points: Optional[List[int]] = []  # Indices where scale was restarted (new roll placed fresh)
 
 @api_router.put("/fabric-lots/{lot_id}/roll-weights")
 async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
     """
-    Update roll weights using cumulative scale readings
+    Update roll weights using cumulative scale readings with restart support.
     
-    Example: 
+    Example without restart:
     - Roll 1 on scale: 22 kg → scale_readings[0] = 22, roll_weight[0] = 22
     - Roll 2 added: 45 kg → scale_readings[1] = 45, roll_weight[1] = 23 (45-22)
     - Roll 3 added: 70 kg → scale_readings[2] = 70, roll_weight[2] = 25 (70-45)
+    
+    Example with restart at roll 3 (scale capacity reached):
+    - Roll 1 on scale: 22 kg → roll_weight[0] = 22
+    - Roll 2 added: 45 kg → roll_weight[1] = 23 (45-22)
+    - Scale restarted, Roll 3 fresh: 25 kg → roll_weight[2] = 25 (fresh reading)
+    - restart_points = [2] (index of roll 3)
     """
     fabric_lot = await db.fabric_lots.find_one({"id": lot_id}, {"_id": 0})
     if not fabric_lot:
         raise HTTPException(status_code=404, detail="Fabric lot not found")
     
     scale_readings = weights_update.scale_readings
-    number_of_rolls = fabric_lot.get('number_of_rolls', 1)
+    restart_points = weights_update.restart_points or []
+    number_of_rolls = fabric_lot.get('number_of_rolls', len(fabric_lot.get('roll_numbers', [])))
     
     # Validate number of readings matches number of rolls
     if len(scale_readings) != number_of_rolls:
@@ -752,19 +760,25 @@ async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
             detail=f"Number of scale readings ({len(scale_readings)}) must match number of rolls ({number_of_rolls})"
         )
     
-    # Validate scale readings are in ascending order
+    # Validate readings are in ascending order within each segment (between restarts)
+    current_segment_start = 0
     for i in range(1, len(scale_readings)):
+        if i in restart_points:
+            # New segment starts here, reset the segment start
+            current_segment_start = i
+            continue
+        
         if scale_readings[i] <= scale_readings[i-1]:
             raise HTTPException(
                 status_code=400,
-                detail=f"Scale readings must be in ascending order. Reading {i+1} ({scale_readings[i]}) is not greater than reading {i} ({scale_readings[i-1]})"
+                detail=f"Scale readings must be ascending within a segment. Reading {i+1} ({scale_readings[i]}) is not greater than reading {i} ({scale_readings[i-1]}). Did you forget to mark a restart point?"
             )
     
-    # Calculate individual roll weights
+    # Calculate individual roll weights from cumulative readings with restart support
     roll_weights = []
     for i, reading in enumerate(scale_readings):
-        if i == 0:
-            # First roll weight is the first reading
+        if i == 0 or i in restart_points:
+            # First roll or restart point: weight is just the reading
             roll_weight = reading
         else:
             # Subsequent rolls: current reading - previous reading
