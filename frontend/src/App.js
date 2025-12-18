@@ -2374,6 +2374,86 @@ _Arian Knit Fab_`;
                   )}
                 </DialogContent>
               </Dialog>
+
+              {/* Edit Fabric Lot Dialog (Admin Only) */}
+              <Dialog open={editFabricDialogOpen} onOpenChange={setEditFabricDialogOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>✏️ Edit Fabric Lot - {editingFabricLot?.lot_number}</DialogTitle>
+                    <DialogDescription>Update fabric lot details (Admin only)</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleEditFabricLot} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Fabric Type</Label>
+                        <Input 
+                          value={editFabricForm.fabric_type}
+                          onChange={(e) => setEditFabricForm({...editFabricForm, fabric_type: e.target.value})}
+                          placeholder="Cotton, Polyester, etc."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Color</Label>
+                        <Input 
+                          value={editFabricForm.color}
+                          onChange={(e) => setEditFabricForm({...editFabricForm, color: e.target.value})}
+                          placeholder="Red, Blue, etc."
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Supplier Name</Label>
+                        <Input 
+                          value={editFabricForm.supplier_name}
+                          onChange={(e) => setEditFabricForm({...editFabricForm, supplier_name: e.target.value})}
+                          placeholder="Supplier name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Rate per kg (₹)</Label>
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          value={editFabricForm.rate_per_kg}
+                          onChange={(e) => setEditFabricForm({...editFabricForm, rate_per_kg: e.target.value})}
+                          placeholder="Rate"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Remaining Fabric (kg)</Label>
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          value={editFabricForm.remaining_quantity}
+                          onChange={(e) => setEditFabricForm({...editFabricForm, remaining_quantity: e.target.value})}
+                          placeholder="Remaining quantity"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Remaining Rib (kg)</Label>
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          value={editFabricForm.remaining_rib_quantity}
+                          onChange={(e) => setEditFabricForm({...editFabricForm, remaining_rib_quantity: e.target.value})}
+                          placeholder="Remaining rib"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setEditFabricDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                        {loading ? "Saving..." : "💾 Save Changes"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
               
               {/* Search and Filter Bar */}
               <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm border">
