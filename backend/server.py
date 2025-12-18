@@ -3681,9 +3681,10 @@ def generate_cutting_rows(orders, lot_status):
     return ''.join(rows)
 
 
-def generate_fabric_rows(lots):
+def generate_fabric_rows(lots, fabric_usage):
     rows = []
     for l in lots:
+        lot_num = l.get('lot_number', '')
         # Calculate total from rolls if total_quantity not set
         rolls = l.get('rolls', [])
         total_qty = l.get('total_quantity', 0)
@@ -3691,8 +3692,13 @@ def generate_fabric_rows(lots):
             total_qty = sum(r.get('weight', 0) for r in rolls)
         
         remaining_qty = l.get('remaining_quantity', 0)
-        # Ensure used is never negative
-        used_qty = max(0, total_qty - remaining_qty)
+        
+        # Get actual used quantity from cutting orders
+        used_qty = fabric_usage.get(lot_num, 0)
+        
+        # If we have remaining but no total, estimate total = remaining + used
+        if total_qty == 0 and (remaining_qty > 0 or used_qty > 0):
+            total_qty = remaining_qty + used_qty
         
         status_class = 'in-stock' if remaining_qty > 0 else 'exhausted'
         status_text = 'In Stock' if remaining_qty > 0 else 'Exhausted'
