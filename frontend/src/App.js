@@ -2635,11 +2635,46 @@ function App() {
                           data-testid="outsourcing-notes-input"
                         />
                       </div>
-                      {outsourcingForm.cutting_order_ids.length > 0 && (
+                      {/* Size Distribution - Different display for edit vs create */}
+                      {editingOutsourcingOrder ? (
+                        <div className="space-y-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                          <h4 className="font-semibold text-slate-700">📝 Edit Size Distribution</h4>
+                          <div className="grid grid-cols-4 gap-2">
+                            {Object.entries(outsourcingForm.size_distribution || {}).map(([size, qty]) => (
+                              <div key={size} className="space-y-1">
+                                <Label className="text-xs text-slate-600">{size}</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={qty}
+                                  onChange={(e) => {
+                                    const newDist = {...outsourcingForm.size_distribution};
+                                    newDist[size] = parseInt(e.target.value) || 0;
+                                    setOutsourcingForm({...outsourcingForm, size_distribution: newDist});
+                                  }}
+                                  className="h-8"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="pt-2 border-t border-amber-200">
+                            <p className="text-sm text-slate-600">Total: {Object.values(outsourcingForm.size_distribution || {}).reduce((a, b) => a + b, 0)} pcs</p>
+                            {outsourcingForm.rate_per_pcs && (
+                              <p className="text-lg font-bold text-indigo-600">
+                                Total Amount: ₹{(Object.values(outsourcingForm.size_distribution || {}).reduce((a, b) => a + b, 0) * parseFloat(outsourcingForm.rate_per_pcs || 0)).toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                          {editingOutsourcingOrder.status === 'Received' && (
+                            <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                              ✅ This order has been delivered. You can still edit details.
+                            </div>
+                          )}
+                        </div>
+                      ) : outsourcingForm.cutting_order_ids.length > 0 && (
                         <div className="space-y-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
                           <h4 className="font-semibold text-slate-700">Combined Size Distribution</h4>
                           {(() => {
-                            // Calculate combined size distribution from selected lots
                             const combinedSizes = {};
                             outsourcingForm.cutting_order_ids.forEach(id => {
                               const order = availableCuttingOrders.find(o => o.id === id);
@@ -2680,7 +2715,7 @@ function App() {
                           className="bg-indigo-600 hover:bg-indigo-700" 
                           disabled={
                             loading || 
-                            outsourcingForm.cutting_order_ids.length === 0 ||
+                            (!editingOutsourcingOrder && outsourcingForm.cutting_order_ids.length === 0) ||
                             !outsourcingForm.unit_name ||
                             !outsourcingForm.rate_per_pcs
                           } 
