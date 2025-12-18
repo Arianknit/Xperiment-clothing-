@@ -3559,6 +3559,42 @@ function App() {
                   )}
                 </div>
               </div>
+              
+              {/* Mistakes Section */}
+              <div className="space-y-2">
+                <Label className="text-orange-700">⚠️ Mistakes (Defective pieces - will be debited)</Label>
+                <div className="grid grid-cols-4 gap-2 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                  {Object.entries(selectedIroningOrder.size_distribution).map(([size, sentQty]) => (
+                    <div key={`mistake-${size}`} className="space-y-1">
+                      <Label className="text-xs text-orange-700">{size}</Label>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max={ironingReceiptForm.received_distribution[size] || 0}
+                        value={ironingReceiptForm.mistake_distribution[size] || ''} 
+                        onChange={(e) => setIroningReceiptForm({
+                          ...ironingReceiptForm,
+                          mistake_distribution: {
+                            ...ironingReceiptForm.mistake_distribution,
+                            [size]: parseInt(e.target.value) || 0
+                          }
+                        })}
+                        placeholder="0"
+                        className="h-8 border-orange-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {getTotalQty(ironingReceiptForm.mistake_distribution) > 0 && (
+                  <div className="bg-orange-100 p-2 rounded border border-orange-300">
+                    <p className="text-sm font-semibold text-orange-700">
+                      Total Mistakes: {getTotalQty(ironingReceiptForm.mistake_distribution)} pcs 
+                      (Debit: ₹{(getTotalQty(ironingReceiptForm.mistake_distribution) * selectedIroningOrder.rate_per_pcs).toFixed(2)})
+                    </p>
+                  </div>
+                )}
+              </div>
+              
               {selectedIroningOrder.master_pack_ratio && Object.keys(selectedIroningOrder.master_pack_ratio).length > 0 && getTotalQty(ironingReceiptForm.received_distribution) > 0 && (() => {
                 const ratio = selectedIroningOrder.master_pack_ratio;
                 let completePacks = Infinity;
