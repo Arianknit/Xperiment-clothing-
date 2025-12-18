@@ -193,6 +193,17 @@ function App() {
   });
   
   const [barcodeView, setBarcodeView] = useState(null);
+  
+  // Unit Payment state
+  const [unitPaymentDialogOpen, setUnitPaymentDialogOpen] = useState(false);
+  const [unitPaymentForm, setUnitPaymentForm] = useState({
+    unit_name: "",
+    amount: "",
+    payment_method: "Cash",
+    notes: ""
+  });
+  const [pendingBills, setPendingBills] = useState(null);
+  const [availableUnits, setAvailableUnits] = useState([]);
 
   useEffect(() => {
     fetchDashboardStats();
