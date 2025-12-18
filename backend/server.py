@@ -581,6 +581,27 @@ async def toggle_user_status(user_id: str, current_user: dict = Depends(get_curr
     
     return {"message": f"User {'enabled' if new_status else 'disabled'} successfully"}
 
+@api_router.put("/auth/users/{user_id}/role")
+async def update_user_role(user_id: str, role_data: dict, current_user: dict = Depends(get_current_user)):
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    new_role = role_data.get('role')
+    if new_role not in ['admin', 'user']:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be 'admin' or 'user'")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent changing the main admin's role
+    if user.get('username') == 'admin':
+        raise HTTPException(status_code=400, detail="Cannot change the main admin's role")
+    
+    await db.users.update_one({"id": user_id}, {"$set": {"role": new_role}})
+    
+    return {"message": f"User role updated to '{new_role}' successfully"}
+
 
 # ==================== FABRIC LOT ROUTES ====================
 
