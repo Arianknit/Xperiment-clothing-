@@ -551,3 +551,27 @@
 
 **Recommendation:** Authentication system is fully functional, secure, and ready for production use. No critical issues found during comprehensive testing.
 
+
+## Multiple Lot Selection for Outsourcing
+
+### Backend Changes
+- Updated OutsourcingOrder model to support:
+  - `cutting_order_ids: List[str]` - Multiple cutting order IDs
+  - `cutting_lot_numbers: List[str]` - Multiple lot numbers
+- Updated OutsourcingOrderCreate to accept `cutting_order_ids` array
+- Backend now combines size distributions from all selected lots
+- Marks operation as completed on ALL selected cutting orders
+
+### Frontend Changes
+- Replaced single dropdown with checkbox-based multi-select
+- Shows "Select Cutting Lots (Multiple)" with scrollable list
+- Each lot shows: lot number, style, category, color, pieces
+- Lots with operation already done show badge and are disabled
+- Combined size distribution preview shows total from all lots
+- Button shows count: "Create DC (X Lots)"
+
+### Test Cases
+1. Select multiple lots for same operation
+2. Combined size distribution calculation
+3. Validation prevents selecting lots with completed operation
+
