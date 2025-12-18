@@ -83,6 +83,10 @@ function App() {
     comments: ''
   });
   
+  // WhatsApp state
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [whatsappData, setWhatsappData] = useState({ type: '', data: null, phone: '', useUnitPhone: true });
+  
   // Fabric lot form state
   const [lotForm, setLotForm] = useState({
     entry_date: new Date().toISOString().split('T')[0],
