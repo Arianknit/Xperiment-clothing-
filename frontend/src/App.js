@@ -2690,6 +2690,165 @@ function App() {
                 </div>
               </div>
               
+              {/* Manage Units Dialog */}
+              <Dialog open={unitsDialogOpen} onOpenChange={(open) => {
+                setUnitsDialogOpen(open);
+                if (!open) {
+                  setUnitForm({ unit_name: "", operations: [], contact_person: "", phone: "", address: "" });
+                  setEditingUnit(null);
+                }
+              }}>
+                <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>👥 Manage Outsourcing Units</DialogTitle>
+                    <DialogDescription>Add and manage nominated outsourcing units and their operations</DialogDescription>
+                  </DialogHeader>
+                  
+                  {/* Add/Edit Unit Form */}
+                  <form onSubmit={handleUnitSubmit} className="space-y-4 bg-slate-50 p-4 rounded-lg border">
+                    <h4 className="font-semibold text-slate-700">{editingUnit ? "Edit Unit" : "Add New Unit"}</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Unit Name *</Label>
+                        <Input 
+                          value={unitForm.unit_name} 
+                          onChange={(e) => setUnitForm({...unitForm, unit_name: e.target.value})}
+                          placeholder="e.g., Satish Printing"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Contact Person</Label>
+                        <Input 
+                          value={unitForm.contact_person} 
+                          onChange={(e) => setUnitForm({...unitForm, contact_person: e.target.value})}
+                          placeholder="Contact name"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input 
+                          value={unitForm.phone} 
+                          onChange={(e) => setUnitForm({...unitForm, phone: e.target.value})}
+                          placeholder="Phone number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Address</Label>
+                        <Input 
+                          value={unitForm.address} 
+                          onChange={(e) => setUnitForm({...unitForm, address: e.target.value})}
+                          placeholder="Unit address"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Operations Handled *</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {OPERATION_TYPES.map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => {
+                              const ops = unitForm.operations.includes(op)
+                                ? unitForm.operations.filter(o => o !== op)
+                                : [...unitForm.operations, op];
+                              setUnitForm({...unitForm, operations: ops});
+                            }}
+                            className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                              unitForm.operations.includes(op)
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                            }`}
+                          >
+                            {unitForm.operations.includes(op) ? '✓ ' : ''}{op}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      {editingUnit && (
+                        <Button type="button" variant="outline" onClick={() => {
+                          setEditingUnit(null);
+                          setUnitForm({ unit_name: "", operations: [], contact_person: "", phone: "", address: "" });
+                        }}>
+                          Cancel Edit
+                        </Button>
+                      )}
+                      <Button 
+                        type="submit" 
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                        disabled={loading || !unitForm.unit_name || unitForm.operations.length === 0}
+                      >
+                        {loading ? "Saving..." : editingUnit ? "Update Unit" : "Add Unit"}
+                      </Button>
+                    </div>
+                  </form>
+
+                  {/* Units List */}
+                  <div className="mt-4">
+                    <h4 className="font-semibold text-slate-700 mb-3">Registered Units ({outsourcingUnits.length})</h4>
+                    {outsourcingUnits.length === 0 ? (
+                      <p className="text-slate-500 text-center py-4">No units registered yet. Add your first unit above.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {outsourcingUnits.map((unit) => (
+                          <div 
+                            key={unit.id} 
+                            className={`p-3 rounded-lg border flex justify-between items-start ${unit.is_active ? 'bg-white' : 'bg-slate-100 opacity-60'}`}
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-slate-800">{unit.unit_name}</span>
+                                {!unit.is_active && <Badge className="bg-red-100 text-red-700 text-xs">Inactive</Badge>}
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {unit.operations.map((op) => (
+                                  <Badge key={op} className="bg-indigo-100 text-indigo-700 text-xs">{op}</Badge>
+                                ))}
+                              </div>
+                              {(unit.contact_person || unit.phone) && (
+                                <p className="text-xs text-slate-500 mt-1">
+                                  {unit.contact_person} {unit.phone && `• ${unit.phone}`}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingUnit(unit);
+                                  setUnitForm({
+                                    unit_name: unit.unit_name,
+                                    operations: unit.operations,
+                                    contact_person: unit.contact_person || "",
+                                    phone: unit.phone || "",
+                                    address: unit.address || ""
+                                  });
+                                }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600"
+                                onClick={() => handleDeleteUnit(unit.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
               {/* Unit Payment Dialog */}
               <Dialog open={unitPaymentDialogOpen} onOpenChange={(open) => {
                 setUnitPaymentDialogOpen(open);
