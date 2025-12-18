@@ -87,6 +87,21 @@ function App() {
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [whatsappData, setWhatsappData] = useState({ type: '', data: null, phone: '', useUnitPhone: true });
   
+  // Search and Filter state
+  const [fabricSearch, setFabricSearch] = useState("");
+  const [fabricStatusFilter, setFabricStatusFilter] = useState("all");
+  const [cuttingSearch, setCuttingSearch] = useState("");
+  const [cuttingCategoryFilter, setCuttingCategoryFilter] = useState("all");
+  const [outsourcingSearch, setOutsourcingSearch] = useState("");
+  const [outsourcingOperationFilter, setOutsourcingOperationFilter] = useState("all");
+  const [outsourcingStatusFilter, setOutsourcingStatusFilter] = useState("all");
+  const [receiptsSearch, setReceiptsSearch] = useState("");
+  const [receiptsTypeFilter, setReceiptsTypeFilter] = useState("all");
+  const [ironingSearch, setIroningSearch] = useState("");
+  const [ironingStatusFilter, setIroningStatusFilter] = useState("all");
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState("all");
+  
   // Fabric lot form state
   const [lotForm, setLotForm] = useState({
     entry_date: new Date().toISOString().split('T')[0],
