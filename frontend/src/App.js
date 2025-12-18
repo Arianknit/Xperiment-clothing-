@@ -2311,11 +2311,13 @@ _Garment Manufacturing Pro_`;
                 ))}
               </div>
 
-              {fabricLots.length === 0 && (
+              {filteredFabricLots.length === 0 && (
                 <Card className="shadow-lg">
                   <CardContent className="flex flex-col items-center justify-center py-16">
                     <Package className="h-16 w-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 text-lg">No fabric lots in inventory</p>
+                    <p className="text-slate-500 text-lg">
+                      {fabricLots.length === 0 ? "No fabric lots in inventory" : "No matching fabric lots found"}
+                    </p>
                   </CardContent>
                 </Card>
               )}
