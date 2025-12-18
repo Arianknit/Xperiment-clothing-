@@ -3419,7 +3419,6 @@ _Garment Manufacturing Pro_`;
                   </form>
                 </DialogContent>
               </Dialog>
-              </div>
 
               <div className="space-y-4">
                 {filteredOutsourcingOrders.map((order) => (
