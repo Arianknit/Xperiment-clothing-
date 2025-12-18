@@ -391,6 +391,16 @@ function App() {
     }
   };
 
+  const handleChangeUserRole = async (userId, newRole) => {
+    try {
+      await axios.put(`${API}/auth/users/${userId}/role`, { role: newRole });
+      toast.success(`User role changed to "${newRole}" successfully`);
+      fetchAllUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to change user role");
+    }
+  };
+
   const fetchDashboardStats = async () => {
     try {
       const response = await axios.get(`${API}/dashboard/stats`);
