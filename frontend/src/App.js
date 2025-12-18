@@ -3968,12 +3968,14 @@ _Garment Manufacturing Pro_`;
                 ))}
               </div>
 
-              {ironingOrders.length === 0 && (
+              {filteredIroningOrders.length === 0 && (
                 <Card className="shadow-lg">
                   <CardContent className="flex flex-col items-center justify-center py-16">
                     <Factory className="h-16 w-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 text-lg">No ironing orders yet</p>
-                    <p className="text-slate-400 text-sm mt-2">Create an order to send items for ironing</p>
+                    <p className="text-slate-500 text-lg">
+                      {ironingOrders.length === 0 ? "No ironing orders yet" : "No matching ironing orders found"}
+                    </p>
+                    {ironingOrders.length === 0 && <p className="text-slate-400 text-sm mt-2">Create an order to send items for ironing</p>}
                   </CardContent>
                 </Card>
               )}
