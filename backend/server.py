@@ -425,6 +425,7 @@ class CatalogDispatch(BaseModel):
     dispatch_date: datetime
     bora_number: str  # Bundle/Batch number
     color: str  # T-shirt color
+    lot_number: str  # The lot being dispatched from
     notes: Optional[str] = None
 
 
@@ -3635,6 +3636,7 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
         "id": str(uuid.uuid4()),
         "catalog_id": catalog_id,
         "catalog_name": catalog.get('catalog_name'),
+        "lot_number": dispatch.lot_number,
         "dispatch_quantity": dispatch.dispatch_quantity,
         "total_dispatched": total_dispatch,
         "customer_name": dispatch.customer_name,
