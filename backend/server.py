@@ -3882,15 +3882,14 @@ async def get_cutting_report(
                     <th>Master</th>
                     <th>Category</th>
                     <th>Style</th>
-                    <th>Quantity</th>
-                    <th>Fabric Cost</th>
+                    <th>Qty</th>
+                    <th>Current Status / Step</th>
                     <th>Cutting Cost</th>
-                    <th>Paid</th>
                     <th>Balance</th>
                 </tr>
             </thead>
             <tbody>
-                {''.join([f'''
+                {''.join([f"""
                 <tr>
                     <td><strong>{o.get('cutting_lot_number', 'N/A')}</strong></td>
                     <td>{o.get('cutting_date').strftime('%d %b %Y') if o.get('cutting_date') else 'N/A'}</td>
@@ -3898,12 +3897,15 @@ async def get_cutting_report(
                     <td>{o.get('category', 'N/A')}</td>
                     <td>{o.get('style_type', 'N/A')}</td>
                     <td><strong>{o.get('total_quantity', 0)}</strong></td>
-                    <td>₹{o.get('total_fabric_cost', 0):.2f}</td>
+                    <td>
+                        <span class="status-badge status-cutting">✂️ Cut</span>
+                        {''.join([f'<span class="status-badge {"status-received" if os["status"]=="Received" else "status-outsourcing"}">{os["operation"]} ({os["status"]})</span>' for os in lot_status.get(o.get('cutting_lot_number'), {{}}).get('outsourcing', [])]) or ''}
+                        {f'<span class="status-badge {"status-complete" if lot_status.get(o.get("cutting_lot_number"), {{}}).get("ironing", {{}}).get("status")=="Received" else "status-ironing"}">🔥 Ironing ({lot_status.get(o.get("cutting_lot_number"), {{}}).get("ironing", {{}}).get("status", "N/A")})</span>' if lot_status.get(o.get('cutting_lot_number'), {{}}).get('ironing') else ''}
+                    </td>
                     <td>₹{o.get('total_cutting_amount', 0):.2f}</td>
-                    <td style="color: green;">₹{o.get('amount_paid', 0):.2f}</td>
-                    <td style="color: red;">₹{o.get('balance', 0):.2f}</td>
+                    <td style="color: {'green' if o.get('balance', 0) == 0 else 'red'};">₹{o.get('balance', 0):.2f}</td>
                 </tr>
-                ''' for o in orders]) if orders else '<tr><td colspan="10" style="text-align: center; padding: 20px;">No records found</td></tr>'}
+                """ for o in orders]) if orders else '<tr><td colspan="9" style="text-align: center; padding: 20px;">No records found</td></tr>'}
             </tbody>
         </table>
         
