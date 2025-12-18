@@ -3642,7 +3642,7 @@ _Garment Manufacturing Pro_`;
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                           <div>
                             <p className="text-xs text-slate-500">Unit</p>
-                            <p className="font-semibold text-slate-800">{receipt.unit_name}</p>
+                            <p className="font-semibold text-slate-800">{order?.unit_name || receipt.unit_name}</p>
                           </div>
                           <div>
                             <p className="text-xs text-slate-500">Sent</p>
