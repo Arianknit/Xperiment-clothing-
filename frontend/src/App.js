@@ -60,6 +60,11 @@ function App() {
   const [cuttingOrders, setCuttingOrders] = useState([]);
   const [outsourcingOrders, setOutsourcingOrders] = useState([]);
   const [outsourcingReceipts, setOutsourcingReceipts] = useState([]);
+  const [outsourcingUnits, setOutsourcingUnits] = useState([]);
+  const [filteredUnits, setFilteredUnits] = useState([]);
+  const [unitsDialogOpen, setUnitsDialogOpen] = useState(false);
+  const [unitForm, setUnitForm] = useState({ unit_name: "", operations: [], contact_person: "", phone: "", address: "" });
+  const [editingUnit, setEditingUnit] = useState(null);
   const [ironingOrders, setIroningOrders] = useState([]);
   const [ironingReceipts, setIroningReceipts] = useState([]);
   const [catalogs, setCatalogs] = useState([]);
