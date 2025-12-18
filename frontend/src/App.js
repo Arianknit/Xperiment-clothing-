@@ -3574,9 +3574,37 @@ _Garment Manufacturing Pro_`;
                       </div>
                     )}
                     
+                    {/* Transaction Type Selector */}
+                    <div className="space-y-2">
+                      <Label>Transaction Type</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant={unitPaymentForm.transaction_type === 'credit' ? 'default' : 'outline'}
+                          className={unitPaymentForm.transaction_type === 'credit' ? 'bg-green-600 hover:bg-green-700' : ''}
+                          onClick={() => setUnitPaymentForm({...unitPaymentForm, transaction_type: 'credit'})}
+                        >
+                          💰 Payment (Credit)
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={unitPaymentForm.transaction_type === 'debit' ? 'default' : 'outline'}
+                          className={unitPaymentForm.transaction_type === 'debit' ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                          onClick={() => setUnitPaymentForm({...unitPaymentForm, transaction_type: 'debit'})}
+                        >
+                          📝 Charge (Debit)
+                        </Button>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {unitPaymentForm.transaction_type === 'credit' 
+                          ? '💡 Payment reduces the unit\'s pending balance' 
+                          : '💡 Debit adds charges like advance, penalty, or extra work'}
+                      </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Payment Amount (₹)</Label>
+                        <Label>{unitPaymentForm.transaction_type === 'credit' ? 'Payment Amount (₹)' : 'Debit Amount (₹)'}</Label>
                         <Input 
                           type="number" 
                           step="0.01"
@@ -3587,21 +3615,39 @@ _Garment Manufacturing Pro_`;
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Payment Method</Label>
-                        <Select 
-                          value={unitPaymentForm.payment_method}
-                          onValueChange={(value) => setUnitPaymentForm({...unitPaymentForm, payment_method: value})}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Cash">Cash</SelectItem>
-                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                            <SelectItem value="UPI">UPI</SelectItem>
-                            <SelectItem value="Cheque">Cheque</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Label>{unitPaymentForm.transaction_type === 'credit' ? 'Payment Method' : 'Debit Reason'}</Label>
+                        {unitPaymentForm.transaction_type === 'credit' ? (
+                          <Select 
+                            value={unitPaymentForm.payment_method}
+                            onValueChange={(value) => setUnitPaymentForm({...unitPaymentForm, payment_method: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Cash">Cash</SelectItem>
+                              <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                              <SelectItem value="UPI">UPI</SelectItem>
+                              <SelectItem value="Cheque">Cheque</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Select 
+                            value={unitPaymentForm.payment_method}
+                            onValueChange={(value) => setUnitPaymentForm({...unitPaymentForm, payment_method: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Advance">Advance Payment</SelectItem>
+                              <SelectItem value="Penalty">Penalty/Fine</SelectItem>
+                              <SelectItem value="Extra Work">Extra Work</SelectItem>
+                              <SelectItem value="Adjustment">Adjustment</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
                     
