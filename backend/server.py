@@ -240,9 +240,11 @@ class OutsourcingOrder(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     dc_number: str
     dc_date: datetime
-    cutting_order_id: str
+    cutting_order_id: str  # Primary cutting order ID (for backward compatibility)
+    cutting_order_ids: Optional[List[str]] = []  # Multiple cutting order IDs
     cutting_lot_number: Optional[str] = ""
-    lot_number: str
+    cutting_lot_numbers: Optional[List[str]] = []  # Multiple lot numbers
+    lot_number: str  # Fabric lot number
     color: Optional[str] = ""
     category: str
     style_type: str
@@ -264,13 +266,9 @@ class OutsourcingOrder(BaseModel):
 
 class OutsourcingOrderCreate(BaseModel):
     dc_date: datetime
-    cutting_order_id: str
-    lot_number: str
-    category: str
-    style_type: str
+    cutting_order_ids: List[str]  # Multiple cutting order IDs
     operation_type: str
     unit_name: str
-    size_distribution: Dict[str, int]
     rate_per_pcs: float
     notes: Optional[str] = ""
 
