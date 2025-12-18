@@ -3677,14 +3677,17 @@ _Garment Manufacturing Pro_`;
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                );
+                })}
               </div>
 
-              {outsourcingReceipts.length === 0 && (
+              {filteredReceipts.length === 0 && (
                 <Card className="shadow-lg">
                   <CardContent className="flex flex-col items-center justify-center py-16">
                     <PackageCheck className="h-16 w-16 text-slate-300 mb-4" />
-                    <p className="text-slate-500 text-lg">No receipts recorded yet</p>
+                    <p className="text-slate-500 text-lg">
+                      {allReceipts.length === 0 ? "No receipts recorded yet" : "No matching receipts found"}
+                    </p>
                   </CardContent>
                 </Card>
               )}
