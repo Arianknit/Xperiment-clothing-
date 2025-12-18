@@ -1555,95 +1555,44 @@ _Garment Manufacturing Pro_`;
               </div>
             )}
             
-            {!showRegister ? (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      id="username"
-                      type="text" 
-                      placeholder="Enter username"
-                      className="pl-10"
-                      value={loginForm.username}
-                      onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      id="password"
-                      type="password" 
-                      placeholder="Enter password"
-                      className="pl-10"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
-                <p className="text-center text-sm text-slate-500">
-                  Don't have an account?{" "}
-                  <button type="button" onClick={() => { setShowRegister(true); setAuthError(""); }} className="text-indigo-600 hover:underline font-medium">
-                    Register
-                  </button>
-                </p>
-              </form>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reg-fullname">Full Name</Label>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <Input 
-                    id="reg-fullname"
+                    id="username"
                     type="text" 
-                    placeholder="Enter your full name"
-                    value={registerForm.full_name}
-                    onChange={(e) => setRegisterForm({...registerForm, full_name: e.target.value})}
+                    placeholder="Enter username"
+                    className="pl-10"
+                    value={loginForm.username}
+                    onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-username">Username</Label>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <Input 
-                    id="reg-username"
-                    type="text" 
-                    placeholder="Choose a username"
-                    value={registerForm.username}
-                    onChange={(e) => setRegisterForm({...registerForm, username: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password">Password</Label>
-                  <Input 
-                    id="reg-password"
+                    id="password"
                     type="password" 
-                    placeholder="Create a password"
-                    value={registerForm.password}
-                    onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                    placeholder="Enter password"
+                    className="pl-10"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  {loading ? "Creating account..." : "Create Account"}
-                </Button>
-                <p className="text-center text-sm text-slate-500">
-                  Already have an account?{" "}
-                  <button type="button" onClick={() => { setShowRegister(false); setAuthError(""); }} className="text-indigo-600 hover:underline font-medium">
-                    Sign In
-                  </button>
-                </p>
-              </form>
-            )}
+              </div>
+              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+              <p className="text-center text-xs text-slate-400 mt-4">
+                Contact admin for new account
+              </p>
+            </form>
           </CardContent>
         </Card>
       </div>
