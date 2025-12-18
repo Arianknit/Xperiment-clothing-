@@ -723,28 +723,28 @@ function App() {
         toast.success("Outsourcing order updated successfully");
       } else {
         await axios.post(`${API}/outsourcing-orders`, {
-          ...outsourcingForm,
+          cutting_order_ids: outsourcingForm.cutting_order_ids,
           dc_date: new Date(outsourcingForm.dc_date).toISOString(),
-          rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs)
+          operation_type: outsourcingForm.operation_type,
+          unit_name: outsourcingForm.unit_name,
+          rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs),
+          notes: outsourcingForm.notes || ""
         });
-        toast.success("Outsourcing order created successfully");
+        toast.success(`Outsourcing order created with ${outsourcingForm.cutting_order_ids.length} lot(s)`);
       }
       
       setOutsourcingDialogOpen(false);
       setOutsourcingForm({
         dc_date: new Date().toISOString().split('T')[0],
-        cutting_order_id: "",
-        lot_number: "",
-        category: "Kids",
-        style_type: "",
+        cutting_order_ids: [],
         operation_type: "Printing",
         unit_name: "",
         rate_per_pcs: "",
-        notes: "",
-        size_distribution: {}
+        notes: ""
       });
       setEditingOutsourcingOrder(null);
       fetchOutsourcingOrders();
+      fetchCuttingOrders();
       fetchDashboardStats();
     } catch (error) {
       console.error("Error saving outsourcing order:", error);
