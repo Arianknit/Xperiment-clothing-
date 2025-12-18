@@ -1545,7 +1545,7 @@ _Garment Manufacturing Pro_`;
               <Factory className="h-10 w-10 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold text-slate-800">Garment Manufacturing Pro</CardTitle>
-            <CardDescription>{showRegister ? "Create your account" : "Sign in to continue"}</CardDescription>
+            <CardDescription>Sign in to continue</CardDescription>
           </CardHeader>
           <CardContent>
             {authError && (
