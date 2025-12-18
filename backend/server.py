@@ -258,6 +258,8 @@ class OutsourcingOrder(BaseModel):
     payment_status: Optional[str] = "Unpaid"  # Unpaid, Partial, Paid
     status: str  # Sent, Received, Partial
     whatsapp_sent: bool = False
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class OutsourcingOrderCreate(BaseModel):
