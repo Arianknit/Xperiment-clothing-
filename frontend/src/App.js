@@ -2647,19 +2647,55 @@ function App() {
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <h3 className="text-xl font-bold text-slate-800">{order.dc_number}</h3>
                             {getStatusBadge(order.status)}
                             <Badge className="bg-purple-100 text-purple-800 border border-purple-200">{order.operation_type}</Badge>
-                            {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
                             {getPaymentStatusBadge(order.payment_status || "Unpaid")}
+                            <Badge className="bg-slate-100 text-slate-700">
+                              {order.lot_details?.length || 1} Lot(s)
+                            </Badge>
                           </div>
-                          {order.cutting_lot_number && (
-                            <div className="text-sm text-slate-600 bg-indigo-50 px-3 py-1 rounded inline-block">
+                          
+                          {/* Lot-wise Details Section */}
+                          {order.lot_details && order.lot_details.length > 0 ? (
+                            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 overflow-hidden">
+                              <div className="bg-indigo-100 px-3 py-2 border-b border-indigo-200">
+                                <p className="text-sm font-semibold text-indigo-800">📦 Lot-wise Details</p>
+                              </div>
+                              <div className="divide-y divide-indigo-100">
+                                {order.lot_details.map((lot, idx) => (
+                                  <div key={idx} className="px-3 py-2">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-slate-800">{lot.cutting_lot_number}</span>
+                                        <Badge className="bg-slate-100 text-slate-600 text-xs">{lot.category}</Badge>
+                                        <span className="text-sm text-slate-600">- {lot.style_type}</span>
+                                        {lot.color && <span className="text-xs text-purple-600">🎨 {lot.color}</span>}
+                                      </div>
+                                      <span className="font-bold text-indigo-600">{lot.quantity} pcs</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {Object.entries(lot.size_distribution || {}).map(([size, qty]) => (
+                                        qty > 0 && (
+                                          <span key={size} className="text-xs bg-white px-2 py-0.5 rounded border">
+                                            {size}: {qty}
+                                          </span>
+                                        )
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : order.cutting_lot_number && (
+                            <div className="text-sm text-slate-600 bg-indigo-50 px-3 py-2 rounded border border-indigo-200">
                               <span className="font-semibold">Cutting Lot:</span> {order.cutting_lot_number}
+                              {order.color && <span className="ml-2 text-purple-600">🎨 {order.color}</span>}
                             </div>
                           )}
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2 border-t">
                             <div>
                               <p className="text-xs text-slate-500">Unit Name</p>
                               <p className="font-semibold text-slate-800">{order.unit_name}</p>
