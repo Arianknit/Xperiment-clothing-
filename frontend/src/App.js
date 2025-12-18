@@ -3831,7 +3831,7 @@ _Garment Manufacturing Pro_`;
               </div>
 
               <div className="space-y-4">
-                {ironingOrders.map((order) => (
+                {filteredIroningOrders.map((order) => (
                   <Card key={order.id} className="shadow-lg border-l-4 border-l-amber-500" data-testid={`ironing-card-${order.id}`}>
                     <CardContent className="pt-6">
                       <div className="space-y-4">
