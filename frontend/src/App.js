@@ -3116,8 +3116,7 @@ _Garment Manufacturing Pro_`;
                       </div>
                     </form>
                   </DialogContent>
-                  </Dialog>
-                </div>
+                </Dialog>
               </div>
               
               {/* Manage Units Dialog */}
