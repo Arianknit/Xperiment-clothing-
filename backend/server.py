@@ -3640,6 +3640,30 @@ async def get_catalog_dispatches(catalog_id: str):
 
 
 # Reports Endpoints
+def generate_fabric_rows(lots):
+    rows = []
+    for l in lots:
+        total_qty = l.get('total_quantity', 0)
+        remaining_qty = l.get('remaining_quantity', 0)
+        used_qty = total_qty - remaining_qty
+        status_class = 'in-stock' if remaining_qty > 0 else 'exhausted'
+        status_text = 'In Stock' if remaining_qty > 0 else 'Exhausted'
+        rows.append(f"""
+        <tr>
+            <td><strong>{l.get('lot_number', 'N/A')}</strong></td>
+            <td>{l.get('supplier_name', 'N/A')}</td>
+            <td>{l.get('fabric_type', 'N/A')}</td>
+            <td>{l.get('color', 'N/A')}</td>
+            <td>{len(l.get('rolls', []))}</td>
+            <td>{total_qty:.2f}</td>
+            <td>{used_qty:.2f}</td>
+            <td><strong>{remaining_qty:.2f}</strong></td>
+            <td><span class="{status_class}">{status_text}</span></td>
+        </tr>
+        """)
+    return ''.join(rows)
+
+
 @api_router.get("/reports/fabric-inventory", response_class=HTMLResponse)
 async def get_fabric_inventory_report(
     status: str = None,
