@@ -1251,6 +1251,13 @@ _Garment Manufacturing Pro_`;
         whatsappData.data.method,
         whatsappData.data.pendingAmount
       );
+    } else if (whatsappData.type === 'payment_reminder') {
+      message = generatePaymentReminderMessage(
+        whatsappData.data.unitName,
+        whatsappData.data.totalPending,
+        whatsappData.data.billsCount,
+        whatsappData.data.bills
+      );
     }
     
     openWhatsApp(phone, message);
