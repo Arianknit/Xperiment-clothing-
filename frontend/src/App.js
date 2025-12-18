@@ -809,7 +809,8 @@ function App() {
           operation_type: outsourcingForm.operation_type,
           unit_name: outsourcingForm.unit_name,
           rate_per_pcs: parseFloat(outsourcingForm.rate_per_pcs),
-          size_distribution: outsourcingForm.size_distribution
+          size_distribution: outsourcingForm.size_distribution,
+          notes: outsourcingForm.notes || ""
         });
         toast.success("Outsourcing order updated successfully");
       } else {
