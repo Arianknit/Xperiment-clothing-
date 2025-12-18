@@ -1116,6 +1116,135 @@ function App() {
     return <Badge className={`${variants[status]} border`} data-testid={`status-badge-${status.toLowerCase()}`}>{status}</Badge>;
   };
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-4 rounded-2xl shadow-lg inline-block mb-4">
+            <Factory className="h-10 w-10 text-white animate-pulse" />
+          </div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login/register page if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl border-0">
+          <CardHeader className="text-center pb-2">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-4 rounded-2xl shadow-lg inline-block mx-auto mb-4">
+              <Factory className="h-10 w-10 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-slate-800">Garment Manufacturing Pro</CardTitle>
+            <CardDescription>{showRegister ? "Create your account" : "Sign in to continue"}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {authError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {authError}
+              </div>
+            )}
+            
+            {!showRegister ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input 
+                      id="username"
+                      type="text" 
+                      placeholder="Enter username"
+                      className="pl-10"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input 
+                      id="password"
+                      type="password" 
+                      placeholder="Enter password"
+                      className="pl-10"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+                <p className="text-center text-sm text-slate-500">
+                  Don't have an account?{" "}
+                  <button type="button" onClick={() => { setShowRegister(true); setAuthError(""); }} className="text-indigo-600 hover:underline font-medium">
+                    Register
+                  </button>
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reg-fullname">Full Name</Label>
+                  <Input 
+                    id="reg-fullname"
+                    type="text" 
+                    placeholder="Enter your full name"
+                    value={registerForm.full_name}
+                    onChange={(e) => setRegisterForm({...registerForm, full_name: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-username">Username</Label>
+                  <Input 
+                    id="reg-username"
+                    type="text" 
+                    placeholder="Choose a username"
+                    value={registerForm.username}
+                    onChange={(e) => setRegisterForm({...registerForm, username: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Password</Label>
+                  <Input 
+                    id="reg-password"
+                    type="password" 
+                    placeholder="Create a password"
+                    value={registerForm.password}
+                    onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {loading ? "Creating account..." : "Create Account"}
+                </Button>
+                <p className="text-center text-sm text-slate-500">
+                  Already have an account?{" "}
+                  <button type="button" onClick={() => { setShowRegister(false); setAuthError(""); }} className="text-indigo-600 hover:underline font-medium">
+                    Sign In
+                  </button>
+                </p>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
       {/* Header */}
@@ -1131,14 +1260,31 @@ function App() {
                 <p className="text-sm text-slate-500">Complete Production Management System</p>
               </div>
             </div>
-            <Button 
-              onClick={handleGenerateBillReport}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
-              data-testid="generate-bill-report"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Generate Bill Report
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
+                <User className="h-4 w-4 text-slate-600" />
+                <span className="text-sm font-medium text-slate-700">{currentUser?.full_name}</span>
+                <Badge className={currentUser?.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}>
+                  {currentUser?.role}
+                </Badge>
+              </div>
+              <Button 
+                onClick={handleGenerateBillReport}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+                data-testid="generate-bill-report"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Bill Report
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
