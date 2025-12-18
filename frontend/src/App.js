@@ -3575,10 +3575,54 @@ _Garment Manufacturing Pro_`;
           {/* Receipts Tab */}
           <TabsContent value="receipts" data-testid="receipts-content">
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold text-slate-800">Outsourcing Receipts</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-slate-800">All Receipts</h2>
+              </div>
+              
+              {/* Search and Filter Bar */}
+              <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm border">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search by DC #, unit name, lot #..." 
+                    value={receiptsSearch}
+                    onChange={(e) => setReceiptsSearch(e.target.value)}
+                    className="pl-10"
+                    data-testid="receipts-search"
+                  />
+                </div>
+                <Select value={receiptsTypeFilter} onValueChange={setReceiptsTypeFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Outsourcing">Outsourcing</SelectItem>
+                    <SelectItem value="Ironing">Ironing</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(receiptsSearch || receiptsTypeFilter !== "all") && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => { setReceiptsSearch(""); setReceiptsTypeFilter("all"); }}
+                    className="text-slate-500"
+                  >
+                    <X className="h-4 w-4 mr-1" /> Clear
+                  </Button>
+                )}
+                <span className="text-sm text-slate-500">
+                  Showing {filteredReceipts.length} of {allReceipts.length}
+                </span>
+              </div>
 
               <div className="space-y-4">
-                {outsourcingReceipts.map((receipt) => (
+                {filteredReceipts.map((receipt) => {
+                  const order = receipt.type === 'Outsourcing' 
+                    ? outsourcingOrders.find(o => o.id === receipt.outsourcing_order_id)
+                    : ironingOrders.find(o => o.id === receipt.ironing_order_id);
+                  return (
                   <Card key={receipt.id} className="shadow-lg" data-testid={`receipt-card-${receipt.id}`}>
                     <CardContent className="pt-6">
                       <div className="space-y-3">
