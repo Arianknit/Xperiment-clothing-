@@ -2691,8 +2691,8 @@ function App() {
                       </div>
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setCatalogDialogOpen(false)} data-testid="catalog-cancel-button">Cancel</Button>
-                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || catalogForm.lot_numbers.length === 0} data-testid="catalog-submit-button">
-                          {loading ? "Creating..." : "Create Catalog"}
+                        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading || uploadingImage || catalogForm.lot_numbers.length === 0} data-testid="catalog-submit-button">
+                          {uploadingImage ? "Uploading Image..." : loading ? "Creating..." : "Create Catalog"}
                         </Button>
                       </div>
                     </form>
