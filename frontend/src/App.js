@@ -5125,6 +5125,119 @@ _Garment Manufacturing Pro_`;
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* User Management Dialog (Admin Only) */}
+      <Dialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-purple-600" />
+              User Management
+            </DialogTitle>
+            <DialogDescription>Create and manage user accounts</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Create New User Form */}
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <h3 className="font-semibold text-purple-800 mb-3">➕ Create New User</h3>
+              <form onSubmit={handleCreateUser} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Full Name</Label>
+                    <Input
+                      value={newUserForm.full_name}
+                      onChange={(e) => setNewUserForm({...newUserForm, full_name: e.target.value})}
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Username</Label>
+                    <Input
+                      value={newUserForm.username}
+                      onChange={(e) => setNewUserForm({...newUserForm, username: e.target.value})}
+                      placeholder="johndoe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Password</Label>
+                    <Input
+                      type="password"
+                      value={newUserForm.password}
+                      onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})}
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Role</Label>
+                    <Select value={newUserForm.role} onValueChange={(value) => setNewUserForm({...newUserForm, role: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {loading ? "Creating..." : "Create User"}
+                </Button>
+              </form>
+            </div>
+
+            {/* Existing Users List */}
+            <div>
+              <h3 className="font-semibold text-slate-800 mb-3">👥 All Users ({allUsers.length})</h3>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {allUsers.map((user) => (
+                  <div 
+                    key={user.id} 
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      user.is_active !== false ? 'bg-white' : 'bg-slate-100 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        <User className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">{user.full_name}</p>
+                        <p className="text-xs text-slate-500">@{user.username}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}>
+                        {user.role}
+                      </Badge>
+                      <Badge className={user.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                        {user.is_active !== false ? 'Active' : 'Inactive'}
+                      </Badge>
+                      {user.username !== 'admin' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleToggleUserStatus(user.id, user.is_active !== false)}
+                          className={user.is_active !== false ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}
+                        >
+                          {user.is_active !== false ? 'Deactivate' : 'Activate'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
