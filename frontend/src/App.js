@@ -329,23 +329,6 @@ function App() {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setAuthError("");
-    setLoading(true);
-    
-    try {
-      await axios.post(`${API}/auth/register`, registerForm);
-      toast.success("Registration successful! Please login.");
-      setShowRegister(false);
-      setRegisterForm({ username: "", password: "", full_name: "", role: "user" });
-    } catch (error) {
-      setAuthError(error.response?.data?.detail || "Registration failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     delete axios.defaults.headers.common['Authorization'];
