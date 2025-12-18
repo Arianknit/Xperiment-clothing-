@@ -51,8 +51,6 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
-  const [registerForm, setRegisterForm] = useState({ username: "", password: "", full_name: "", role: "user" });
-  const [showRegister, setShowRegister] = useState(false);
   const [authError, setAuthError] = useState("");
   
   // User Management state (Admin only)
