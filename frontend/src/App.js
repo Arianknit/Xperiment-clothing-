@@ -4484,6 +4484,105 @@ _Garment Manufacturing Pro_`;
           )}
         </DialogContent>
       </Dialog>
+
+      {/* WhatsApp Dialog */}
+      <Dialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-green-600" />
+              Send via WhatsApp
+            </DialogTitle>
+            <DialogDescription>
+              {whatsappData.type === 'dc' && "Send Delivery Challan details"}
+              {whatsappData.type === 'reminder' && "Send reminder for pending order"}
+              {whatsappData.type === 'payment' && "Send payment confirmation"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Phone Number Selection */}
+            <div className="space-y-3">
+              {whatsappData.unitPhone && (
+                <div 
+                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                    whatsappData.useUnitPhone 
+                      ? 'bg-green-50 border-green-500 ring-2 ring-green-300' 
+                      : 'bg-slate-50 hover:bg-slate-100'
+                  }`}
+                  onClick={() => setWhatsappData({...whatsappData, useUnitPhone: true})}
+                >
+                  <div className="flex items-center gap-2">
+                    <input type="radio" checked={whatsappData.useUnitPhone} onChange={() => {}} />
+                    <div>
+                      <p className="font-semibold text-slate-800">Unit Contact</p>
+                      <p className="text-sm text-slate-600 flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {whatsappData.unitPhone}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div 
+                className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  !whatsappData.useUnitPhone 
+                    ? 'bg-green-50 border-green-500 ring-2 ring-green-300' 
+                    : 'bg-slate-50 hover:bg-slate-100'
+                }`}
+                onClick={() => setWhatsappData({...whatsappData, useUnitPhone: false})}
+              >
+                <div className="flex items-center gap-2">
+                  <input type="radio" checked={!whatsappData.useUnitPhone} onChange={() => {}} />
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-800">Custom Number</p>
+                    {!whatsappData.useUnitPhone && (
+                      <Input
+                        type="tel"
+                        placeholder="Enter phone number (e.g., 9876543210)"
+                        value={whatsappData.phone}
+                        onChange={(e) => setWhatsappData({...whatsappData, phone: e.target.value})}
+                        className="mt-2"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Message Preview */}
+            <div className="space-y-2">
+              <Label>Message Preview</Label>
+              <div className="bg-slate-100 p-3 rounded-lg text-sm max-h-48 overflow-y-auto whitespace-pre-wrap font-mono text-xs">
+                {whatsappData.type === 'dc' && whatsappData.data && generateDCMessage(whatsappData.data)}
+                {whatsappData.type === 'reminder' && whatsappData.data && generateReminderMessage(whatsappData.data)}
+                {whatsappData.type === 'payment' && whatsappData.data && generatePaymentMessage(
+                  whatsappData.data.unitName,
+                  whatsappData.data.amount,
+                  whatsappData.data.method,
+                  whatsappData.data.pendingAmount
+                )}
+              </div>
+            </div>
+
+            {/* Send Button */}
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setWhatsappDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleWhatsAppSend}
+                disabled={!whatsappData.useUnitPhone && !whatsappData.phone}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Open WhatsApp
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
