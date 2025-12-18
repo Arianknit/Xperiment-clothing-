@@ -3884,6 +3884,9 @@ async def record_unit_payment(payment: UnitPayment):
 # Include the router in the main app
 app.include_router(api_router)
 
+# Mount static files for serving uploaded images
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
