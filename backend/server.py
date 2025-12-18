@@ -292,6 +292,7 @@ class Catalog(BaseModel):
     catalog_code: str
     description: Optional[str] = None
     color: Optional[str] = ""
+    image_url: Optional[str] = None  # URL to catalog product image
     lot_numbers: List[str]  # List of cutting lot numbers
     total_quantity: int
     available_stock: int
@@ -302,6 +303,7 @@ class CatalogCreate(BaseModel):
     catalog_name: str
     catalog_code: str
     description: Optional[str] = None
+    image_url: Optional[str] = None
     lot_numbers: List[str]
 
 class CatalogDispatch(BaseModel):
