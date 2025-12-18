@@ -2509,23 +2509,38 @@ _Garment Manufacturing Pro_`;
                       <h3 className="text-lg font-semibold text-red-800">⚠️ Pending Reminders ({overdueOrders.length})</h3>
                       <p className="text-sm text-red-700 mt-1">The following lots have been at outsourcing units for more than 7 days without receipt:</p>
                       <div className="mt-3 space-y-2">
-                        {overdueOrders.slice(0, 5).map((order, idx) => (
-                          <div key={idx} className="bg-white p-3 rounded border-l-2 border-red-400">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <span className="font-semibold text-slate-800">{order.cutting_lot_number}</span>
-                                <span className="text-slate-600 mx-2">•</span>
-                                <span className="text-slate-700">{order.operation_type}</span>
-                                <span className="text-slate-600 mx-2">•</span>
-                                <span className="text-slate-700">{order.unit_name}</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-red-600 font-bold text-lg">{order.days_pending} days</span>
-                                <p className="text-xs text-slate-500">DC: {order.dc_number}</p>
+                        {overdueOrders.slice(0, 5).map((order, idx) => {
+                          const unit = outsourcingUnits.find(u => u.unit_name === order.unit_name);
+                          return (
+                            <div key={idx} className="bg-white p-3 rounded border-l-2 border-red-400">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="font-semibold text-slate-800">{order.cutting_lot_number}</span>
+                                  <span className="text-slate-600 mx-2">•</span>
+                                  <span className="text-slate-700">{order.operation_type}</span>
+                                  <span className="text-slate-600 mx-2">•</span>
+                                  <span className="text-slate-700">{order.unit_name}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-green-500 text-green-600 hover:bg-green-50"
+                                    onClick={() => openWhatsAppDialog('reminder', order, unit?.phone || '')}
+                                    data-testid={`whatsapp-reminder-${idx}`}
+                                  >
+                                    <MessageCircle className="h-3 w-3 mr-1" />
+                                    Remind
+                                  </Button>
+                                  <div className="text-right">
+                                    <span className="text-red-600 font-bold text-lg">{order.days_pending} days</span>
+                                    <p className="text-xs text-slate-500">DC: {order.dc_number}</p>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                         {overdueOrders.length > 5 && (
                           <p className="text-sm text-red-600 font-medium mt-2">... and {overdueOrders.length - 5} more overdue orders</p>
                         )}
