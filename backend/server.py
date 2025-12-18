@@ -3727,13 +3727,13 @@ async def get_fabric_inventory_report(
     lots = await db.fabric_lots.find({}, {"_id": 0}).to_list(1000)
     
     # Get cutting orders to calculate fabric usage
-    cutting_orders = await db.cutting_orders.find({}, {"_id": 0, "fabric_lot_number": 1, "fabric_used": 1}).to_list(1000)
+    cutting_orders = await db.cutting_orders.find({}, {"_id": 0, "lot_number": 1, "fabric_used": 1}).to_list(1000)
     
     # Calculate fabric usage per lot from cutting orders
     fabric_usage = {}
     for co in cutting_orders:
-        lot_num = co.get('fabric_lot_number', '')
-        used = co.get('fabric_used', 0)
+        lot_num = co.get('lot_number', '')
+        used = co.get('fabric_used', 0) or 0
         if lot_num:
             fabric_usage[lot_num] = fabric_usage.get(lot_num, 0) + used
     
