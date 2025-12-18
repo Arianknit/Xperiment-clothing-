@@ -2812,6 +2812,22 @@ function App() {
                   </CardContent>
                 </Card>
               )}
+              
+              {/* Image View Dialog */}
+              <Dialog open={viewImageDialog} onOpenChange={setViewImageDialog}>
+                <DialogContent className="sm:max-w-[800px] p-2">
+                  <DialogHeader className="sr-only">
+                    <DialogTitle>Product Image</DialogTitle>
+                  </DialogHeader>
+                  {viewImageUrl && (
+                    <img 
+                      src={viewImageUrl} 
+                      alt="Product"
+                      className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           </TabsContent>
 
