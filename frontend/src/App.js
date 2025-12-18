@@ -4551,6 +4551,7 @@ _Garment Manufacturing Pro_`;
               {whatsappData.type === 'dc' && "Send Delivery Challan details"}
               {whatsappData.type === 'reminder' && "Send reminder for pending order"}
               {whatsappData.type === 'payment' && "Send payment confirmation"}
+              {whatsappData.type === 'payment_reminder' && "Send payment reminder to unit"}
             </DialogDescription>
           </DialogHeader>
           
