@@ -216,17 +216,114 @@ function App() {
   const [pendingBills, setPendingBills] = useState(null);
   const [availableUnits, setAvailableUnits] = useState([]);
 
+  // Set up axios interceptor for auth token
   useEffect(() => {
-    fetchDashboardStats();
-    fetchFabricLots();
-    fetchCuttingOrders();
-    fetchOutsourcingOrders();
-    fetchOutsourcingReceipts();
-    fetchIroningOrders();
-    fetchIroningReceipts();
-    fetchCatalogs();
-    fetchOverdueOrders();
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Add response interceptor to handle 401 errors
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 401) {
+          handleLogout();
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+    return () => axios.interceptors.response.eject(interceptor);
   }, []);
+
+  // Check auth status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDashboardStats();
+      fetchFabricLots();
+      fetchCuttingOrders();
+      fetchOutsourcingOrders();
+      fetchOutsourcingReceipts();
+      fetchIroningOrders();
+      fetchIroningReceipts();
+      fetchCatalogs();
+      fetchOverdueOrders();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuthStatus = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setAuthLoading(false);
+      return;
+    }
+    
+    try {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const response = await axios.get(`${API}/auth/me`);
+      setCurrentUser(response.data);
+      setIsAuthenticated(true);
+    } catch (error) {
+      localStorage.removeItem('authToken');
+      delete axios.defaults.headers.common['Authorization'];
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setLoading(true);
+    
+    try {
+      const response = await axios.post(`${API}/auth/login`, loginForm);
+      const { token, user } = response.data;
+      
+      localStorage.setItem('authToken', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      setLoginForm({ username: "", password: "" });
+      toast.success(`Welcome back, ${user.full_name}!`);
+    } catch (error) {
+      setAuthError(error.response?.data?.detail || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/auth/register`, registerForm);
+      toast.success("Registration successful! Please login.");
+      setShowRegister(false);
+      setRegisterForm({ username: "", password: "", full_name: "", role: "user" });
+    } catch (error) {
+      setAuthError(error.response?.data?.detail || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    delete axios.defaults.headers.common['Authorization'];
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    toast.success("Logged out successfully");
+  };
 
   const fetchDashboardStats = async () => {
     try {
