@@ -790,8 +790,11 @@ function App() {
         catalog_name: "",
         catalog_code: "",
         description: "",
+        image_url: "",
         lot_numbers: []
       });
+      setCatalogImageFile(null);
+      setCatalogImagePreview(null);
       fetchCatalogs();
     } catch (error) {
       console.error("Error creating catalog:", error);
