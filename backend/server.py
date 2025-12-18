@@ -1472,20 +1472,92 @@ async def get_delivery_challan(order_id: str):
                 <div class="info-value">{order['dc_date'].strftime('%d-%m-%Y')}</div>
             </div>
             <div class="info-row">
+                <div class="info-label">Unit Name:</div>
+                <div class="info-value" style="font-weight: bold;">{order['unit_name']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Operation Type:</div>
+                <div class="info-value" style="font-weight: bold; color: #4F46E5;">{order['operation_type']}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Total Lots:</div>
+                <div class="info-value">{len(order.get('lot_details', [])) or 1} Lot(s)</div>
+            </div>
+        </div>
+    """
+    
+    # Check if lot_details exists for multi-lot orders
+    lot_details = order.get('lot_details', [])
+    
+    if lot_details and len(lot_details) > 0:
+        # Multi-lot DC - show lot-wise details
+        html_content += """
+        <h3 style="background-color: #EEF2FF; padding: 10px; border-radius: 5px; margin-top: 20px;">📦 Lot-wise Details</h3>
+        """
+        
+        for idx, lot in enumerate(lot_details, 1):
+            lot_sizes = lot.get('size_distribution', {})
+            lot_qty = lot.get('quantity', sum(lot_sizes.values()))
+            
+            html_content += f"""
+        <div style="border: 1px solid #ddd; border-radius: 5px; margin: 10px 0; overflow: hidden;">
+            <div style="background-color: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd;">
+                <strong style="font-size: 16px;">{lot.get('cutting_lot_number', 'N/A')}</strong>
+                <span style="margin-left: 10px; color: #666;">
+                    {lot.get('category', '')} | {lot.get('style_type', '')}
+                    {f" | 🎨 {lot.get('color')}" if lot.get('color') else ''}
+                </span>
+                <span style="float: right; font-weight: bold; color: #4F46E5;">{lot_qty} pcs</span>
+            </div>
+            <table style="margin: 0; border: none;">
+                <thead>
+                    <tr>
+                        <th style="border: none; border-bottom: 1px solid #ddd;">Size</th>
+                        <th style="border: none; border-bottom: 1px solid #ddd;">Qty</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            
+            for size, qty in lot_sizes.items():
+                if qty > 0:
+                    html_content += f"""
+                    <tr>
+                        <td style="border: none; border-bottom: 1px solid #eee;">{size}</td>
+                        <td style="border: none; border-bottom: 1px solid #eee;">{qty}</td>
+                    </tr>
+                    """
+            
+            html_content += f"""
+                    <tr style="font-weight: bold; background-color: #f0f0f0;">
+                        <td style="border: none;">Subtotal</td>
+                        <td style="border: none;">{lot_qty}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+            """
+        
+        # Grand total section
+        html_content += f"""
+        <div style="background-color: #4F46E5; color: white; padding: 15px; border-radius: 5px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 18px; font-weight: bold;">GRAND TOTAL ({len(lot_details)} Lots)</span>
+                <span style="font-size: 24px; font-weight: bold;">{order['total_quantity']} pcs</span>
+            </div>
+        </div>
+        """
+    else:
+        # Single lot DC - original format
+        html_content += f"""
+        <div class="info-section">
+            <div class="info-row">
                 <div class="info-label">Cutting Lot Number:</div>
                 <div class="info-value" style="font-weight: bold; color: #4F46E5;">{order.get('cutting_lot_number', 'N/A')}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Fabric Lot Number:</div>
                 <div class="info-value">{order['lot_number']}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Unit Name:</div>
-                <div class="info-value">{order['unit_name']}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Operation Type:</div>
-                <div class="info-value">{order['operation_type']}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Category:</div>
@@ -1510,25 +1582,27 @@ async def get_delivery_challan(order_id: str):
                 </tr>
             </thead>
             <tbody>
-    """
-    
-    # Add size distribution rows
-    for size, qty in order['size_distribution'].items():
-        if qty > 0:
-            html_content += f"""
+        """
+        
+        for size, qty in order['size_distribution'].items():
+            if qty > 0:
+                html_content += f"""
                 <tr>
                     <td>{size}</td>
                     <td>{qty}</td>
                 </tr>
-            """
-    
-    html_content += f"""
+                """
+        
+        html_content += f"""
                 <tr class="total-row">
                     <td>TOTAL</td>
                     <td>{order['total_quantity']}</td>
                 </tr>
             </tbody>
         </table>
+        """
+    
+    html_content += f"""
         
         <div class="info-section">
             <div class="info-row">
