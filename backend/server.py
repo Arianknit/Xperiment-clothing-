@@ -3726,6 +3726,17 @@ async def get_fabric_inventory_report(
     """Generate fabric inventory report"""
     lots = await db.fabric_lots.find({}, {"_id": 0}).to_list(1000)
     
+    # Get cutting orders to calculate fabric usage
+    cutting_orders = await db.cutting_orders.find({}, {"_id": 0, "fabric_lot_number": 1, "fabric_used": 1}).to_list(1000)
+    
+    # Calculate fabric usage per lot from cutting orders
+    fabric_usage = {}
+    for co in cutting_orders:
+        lot_num = co.get('fabric_lot_number', '')
+        used = co.get('fabric_used', 0)
+        if lot_num:
+            fabric_usage[lot_num] = fabric_usage.get(lot_num, 0) + used
+    
     # Apply filters
     if status == "in_stock":
         lots = [l for l in lots if l.get('remaining_quantity', 0) > 0]
@@ -3738,17 +3749,9 @@ async def get_fabric_inventory_report(
     # Calculate totals
     total_lots = len(lots)
     total_rolls = sum(len(l.get('rolls', [])) for l in lots)
-    
-    # Calculate total quantity from rolls if not set
-    total_quantity = 0
-    for l in lots:
-        qty = l.get('total_quantity', 0)
-        if qty == 0:
-            qty = sum(r.get('weight', 0) for r in l.get('rolls', []))
-        total_quantity += qty
-    
     total_remaining = sum(l.get('remaining_quantity', 0) for l in lots)
-    total_used = max(0, total_quantity - total_remaining)
+    total_used = sum(fabric_usage.get(l.get('lot_number', ''), 0) for l in lots)
+    total_quantity = total_remaining + total_used
     
     html = f"""
     <!DOCTYPE html>
