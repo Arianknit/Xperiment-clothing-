@@ -381,6 +381,62 @@ function App() {
     }
   };
 
+  const fetchOutsourcingUnits = async () => {
+    try {
+      const response = await axios.get(`${API}/outsourcing-units`);
+      setOutsourcingUnits(response.data);
+    } catch (error) {
+      console.error("Error fetching outsourcing units:", error);
+    }
+  };
+
+  const fetchUnitsByOperation = async (operation) => {
+    if (!operation) {
+      setFilteredUnits([]);
+      return;
+    }
+    try {
+      const response = await axios.get(`${API}/outsourcing-units/by-operation/${encodeURIComponent(operation)}`);
+      setFilteredUnits(response.data);
+    } catch (error) {
+      console.error("Error fetching units by operation:", error);
+      setFilteredUnits([]);
+    }
+  };
+
+  const handleUnitSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (editingUnit) {
+        await axios.put(`${API}/outsourcing-units/${editingUnit.id}`, unitForm);
+        toast.success("Unit updated successfully");
+      } else {
+        await axios.post(`${API}/outsourcing-units`, unitForm);
+        toast.success("Unit added successfully");
+      }
+      setUnitsDialogOpen(false);
+      setUnitForm({ unit_name: "", operations: [], contact_person: "", phone: "", address: "" });
+      setEditingUnit(null);
+      fetchOutsourcingUnits();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save unit");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUnit = async (unitId) => {
+    if (!window.confirm("Are you sure you want to delete this unit?")) return;
+    try {
+      await axios.delete(`${API}/outsourcing-units/${unitId}`);
+      toast.success("Unit deleted successfully");
+      fetchOutsourcingUnits();
+    } catch (error) {
+      toast.error("Failed to delete unit");
+    }
+  };
+
   const fetchOverdueOrders = async () => {
     try {
       const response = await axios.get(`${API}/outsourcing-orders/overdue/reminders`);
