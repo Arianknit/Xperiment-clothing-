@@ -2778,7 +2778,61 @@ _Garment Manufacturing Pro_`;
                     <DollarSign className="h-4 w-4 mr-2" />
                     Pay Unit
                   </Button>
-                  <Dialog open={outsourcingDialogOpen} onOpenChange={setOutsourcingDialogOpen}>
+                </div>
+              </div>
+              
+              {/* Search and Filter Bar */}
+              <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-lg shadow-sm border">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search by DC #, unit name, lot #..." 
+                    value={outsourcingSearch}
+                    onChange={(e) => setOutsourcingSearch(e.target.value)}
+                    className="pl-10"
+                    data-testid="outsourcing-search"
+                  />
+                </div>
+                <Select value={outsourcingOperationFilter} onValueChange={setOutsourcingOperationFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Operation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Operations</SelectItem>
+                    {OPERATION_TYPES.map(op => (
+                      <SelectItem key={op} value={op}>{op}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={outsourcingStatusFilter} onValueChange={setOutsourcingStatusFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Sent">Sent</SelectItem>
+                    <SelectItem value="Partial">Partial</SelectItem>
+                    <SelectItem value="Received">Received</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(outsourcingSearch || outsourcingOperationFilter !== "all" || outsourcingStatusFilter !== "all") && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => { setOutsourcingSearch(""); setOutsourcingOperationFilter("all"); setOutsourcingStatusFilter("all"); }}
+                    className="text-slate-500"
+                  >
+                    <X className="h-4 w-4 mr-1" /> Clear
+                  </Button>
+                )}
+                <span className="text-sm text-slate-500">
+                  Showing {filteredOutsourcingOrders.length} of {outsourcingOrders.length}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <Dialog open={outsourcingDialogOpen} onOpenChange={setOutsourcingDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { 
                         setEditingOutsourcingOrder(null); 
