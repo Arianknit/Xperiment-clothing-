@@ -1627,21 +1627,40 @@ _Garment Manufacturing Pro_`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 pb-16 md:pb-0">
+      {/* PWA Install Banner */}
+      {showInstallBanner && (
+        <div className="bg-indigo-600 text-white px-4 py-2 flex items-center justify-between">
+          <span className="text-sm">📱 Install app for better experience</span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={handleInstallApp}>
+              <Download className="h-4 w-4 mr-1" /> Install
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowInstallBanner(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-2.5 rounded-xl shadow-lg">
-                <Factory className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-2 md:p-2.5 rounded-xl shadow-lg">
+                <Factory className="h-5 w-5 md:h-6 md:w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-800" data-testid="app-title">Garment Manufacturing Pro</h1>
-                <p className="text-sm text-slate-500">Complete Production Management System</p>
+                <h1 className="text-lg md:text-2xl font-bold text-slate-800" data-testid="app-title">
+                  {isMobile ? 'GarmentPro' : 'Garment Manufacturing Pro'}
+                </h1>
+                <p className="text-xs md:text-sm text-slate-500 hidden sm:block">Complete Production Management System</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            
+            {/* Desktop Header Actions */}
+            <div className="hidden md:flex items-center gap-3">
               <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
                 <User className="h-4 w-4 text-slate-600" />
                 <span className="text-sm font-medium text-slate-700">{currentUser?.full_name}</span>
@@ -1677,14 +1696,97 @@ _Garment Manufacturing Pro_`;
                 Logout
               </Button>
             </div>
+
+            {/* Mobile Header Actions */}
+            <div className="flex md:hidden items-center gap-2">
+              <Button 
+                size="icon" 
+                variant="outline"
+                onClick={() => setScannerDialogOpen(true)}
+                className="h-9 w-9"
+              >
+                <QrCode className="h-5 w-5" />
+              </Button>
+              <Button 
+                size="icon" 
+                variant="outline"
+                onClick={() => setMobileMenuOpen(true)}
+                className="h-9 w-9"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
+      {/* Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+          <div className="fixed right-0 top-0 h-full w-72 bg-white shadow-xl p-4 overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="font-bold text-lg">Menu</h2>
+              <Button size="icon" variant="ghost" onClick={() => setMobileMenuOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-slate-100 rounded-lg mb-4">
+              <User className="h-8 w-8 text-slate-600 bg-white p-1.5 rounded-full" />
+              <div>
+                <p className="font-medium text-slate-800">{currentUser?.full_name}</p>
+                <Badge className={currentUser?.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}>
+                  {currentUser?.role}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {currentUser?.role === 'admin' && (
+                <Button 
+                  onClick={() => { fetchAllUsers(); setUsersDialogOpen(true); setMobileMenuOpen(false); }}
+                  variant="outline"
+                  className="w-full justify-start border-purple-300 text-purple-600"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Users
+                </Button>
+              )}
+              <Button 
+                onClick={() => { handleGenerateBillReport(); setMobileMenuOpen(false); }}
+                className="w-full justify-start bg-indigo-600 hover:bg-indigo-700"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Bill Report
+              </Button>
+              <Button 
+                onClick={() => { setScannerDialogOpen(true); setMobileMenuOpen(false); }}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Scan Barcode
+              </Button>
+              <hr className="my-4" />
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full justify-start border-red-300 text-red-600"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-3 md:px-6 py-4 md:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 max-w-7xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
+          {/* Desktop Tabs */}
+          <TabsList className="hidden md:grid w-full grid-cols-8 max-w-7xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-dashboard">
               <TrendingUp className="h-4 w-4 mr-2" />
               Dashboard
@@ -1718,6 +1820,25 @@ _Garment Manufacturing Pro_`;
               Reports
             </TabsTrigger>
           </TabsList>
+
+          {/* Mobile Tab Selector */}
+          <div className="md:hidden mb-4">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dashboard">📊 Dashboard</SelectItem>
+                <SelectItem value="fabric-lots">📦 Fabric</SelectItem>
+                <SelectItem value="cutting">✂️ Cutting</SelectItem>
+                <SelectItem value="outsourcing">📤 Outsourcing</SelectItem>
+                <SelectItem value="receipts">📥 Receipts</SelectItem>
+                <SelectItem value="ironing">🔥 Ironing</SelectItem>
+                <SelectItem value="catalog">📚 Catalog</SelectItem>
+                <SelectItem value="reports">📋 Reports</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" data-testid="dashboard-content">
