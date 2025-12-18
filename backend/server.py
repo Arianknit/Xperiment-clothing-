@@ -761,11 +761,9 @@ async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
         )
     
     # Validate readings are in ascending order within each segment (between restarts)
-    current_segment_start = 0
     for i in range(1, len(scale_readings)):
         if i in restart_points:
-            # New segment starts here, reset the segment start
-            current_segment_start = i
+            # New segment starts here, skip validation
             continue
         
         if scale_readings[i] <= scale_readings[i-1]:
