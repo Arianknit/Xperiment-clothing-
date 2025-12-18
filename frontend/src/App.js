@@ -3512,28 +3512,38 @@ _Garment Manufacturing Pro_`;
                     
                     {pendingBills && (
                       <div className="bg-slate-50 p-4 rounded-lg border space-y-3">
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-4 gap-2">
                           <div className="bg-blue-50 p-2 rounded border border-blue-200 text-center">
                             <p className="text-xs text-slate-500">Outsourcing</p>
-                            <p className="font-bold text-blue-600">₹{pendingBills.outsourcing_pending}</p>
+                            <p className="font-bold text-blue-600 text-sm">₹{pendingBills.outsourcing_pending}</p>
                           </div>
                           <div className="bg-purple-50 p-2 rounded border border-purple-200 text-center">
                             <p className="text-xs text-slate-500">Ironing</p>
-                            <p className="font-bold text-purple-600">₹{pendingBills.ironing_pending}</p>
+                            <p className="font-bold text-purple-600 text-sm">₹{pendingBills.ironing_pending}</p>
+                          </div>
+                          <div className="bg-orange-50 p-2 rounded border border-orange-200 text-center">
+                            <p className="text-xs text-slate-500">Debits</p>
+                            <p className="font-bold text-orange-600 text-sm">₹{pendingBills.total_debits || 0}</p>
                           </div>
                           <div className="bg-red-50 p-2 rounded border border-red-200 text-center">
-                            <p className="text-xs text-slate-500">Total Pending</p>
-                            <p className="font-bold text-red-600">₹{pendingBills.total_pending}</p>
+                            <p className="text-xs text-slate-500">Total</p>
+                            <p className="font-bold text-red-600 text-sm">₹{pendingBills.total_pending}</p>
                           </div>
                         </div>
                         
                         {pendingBills.bills.length > 0 && (
                           <div className="max-h-40 overflow-y-auto space-y-1">
-                            <p className="text-xs font-semibold text-slate-600">Pending Bills ({pendingBills.bills_count}):</p>
+                            <p className="text-xs font-semibold text-slate-600">Bills & Debits ({pendingBills.bills_count}):</p>
                             {pendingBills.bills.map((bill, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded border">
-                                <span>{bill.dc_number} ({bill.type})</span>
-                                <span className="font-semibold text-red-600">₹{bill.balance}</span>
+                              <div key={idx} className={`flex justify-between items-center text-xs p-2 rounded border ${bill.type === 'debit' ? 'bg-orange-50 border-orange-200' : 'bg-white'}`}>
+                                <div>
+                                  <span>{bill.dc_number}</span>
+                                  <span className={`ml-2 text-xs px-1 rounded ${bill.type === 'debit' ? 'bg-orange-200 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>
+                                    {bill.type}
+                                  </span>
+                                  {bill.notes && <span className="ml-2 text-slate-400">({bill.notes})</span>}
+                                </div>
+                                <span className={`font-semibold ${bill.type === 'debit' ? 'text-orange-600' : 'text-red-600'}`}>₹{bill.balance}</span>
                               </div>
                             ))}
                           </div>
