@@ -3424,7 +3424,7 @@ _Garment Manufacturing Pro_`;
               </Dialog>
 
               <div className="space-y-4">
-                {outsourcingOrders.map((order) => (
+                {filteredOutsourcingOrders.map((order) => (
                   <Card key={order.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`outsourcing-order-card-${order.id}`}>
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
