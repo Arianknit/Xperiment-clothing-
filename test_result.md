@@ -165,3 +165,25 @@
 ## Incorporate User Feedback
 - None yet
 
+
+## Catalog Image Upload Feature
+
+### Backend Changes
+- Added `/api/upload/catalog-image` endpoint for image upload
+- Added `image_url` field to Catalog model
+- Serving static files from `/api/uploads/` directory
+- Max file size: 5MB, allowed types: JPEG, PNG, WebP
+
+### Frontend Changes
+- Added image upload section in Create Catalog dialog
+- Image preview with remove button
+- Thumbnail display on catalog cards (24x24 to 32x32 px)
+- Full image view dialog on click
+- Upload progress indication
+
+### Test Cases
+1. Backend: Image upload endpoint - working
+2. Frontend: Image upload UI in dialog
+3. Frontend: Image thumbnail on catalog card
+4. Frontend: Full view dialog on image click
+
