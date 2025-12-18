@@ -3481,13 +3481,13 @@ _Garment Manufacturing Pro_`;
                 setUnitPaymentDialogOpen(open);
                 if (!open) {
                   setPendingBills(null);
-                  setUnitPaymentForm({ unit_name: "", amount: "", payment_method: "Cash", notes: "" });
+                  setUnitPaymentForm({ unit_name: "", amount: "", transaction_type: "credit", payment_method: "Cash", notes: "" });
                 }
               }}>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>💳 Pay Unit</DialogTitle>
-                    <DialogDescription>Record payment for outsourcing/ironing unit</DialogDescription>
+                    <DialogTitle>💳 Unit Payment / Debit</DialogTitle>
+                    <DialogDescription>Record payment (credit) or add charge (debit) for unit</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleUnitPaymentSubmit} className="space-y-4">
                     <div className="space-y-2">
