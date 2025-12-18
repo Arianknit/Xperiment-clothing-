@@ -2705,19 +2705,40 @@ function App() {
                   <Card key={catalog.id} className="shadow-lg border-l-4 border-l-indigo-500" data-testid={`catalog-card-${catalog.id}`}>
                     <CardContent className="pt-6">
                       <div className="space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-xl font-bold text-slate-800">{catalog.catalog_name}</h3>
-                              <Badge className="bg-indigo-100 text-indigo-800 border">{catalog.catalog_code}</Badge>
-                              {catalog.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {catalog.color}</Badge>}
+                        <div className="flex gap-4">
+                          {/* Product Image Thumbnail */}
+                          {catalog.image_url && (
+                            <div 
+                              className="flex-shrink-0 cursor-pointer group relative"
+                              onClick={() => {
+                                setViewImageUrl(catalog.image_url);
+                                setViewImageDialog(true);
+                              }}
+                            >
+                              <img 
+                                src={catalog.image_url} 
+                                alt={catalog.catalog_name}
+                                className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg border-2 border-slate-200 group-hover:border-indigo-400 transition-colors"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-lg flex items-center justify-center transition-all">
+                                <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
                             </div>
-                            {catalog.description && <p className="text-sm text-slate-600">{catalog.description}</p>}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                          )}
+                          
+                          <div className="flex-1 flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-xl font-bold text-slate-800">{catalog.catalog_name}</h3>
+                                <Badge className="bg-indigo-100 text-indigo-800 border">{catalog.catalog_code}</Badge>
+                                {catalog.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {catalog.color}</Badge>}
+                              </div>
+                              {catalog.description && <p className="text-sm text-slate-600">{catalog.description}</p>}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white"
                               onClick={() => {
                                 setSelectedCatalog(catalog);
                                 setDispatchForm({});
