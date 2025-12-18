@@ -131,6 +131,8 @@ class FabricLot(BaseModel):
     roll_numbers: Optional[List[str]] = []
     roll_weights: Optional[List[float]] = []  # Individual weight of each roll
     scale_readings: Optional[List[float]] = []  # Cumulative scale reading after each roll
+    created_by: Optional[str] = None  # Username who created
+    updated_by: Optional[str] = None  # Username who last updated
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class FabricLotCreate(BaseModel):
