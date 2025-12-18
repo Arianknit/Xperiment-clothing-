@@ -5360,6 +5360,71 @@ _Garment Manufacturing Pro_`;
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Barcode Scanner Dialog */}
+      <Dialog open={scannerDialogOpen} onOpenChange={setScannerDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-indigo-600" />
+              Scan Barcode
+            </DialogTitle>
+            <DialogDescription>Scan a fabric lot barcode to view details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div id="barcode-scanner" className="w-full min-h-[250px] bg-slate-100 rounded-lg overflow-hidden" />
+            <p className="text-xs text-slate-500 text-center">Point camera at barcode to scan</p>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => setScannerDialogOpen(false)}
+            >
+              Close Scanner
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-30 safe-area-pb">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg ${activeTab === 'dashboard' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-600'}`}
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Home</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('fabric-lots')}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg ${activeTab === 'fabric-lots' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-600'}`}
+          >
+            <Package className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Fabric</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('outsourcing')}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg ${activeTab === 'outsourcing' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-600'}`}
+          >
+            <Send className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Outsource</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('cutting')}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg ${activeTab === 'cutting' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-600'}`}
+          >
+            <Scissors className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Cutting</span>
+          </button>
+          <button
+            onClick={() => setScannerDialogOpen(true)}
+            className="flex flex-col items-center py-2 px-1 rounded-lg text-slate-600"
+          >
+            <QrCode className="h-5 w-5" />
+            <span className="text-[10px] mt-1">Scan</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
