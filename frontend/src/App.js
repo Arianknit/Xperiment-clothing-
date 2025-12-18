@@ -54,6 +54,13 @@ function App() {
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [authError, setAuthError] = useState("");
   
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scannerDialogOpen, setScannerDialogOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  
   // User Management state (Admin only)
   const [usersDialogOpen, setUsersDialogOpen] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
