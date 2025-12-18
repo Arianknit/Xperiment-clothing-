@@ -4225,11 +4225,41 @@ async def get_unit_pending_bills(unit_name: str):
     # Sort by date
     bills.sort(key=lambda x: x['date'])
     
+    # Get debit transactions for this unit
+    debit_transactions = await db.unit_transactions.find(
+        {"unit_name": unit_name, "transaction_type": "debit"},
+        {"_id": 0}
+    ).to_list(1000)
+    total_debits = sum(t.get('amount', 0) for t in debit_transactions)
+    
+    # Get credit transactions (payments already made via transaction system)
+    credit_transactions = await db.unit_transactions.find(
+        {"unit_name": unit_name, "transaction_type": "credit"},
+        {"_id": 0}
+    ).to_list(1000)
+    total_credits = sum(t.get('amount', 0) for t in credit_transactions)
+    
+    # Add debit entries to bills
+    for debit in debit_transactions:
+        bills.append({
+            "type": "debit",
+            "dc_number": f"DEBIT-{debit.get('id', '')[:8]}",
+            "date": debit.get('transaction_date', ''),
+            "total_amount": debit.get('amount', 0),
+            "paid": 0,
+            "balance": debit.get('amount', 0),
+            "status": "Debit",
+            "notes": debit.get('notes', '')
+        })
+    
+    effective_pending = total_pending + total_debits
+    
     return {
         "unit_name": unit_name,
         "outsourcing_pending": round(outsourcing_pending, 2),
         "ironing_pending": round(ironing_pending, 2),
-        "total_pending": round(total_pending, 2),
+        "total_debits": round(total_debits, 2),
+        "total_pending": round(effective_pending, 2),
         "bills_count": len(bills),
         "bills": bills
     }
