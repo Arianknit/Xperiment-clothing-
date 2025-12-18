@@ -2244,8 +2244,128 @@ function App() {
                       </div>
                     </form>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                </div>
               </div>
+              
+              {/* Unit Payment Dialog */}
+              <Dialog open={unitPaymentDialogOpen} onOpenChange={(open) => {
+                setUnitPaymentDialogOpen(open);
+                if (!open) {
+                  setPendingBills(null);
+                  setUnitPaymentForm({ unit_name: "", amount: "", payment_method: "Cash", notes: "" });
+                }
+              }}>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>💳 Pay Unit</DialogTitle>
+                    <DialogDescription>Record payment for outsourcing/ironing unit</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleUnitPaymentSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Select Unit</Label>
+                      <Select 
+                        value={unitPaymentForm.unit_name} 
+                        onValueChange={(value) => {
+                          setUnitPaymentForm({...unitPaymentForm, unit_name: value});
+                          fetchPendingBills(value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableUnits.map((unit) => (
+                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {pendingBills && (
+                      <div className="bg-slate-50 p-4 rounded-lg border space-y-3">
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="bg-blue-50 p-2 rounded border border-blue-200 text-center">
+                            <p className="text-xs text-slate-500">Outsourcing</p>
+                            <p className="font-bold text-blue-600">₹{pendingBills.outsourcing_pending}</p>
+                          </div>
+                          <div className="bg-purple-50 p-2 rounded border border-purple-200 text-center">
+                            <p className="text-xs text-slate-500">Ironing</p>
+                            <p className="font-bold text-purple-600">₹{pendingBills.ironing_pending}</p>
+                          </div>
+                          <div className="bg-red-50 p-2 rounded border border-red-200 text-center">
+                            <p className="text-xs text-slate-500">Total Pending</p>
+                            <p className="font-bold text-red-600">₹{pendingBills.total_pending}</p>
+                          </div>
+                        </div>
+                        
+                        {pendingBills.bills.length > 0 && (
+                          <div className="max-h-40 overflow-y-auto space-y-1">
+                            <p className="text-xs font-semibold text-slate-600">Pending Bills ({pendingBills.bills_count}):</p>
+                            {pendingBills.bills.map((bill, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded border">
+                                <span>{bill.dc_number} ({bill.type})</span>
+                                <span className="font-semibold text-red-600">₹{bill.balance}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Payment Amount (₹)</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          value={unitPaymentForm.amount}
+                          onChange={(e) => setUnitPaymentForm({...unitPaymentForm, amount: e.target.value})}
+                          placeholder="Enter amount"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Payment Method</Label>
+                        <Select 
+                          value={unitPaymentForm.payment_method}
+                          onValueChange={(value) => setUnitPaymentForm({...unitPaymentForm, payment_method: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cash">Cash</SelectItem>
+                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                            <SelectItem value="UPI">UPI</SelectItem>
+                            <SelectItem value="Cheque">Cheque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Notes (Optional)</Label>
+                      <Input 
+                        value={unitPaymentForm.notes}
+                        onChange={(e) => setUnitPaymentForm({...unitPaymentForm, notes: e.target.value})}
+                        placeholder="Add payment notes"
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setUnitPaymentDialogOpen(false)}>Cancel</Button>
+                      <Button 
+                        type="submit" 
+                        className="bg-green-600 hover:bg-green-700"
+                        disabled={loading || !unitPaymentForm.unit_name || !unitPaymentForm.amount}
+                      >
+                        {loading ? "Processing..." : "Record Payment"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
 
               <div className="space-y-4">
                 {outsourcingOrders.map((order) => (
