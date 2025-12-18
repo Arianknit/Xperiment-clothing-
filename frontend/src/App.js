@@ -5224,9 +5224,24 @@ _Garment Manufacturing Pro_`;
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}>
-                        {user.role}
-                      </Badge>
+                      {user.username !== 'admin' ? (
+                        <Select 
+                          value={user.role} 
+                          onValueChange={(newRole) => handleChangeUserRole(user.id, newRole)}
+                        >
+                          <SelectTrigger className={`w-[100px] h-8 text-xs ${user.role === 'admin' ? 'bg-purple-100 text-purple-700 border-purple-300' : 'bg-slate-100 text-slate-600'}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">User</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge className="bg-purple-100 text-purple-700">
+                          {user.role}
+                        </Badge>
+                      )}
                       <Badge className={user.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
                         {user.is_active !== false ? 'Active' : 'Inactive'}
                       </Badge>
