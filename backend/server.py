@@ -4167,6 +4167,7 @@ async def get_dashboard_stats():
 class UnitPayment(BaseModel):
     unit_name: str
     amount: float
+    transaction_type: str = "credit"  # "credit" for payment, "debit" for adding charge
     payment_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     payment_method: Optional[str] = "Cash"
     notes: Optional[str] = ""
