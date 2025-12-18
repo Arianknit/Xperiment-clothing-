@@ -5146,7 +5146,7 @@ _Arian Knit Fab_`;
         setDispatchDialogOpen(open);
         if (!open) {
           setSelectedDispatchLot(null);
-          setDispatchForm({});
+          setDispatchForm({ customer_name: '', bora_number: '', notes: '', size_quantities: {} });
         }
       }}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="dispatch-dialog">
@@ -5161,10 +5161,38 @@ _Arian Knit Fab_`;
               <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
                 <p className="text-sm text-slate-700"><strong>Total Available Stock:</strong> {selectedCatalog.available_stock} pcs</p>
               </div>
+
+              {/* Customer & Bora Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dispatch-customer-name">Customer Name *</Label>
+                  <Input 
+                    id="dispatch-customer-name"
+                    type="text" 
+                    value={dispatchForm.customer_name} 
+                    onChange={(e) => setDispatchForm({...dispatchForm, customer_name: e.target.value})}
+                    placeholder="Enter customer name"
+                    required
+                    data-testid="dispatch-customer-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dispatch-bora-number">Bora Number *</Label>
+                  <Input 
+                    id="dispatch-bora-number"
+                    type="text" 
+                    value={dispatchForm.bora_number} 
+                    onChange={(e) => setDispatchForm({...dispatchForm, bora_number: e.target.value})}
+                    placeholder="Enter bora/bundle number"
+                    required
+                    data-testid="dispatch-bora-number"
+                  />
+                </div>
+              </div>
               
               {/* Lot Selection */}
               <div className="space-y-3">
-                <Label className="font-semibold">Select Lot to Dispatch</Label>
+                <Label className="font-semibold">Select Lot to Dispatch *</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {selectedCatalog.lot_numbers.map((lotNum) => {
                     const cuttingOrder = cuttingOrders.find(co => co.lot_number === lotNum);
@@ -5176,13 +5204,14 @@ _Arian Knit Fab_`;
                         type="button"
                         onClick={() => {
                           setSelectedDispatchLot(lotNum);
-                          setDispatchForm({});
+                          setDispatchForm(prev => ({...prev, size_quantities: {}}));
                         }}
                         className={`p-3 rounded-lg border-2 text-left transition-all ${
                           isSelected 
                             ? 'border-indigo-500 bg-indigo-50' 
                             : 'border-slate-200 hover:border-indigo-300'
                         }`}
+                        data-testid={`dispatch-lot-${lotNum}`}
                       >
                         <p className="font-semibold text-slate-800">{lotNum}</p>
                         <p className="text-sm flex items-center gap-1">
@@ -5219,11 +5248,14 @@ _Arian Knit Fab_`;
                           <Input 
                             id={`dispatch-${size}`}
                             type="number" 
-                            value={dispatchForm[size] || ''} 
-                            onChange={(e) => setDispatchForm({
-                              ...dispatchForm,
-                              [size]: parseInt(e.target.value) || 0
-                            })}
+                            value={dispatchForm.size_quantities[size] || ''} 
+                            onChange={(e) => setDispatchForm(prev => ({
+                              ...prev,
+                              size_quantities: {
+                                ...prev.size_quantities,
+                                [size]: parseInt(e.target.value) || 0
+                              }
+                            }))}
                             placeholder="0"
                             max={availableQty}
                             className="h-8"
@@ -5234,20 +5266,33 @@ _Arian Knit Fab_`;
                     ))}
                   </div>
                   <div className="pt-2 border-t">
-                    <p className="text-sm text-slate-600">Total Dispatch: <strong>{getTotalQty(dispatchForm)} pcs</strong></p>
-                    {getTotalQty(dispatchForm) > selectedCatalog.available_stock && (
+                    <p className="text-sm text-slate-600">Total Dispatch: <strong>{getTotalQty(dispatchForm.size_quantities)} pcs</strong></p>
+                    {getTotalQty(dispatchForm.size_quantities) > selectedCatalog.available_stock && (
                       <p className="text-sm text-red-600 font-bold">⚠️ Exceeds available stock!</p>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="dispatch-notes">Notes (Optional)</Label>
+                <Input 
+                  id="dispatch-notes"
+                  type="text" 
+                  value={dispatchForm.notes} 
+                  onChange={(e) => setDispatchForm({...dispatchForm, notes: e.target.value})}
+                  placeholder="Additional notes..."
+                  data-testid="dispatch-notes"
+                />
+              </div>
+
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setDispatchDialogOpen(false)} data-testid="dispatch-cancel-button">Cancel</Button>
                 <Button 
                   type="submit" 
                   className="bg-green-600 hover:bg-green-700" 
-                  disabled={loading || !selectedDispatchLot || getTotalQty(dispatchForm) === 0 || getTotalQty(dispatchForm) > selectedCatalog.available_stock} 
+                  disabled={loading || !selectedDispatchLot || !dispatchForm.customer_name || !dispatchForm.bora_number || getTotalQty(dispatchForm.size_quantities) === 0 || getTotalQty(dispatchForm.size_quantities) > selectedCatalog.available_stock} 
                   data-testid="dispatch-submit-button"
                 >
                   {loading ? "Recording..." : "📦 Record Dispatch"}
