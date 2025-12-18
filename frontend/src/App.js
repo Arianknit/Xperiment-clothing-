@@ -1371,6 +1371,81 @@ _Garment Manufacturing Pro_`;
     return <Badge className={`${variants[status]} border`} data-testid={`status-badge-${status.toLowerCase()}`}>{status}</Badge>;
   };
 
+  // Filtered data based on search and filters
+  const filteredFabricLots = fabricLots.filter(lot => {
+    const searchLower = fabricSearch.toLowerCase();
+    const matchesSearch = !fabricSearch || 
+      lot.lot_number?.toLowerCase().includes(searchLower) ||
+      lot.supplier_name?.toLowerCase().includes(searchLower) ||
+      lot.color?.toLowerCase().includes(searchLower) ||
+      lot.fabric_type?.toLowerCase().includes(searchLower);
+    const matchesStatus = fabricStatusFilter === "all" || 
+      (fabricStatusFilter === "in_stock" && lot.remaining_quantity > 0) ||
+      (fabricStatusFilter === "exhausted" && lot.remaining_quantity <= 0);
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredCuttingOrders = cuttingOrders.filter(order => {
+    const searchLower = cuttingSearch.toLowerCase();
+    const matchesSearch = !cuttingSearch || 
+      order.lot_number?.toLowerCase().includes(searchLower) ||
+      order.cutting_master_name?.toLowerCase().includes(searchLower) ||
+      order.style_type?.toLowerCase().includes(searchLower) ||
+      order.color?.toLowerCase().includes(searchLower);
+    const matchesCategory = cuttingCategoryFilter === "all" || order.category === cuttingCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const filteredOutsourcingOrders = outsourcingOrders.filter(order => {
+    const searchLower = outsourcingSearch.toLowerCase();
+    const matchesSearch = !outsourcingSearch || 
+      order.dc_number?.toLowerCase().includes(searchLower) ||
+      order.unit_name?.toLowerCase().includes(searchLower) ||
+      order.cutting_lot_number?.toLowerCase().includes(searchLower) ||
+      order.lot_details?.some(l => l.cutting_lot_number?.toLowerCase().includes(searchLower));
+    const matchesOperation = outsourcingOperationFilter === "all" || order.operation_type === outsourcingOperationFilter;
+    const matchesStatus = outsourcingStatusFilter === "all" || order.status === outsourcingStatusFilter;
+    return matchesSearch && matchesOperation && matchesStatus;
+  });
+
+  const allReceipts = [
+    ...outsourcingReceipts.map(r => ({ ...r, type: 'Outsourcing' })),
+    ...ironingReceipts.map(r => ({ ...r, type: 'Ironing' }))
+  ].sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
+
+  const filteredReceipts = allReceipts.filter(receipt => {
+    const searchLower = receiptsSearch.toLowerCase();
+    const order = receipt.type === 'Outsourcing' 
+      ? outsourcingOrders.find(o => o.id === receipt.outsourcing_order_id)
+      : ironingOrders.find(o => o.id === receipt.ironing_order_id);
+    const matchesSearch = !receiptsSearch || 
+      order?.dc_number?.toLowerCase().includes(searchLower) ||
+      order?.unit_name?.toLowerCase().includes(searchLower) ||
+      order?.cutting_lot_number?.toLowerCase().includes(searchLower);
+    const matchesType = receiptsTypeFilter === "all" || receipt.type === receiptsTypeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  const filteredIroningOrders = ironingOrders.filter(order => {
+    const searchLower = ironingSearch.toLowerCase();
+    const matchesSearch = !ironingSearch || 
+      order.dc_number?.toLowerCase().includes(searchLower) ||
+      order.unit_name?.toLowerCase().includes(searchLower) ||
+      order.cutting_lot_number?.toLowerCase().includes(searchLower);
+    const matchesStatus = ironingStatusFilter === "all" || order.status === ironingStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredCatalogs = catalogs.filter(catalog => {
+    const searchLower = catalogSearch.toLowerCase();
+    const matchesSearch = !catalogSearch || 
+      catalog.catalog_name?.toLowerCase().includes(searchLower) ||
+      catalog.style_type?.toLowerCase().includes(searchLower) ||
+      catalog.color?.toLowerCase().includes(searchLower);
+    const matchesCategory = catalogCategoryFilter === "all" || catalog.category === catalogCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
   // Show loading while checking auth
   if (authLoading) {
     return (
