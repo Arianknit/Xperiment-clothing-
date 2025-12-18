@@ -356,6 +356,41 @@ function App() {
     toast.success("Logged out successfully");
   };
 
+  // User Management Functions (Admin only)
+  const fetchAllUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/users`);
+      setAllUsers(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch users");
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/register`, newUserForm);
+      toast.success(`User "${newUserForm.username}" created successfully!`);
+      setNewUserForm({ username: "", password: "", full_name: "", role: "user" });
+      fetchAllUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to create user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId, currentStatus) => {
+    try {
+      await axios.put(`${API}/auth/users/${userId}/toggle-status`);
+      toast.success(`User ${currentStatus ? 'deactivated' : 'activated'} successfully`);
+      fetchAllUsers();
+    } catch (error) {
+      toast.error("Failed to update user status");
+    }
+  };
+
   const fetchDashboardStats = async () => {
     try {
       const response = await axios.get(`${API}/dashboard/stats`);
