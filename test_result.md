@@ -398,3 +398,29 @@ Updated the catalog dispatch feature to use:
 #### Minor Observations
 - **Stock Update:** Dispatch submission completed but stock numbers remained unchanged (490 pcs available, 10 dispatched) - this may indicate the dispatch was not fully processed on backend or requires page refresh
 - **Form Reset:** Form fields properly reset when dialog is reopened, indicating good state management
+
+## Test Session: Edit Receipt Feature for Outsourcing & Ironing
+Date: 2025-12-19
+
+### Feature Description:
+Added ability to edit receipts (Outsourcing and Ironing) in case wrong entries were made.
+
+### Backend Changes:
+- Added PUT /api/outsourcing-receipts/{receipt_id} endpoint
+- Added PUT /api/ironing-receipts/{receipt_id} endpoint
+- Both endpoints recalculate shortage, mistakes, and debit amounts
+
+### Frontend Changes:
+- Added Edit button on receipt cards (admin only)
+- Added Edit Receipt dialog with:
+  - Receipt Date field
+  - Received Quantities section (size-wise)
+  - Mistakes section (size-wise)
+  - Shortage calculation display
+  - Update Receipt button
+
+### Test Scenarios:
+1. View Receipts tab and verify Edit button appears for admin
+2. Click Edit button and verify dialog opens with correct data
+3. Modify received quantities and verify shortage recalculation
+4. Submit update and verify changes are saved
