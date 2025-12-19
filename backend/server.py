@@ -421,7 +421,8 @@ class CatalogCreate(BaseModel):
     lot_numbers: List[str]
 
 class CatalogDispatch(BaseModel):
-    dispatch_quantity: Dict[str, int]  # Size-wise dispatch quantities
+    master_packs: int  # Number of complete master packs to dispatch
+    loose_pcs: Dict[str, int]  # Loose pieces per size (e.g., {"M": 5, "L": 3})
     customer_name: str
     dispatch_date: datetime
     bora_number: str  # Bundle/Batch number
