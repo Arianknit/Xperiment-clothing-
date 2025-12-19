@@ -4117,7 +4117,7 @@ _Arian Knit Fab_`;
                               onClick={() => handleEditReceipt(receipt)}
                               data-testid={`edit-receipt-${receipt.id}`}
                             >
-                              <Edit3 className="h-4 w-4 mr-1" />
+                              <Pencil className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
                           )}
