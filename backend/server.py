@@ -1515,6 +1515,71 @@ async def get_outsourcing_receipts():
     return receipts
 
 
+@api_router.put("/outsourcing-receipts/{receipt_id}")
+async def update_outsourcing_receipt(receipt_id: str, receipt_update: OutsourcingReceiptCreate):
+    """Edit an outsourcing receipt - allows correcting wrong entries"""
+    # Get existing receipt
+    existing_receipt = await db.outsourcing_receipts.find_one({"id": receipt_id}, {"_id": 0})
+    if not existing_receipt:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    
+    # Get the outsourcing order for calculations
+    outsourcing_order = await db.outsourcing_orders.find_one(
+        {"id": existing_receipt['outsourcing_order_id']}, {"_id": 0}
+    )
+    if not outsourcing_order:
+        raise HTTPException(status_code=404, detail="Outsourcing order not found")
+    
+    # Calculate new shortage
+    shortage_distribution = {}
+    for size, sent_qty in outsourcing_order['size_distribution'].items():
+        received_qty = receipt_update.received_distribution.get(size, 0)
+        shortage = sent_qty - received_qty
+        if shortage > 0:
+            shortage_distribution[size] = shortage
+    
+    # Handle mistakes
+    mistake_distribution = receipt_update.mistake_distribution or {}
+    total_mistakes = sum(mistake_distribution.values()) if mistake_distribution else 0
+    
+    # Calculate totals
+    total_sent = sum(outsourcing_order['size_distribution'].values())
+    total_received = sum(receipt_update.received_distribution.values())
+    total_shortage = sum(shortage_distribution.values())
+    
+    # Calculate debit amounts
+    rate_per_pcs = existing_receipt.get('rate_per_pcs', 0)
+    shortage_debit_amount = round(total_shortage * rate_per_pcs, 2)
+    mistake_debit_amount = round(total_mistakes * rate_per_pcs, 2)
+    
+    # Update the receipt
+    update_data = {
+        "receipt_date": receipt_update.receipt_date.isoformat(),
+        "received_distribution": receipt_update.received_distribution,
+        "mistake_distribution": mistake_distribution,
+        "shortage_distribution": shortage_distribution,
+        "total_received": total_received,
+        "total_shortage": total_shortage,
+        "total_mistakes": total_mistakes,
+        "shortage_debit_amount": shortage_debit_amount,
+        "mistake_debit_amount": mistake_debit_amount
+    }
+    
+    await db.outsourcing_receipts.update_one(
+        {"id": receipt_id},
+        {"$set": update_data}
+    )
+    
+    # Update outsourcing order status
+    new_status = 'Received' if total_shortage == 0 else 'Partial'
+    await db.outsourcing_orders.update_one(
+        {"id": existing_receipt['outsourcing_order_id']},
+        {"$set": {"status": new_status}}
+    )
+    
+    return {"message": "Receipt updated successfully", "total_received": total_received, "total_shortage": total_shortage}
+
+
 # Delivery Challan Print
 @api_router.get("/outsourcing-orders/{order_id}/dc", response_class=HTMLResponse)
 async def get_delivery_challan(order_id: str):
