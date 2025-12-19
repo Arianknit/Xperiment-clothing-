@@ -245,7 +245,8 @@ function App() {
     customer_name: '',
     bora_number: '',
     notes: '',
-    size_quantities: {}
+    master_packs: 0,
+    loose_pcs: {}
   });
   const [selectedDispatchLot, setSelectedDispatchLot] = useState(null);
   
