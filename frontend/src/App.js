@@ -4811,6 +4811,43 @@ _Arian Knit Fab_`;
                             ))}
                           </div>
                         </div>
+
+                        {/* Master Pack Stock Display for Catalog */}
+                        {(() => {
+                          // Get master pack ratio from any lot's ironing order
+                          const firstLot = catalog.lot_numbers[0];
+                          const ratio = getMasterPackRatioForLot(firstLot);
+                          if (ratio && Object.keys(ratio).length > 0) {
+                            const { completePacks, loosePieces, looseDistribution } = calculateMasterPacks(catalog.size_distribution, ratio);
+                            return (
+                              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                                <p className="text-xs text-slate-600 mb-2">📦 Available Stock (Master Pack Format):</p>
+                                <div className="flex items-center gap-4">
+                                  <div className="bg-white px-4 py-2 rounded border border-indigo-300">
+                                    <span className="text-xs text-indigo-600 font-semibold">Master Packs:</span>
+                                    <span className="text-2xl font-bold text-indigo-700 ml-2">{completePacks}</span>
+                                  </div>
+                                  <span className="text-slate-400 text-xl">+</span>
+                                  <div className="bg-white px-4 py-2 rounded border border-amber-300">
+                                    <span className="text-xs text-amber-600 font-semibold">Loose:</span>
+                                    <span className="text-2xl font-bold text-amber-700 ml-2">{loosePieces}</span>
+                                    <span className="text-sm text-amber-600 ml-1">pcs</span>
+                                  </div>
+                                </div>
+                                {loosePieces > 0 && Object.keys(looseDistribution).length > 0 && (
+                                  <div className="mt-2 text-xs text-slate-500">
+                                    Loose breakdown: {Object.entries(looseDistribution).filter(([_, q]) => q > 0).map(([s, q]) => `${s}:${q}`).join(', ')}
+                                  </div>
+                                )}
+                                <div className="mt-2 text-xs text-slate-600">
+                                  <span className="font-semibold">Pack Ratio: </span>
+                                  {Object.entries(ratio).filter(([_, qty]) => qty > 0).map(([size, qty]) => `${size}:${qty}`).join('-')}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </CardContent>
                   </Card>
