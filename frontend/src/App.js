@@ -3098,6 +3098,38 @@ _Arian Knit Fab_`;
                               </div>
                             </div>
                           )}
+                          {/* Master Pack Stock Display */}
+                          {(() => {
+                            const ratio = getMasterPackRatioForLot(order.cutting_lot_number || order.lot_number);
+                            if (ratio && Object.keys(ratio).length > 0) {
+                              const { completePacks, loosePieces, looseDistribution } = calculateMasterPacks(order.bundle_distribution, ratio);
+                              return (
+                                <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                                  <p className="text-xs text-slate-600 mb-2">📦 Stock (Master Pack Format):</p>
+                                  <div className="flex items-center gap-4">
+                                    <div className="bg-white px-4 py-2 rounded border border-indigo-300">
+                                      <span className="text-xs text-indigo-600 font-semibold">Master Packs:</span>
+                                      <span className="text-lg font-bold text-indigo-700 ml-2">{completePacks}</span>
+                                    </div>
+                                    <span className="text-slate-400">+</span>
+                                    <div className="bg-white px-4 py-2 rounded border border-amber-300">
+                                      <span className="text-xs text-amber-600 font-semibold">Loose:</span>
+                                      <span className="text-lg font-bold text-amber-700 ml-2">{loosePieces} pcs</span>
+                                    </div>
+                                    {loosePieces > 0 && Object.keys(looseDistribution).length > 0 && (
+                                      <div className="text-xs text-slate-500">
+                                        ({Object.entries(looseDistribution).filter(([_, q]) => q > 0).map(([s, q]) => `${s}:${q}`).join(', ')})
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-500 mt-1">
+                                    Ratio: {Object.entries(ratio).filter(([_, q]) => q > 0).map(([s, q]) => `${s}:${q}`).join('-')}
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                           <div className="flex gap-2 pt-2">
                             {(order.payment_status !== "Paid") && (
                               <Button 
