@@ -4095,17 +4095,31 @@ _Arian Knit Fab_`;
                   <Card key={`${receipt.type}-${receipt.id}`} className="shadow-lg" data-testid={`receipt-card-${receipt.id}`}>
                     <CardContent className="pt-6">
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-xl font-bold text-slate-800">{order?.dc_number || receipt.dc_number}</h3>
-                          <Badge className={receipt.type === 'Outsourcing' ? "bg-purple-100 text-purple-800 border" : "bg-blue-100 text-blue-800 border"}>
-                            {receipt.type}
-                          </Badge>
-                          {receipt.type === 'Outsourcing' && <Badge className="bg-slate-100 text-slate-700 border">{order?.operation_type}</Badge>}
-                          {receipt.total_shortage > 0 && (
-                            <Badge className="bg-red-100 text-red-800 border border-red-200 flex items-center gap-1">
-                              <AlertCircle className="h-3 w-3" />
-                              Shortage
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-bold text-slate-800">{order?.dc_number || receipt.dc_number}</h3>
+                            <Badge className={receipt.type === 'Outsourcing' ? "bg-purple-100 text-purple-800 border" : "bg-blue-100 text-blue-800 border"}>
+                              {receipt.type}
                             </Badge>
+                            {receipt.type === 'Outsourcing' && <Badge className="bg-slate-100 text-slate-700 border">{order?.operation_type}</Badge>}
+                            {receipt.total_shortage > 0 && (
+                              <Badge className="bg-red-100 text-red-800 border border-red-200 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                Shortage
+                              </Badge>
+                            )}
+                          </div>
+                          {user?.role === 'admin' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-blue-600 hover:bg-blue-50"
+                              onClick={() => handleEditReceipt(receipt)}
+                              data-testid={`edit-receipt-${receipt.id}`}
+                            >
+                              <Edit3 className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
                           )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
