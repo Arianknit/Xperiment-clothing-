@@ -225,6 +225,15 @@ function App() {
   const [ironingReceiptDialogOpen, setIroningReceiptDialogOpen] = useState(false);
   const [selectedIroningOrder, setSelectedIroningOrder] = useState(null);
   
+  // Edit Receipt state
+  const [editReceiptDialogOpen, setEditReceiptDialogOpen] = useState(false);
+  const [selectedEditReceipt, setSelectedEditReceipt] = useState(null);
+  const [editReceiptForm, setEditReceiptForm] = useState({
+    receipt_date: '',
+    received_distribution: {},
+    mistake_distribution: {}
+  });
+  
   // Catalog form state
   const [catalogForm, setCatalogForm] = useState({
     catalog_name: "",
