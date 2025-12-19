@@ -2176,6 +2176,80 @@ async def get_ironing_receipts():
     
     return receipts
 
+
+@api_router.put("/ironing-receipts/{receipt_id}")
+async def update_ironing_receipt(receipt_id: str, receipt_update: IroningReceiptCreate):
+    """Edit an ironing receipt - allows correcting wrong entries"""
+    # Get existing receipt
+    existing_receipt = await db.ironing_receipts.find_one({"id": receipt_id}, {"_id": 0})
+    if not existing_receipt:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    
+    # Get the ironing order for calculations
+    ironing_order = await db.ironing_orders.find_one(
+        {"id": existing_receipt['ironing_order_id']}, {"_id": 0}
+    )
+    if not ironing_order:
+        raise HTTPException(status_code=404, detail="Ironing order not found")
+    
+    # Calculate new shortage
+    shortage_distribution = {}
+    for size, sent_qty in ironing_order['size_distribution'].items():
+        received_qty = receipt_update.received_distribution.get(size, 0)
+        shortage = sent_qty - received_qty
+        if shortage > 0:
+            shortage_distribution[size] = shortage
+    
+    # Handle mistakes
+    mistake_distribution = receipt_update.mistake_distribution or {}
+    total_mistakes = sum(mistake_distribution.values()) if mistake_distribution else 0
+    
+    # Calculate totals
+    total_sent = sum(ironing_order['size_distribution'].values())
+    total_received = sum(receipt_update.received_distribution.values())
+    total_shortage = sum(shortage_distribution.values())
+    
+    # Calculate debit amounts
+    rate_per_pcs = existing_receipt.get('rate_per_pcs', 0)
+    shortage_debit_amount = round(total_shortage * rate_per_pcs, 2)
+    mistake_debit_amount = round(total_mistakes * rate_per_pcs, 2)
+    
+    # Calculate master packs if ratio exists
+    master_pack_ratio = ironing_order.get('master_pack_ratio', {})
+    if master_pack_ratio:
+        complete_packs, loose_pieces, loose_pieces_dist = calculate_master_packs(
+            receipt_update.received_distribution, 
+            master_pack_ratio
+        )
+    else:
+        complete_packs = 0
+        loose_pieces = total_received
+        loose_pieces_dist = receipt_update.received_distribution.copy()
+    
+    # Update the receipt
+    update_data = {
+        "receipt_date": receipt_update.receipt_date.isoformat(),
+        "received_distribution": receipt_update.received_distribution,
+        "mistake_distribution": mistake_distribution,
+        "shortage_distribution": shortage_distribution,
+        "total_received": total_received,
+        "total_shortage": total_shortage,
+        "total_mistakes": total_mistakes,
+        "shortage_debit_amount": shortage_debit_amount,
+        "mistake_debit_amount": mistake_debit_amount,
+        "complete_packs": complete_packs,
+        "loose_pieces": loose_pieces,
+        "loose_pieces_distribution": loose_pieces_dist
+    }
+    
+    await db.ironing_receipts.update_one(
+        {"id": receipt_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Receipt updated successfully", "total_received": total_received, "total_shortage": total_shortage}
+
+
 # Payment Routes for Ironing Orders
 @api_router.post("/ironing-orders/{order_id}/payment")
 async def add_ironing_payment(order_id: str, payment: PaymentRecord):
