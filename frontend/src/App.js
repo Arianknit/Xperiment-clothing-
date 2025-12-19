@@ -4595,7 +4595,7 @@ _Arian Knit Fab_`;
                                 className="bg-green-600 hover:bg-green-700 text-white"
                                 onClick={() => {
                                   setSelectedCatalog(catalog);
-                                  setDispatchForm({ customer_name: '', bora_number: '', notes: '', size_quantities: {} });
+                                  setDispatchForm({ customer_name: '', bora_number: '', notes: '', master_packs: 0, loose_pcs: {} });
                                   setSelectedDispatchLot(null);
                                   setDispatchDialogOpen(true);
                                 }}
