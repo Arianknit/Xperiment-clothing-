@@ -1152,6 +1152,51 @@ function App() {
     window.open(`${API}/ironing-orders/${orderId}/dc`, '_blank');
   };
 
+  // Edit Receipt Handler
+  const handleEditReceipt = (receipt) => {
+    setSelectedEditReceipt(receipt);
+    setEditReceiptForm({
+      receipt_date: new Date(receipt.receipt_date).toISOString().split('T')[0],
+      received_distribution: { ...receipt.received_distribution },
+      mistake_distribution: { ...receipt.mistake_distribution }
+    });
+    setEditReceiptDialogOpen(true);
+  };
+
+  const handleEditReceiptSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const endpoint = selectedEditReceipt.type === 'Outsourcing' 
+        ? `${API}/outsourcing-receipts/${selectedEditReceipt.id}`
+        : `${API}/ironing-receipts/${selectedEditReceipt.id}`;
+      
+      await axios.put(endpoint, {
+        outsourcing_order_id: selectedEditReceipt.outsourcing_order_id,
+        ironing_order_id: selectedEditReceipt.ironing_order_id,
+        receipt_date: new Date(editReceiptForm.receipt_date).toISOString(),
+        received_distribution: editReceiptForm.received_distribution,
+        mistake_distribution: editReceiptForm.mistake_distribution
+      });
+      
+      toast.success("Receipt updated successfully");
+      setEditReceiptDialogOpen(false);
+      setSelectedEditReceipt(null);
+      
+      // Refresh data
+      fetchOutsourcingReceipts();
+      fetchIroningReceipts();
+      fetchOutsourcingOrders();
+      fetchIroningOrders();
+    } catch (error) {
+      console.error("Error updating receipt:", error);
+      toast.error(error.response?.data?.detail || "Failed to update receipt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteIroningOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this ironing order?")) return;
     
