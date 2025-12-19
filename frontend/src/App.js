@@ -1589,6 +1589,48 @@ _Arian Knit Fab_`;
     return <Badge className={`${variants[status]} border`} data-testid={`status-badge-${status.toLowerCase()}`}>{status}</Badge>;
   };
 
+  // Calculate Master Packs and Loose Pieces from size distribution
+  const calculateMasterPacks = (sizeDistribution, masterPackRatio) => {
+    if (!masterPackRatio || !sizeDistribution || Object.keys(masterPackRatio).length === 0) {
+      return { completePacks: 0, loosePieces: getTotalQty(sizeDistribution), looseDistribution: sizeDistribution || {} };
+    }
+    
+    // Calculate how many complete packs we can make
+    let completePacks = Infinity;
+    for (const [size, ratioQty] of Object.entries(masterPackRatio)) {
+      if (ratioQty > 0) {
+        const availableQty = sizeDistribution[size] || 0;
+        const possiblePacks = Math.floor(availableQty / ratioQty);
+        completePacks = Math.min(completePacks, possiblePacks);
+      }
+    }
+    
+    if (completePacks === Infinity || completePacks === 0) {
+      return { completePacks: 0, loosePieces: getTotalQty(sizeDistribution), looseDistribution: sizeDistribution || {} };
+    }
+    
+    // Calculate loose pieces after removing complete packs
+    const looseDistribution = {};
+    let totalLoose = 0;
+    for (const [size, qty] of Object.entries(sizeDistribution)) {
+      const usedInPacks = completePacks * (masterPackRatio[size] || 0);
+      const loose = qty - usedInPacks;
+      if (loose > 0) {
+        looseDistribution[size] = loose;
+        totalLoose += loose;
+      }
+    }
+    
+    return { completePacks, loosePieces: totalLoose, looseDistribution };
+  };
+
+  // Get master pack ratio for a cutting lot (from its ironing order if exists)
+  const getMasterPackRatioForLot = (lotNumber) => {
+    // Find ironing order for this lot
+    const ironingOrder = ironingOrders.find(o => o.cutting_lot_number === lotNumber);
+    return ironingOrder?.master_pack_ratio || null;
+  };
+
   // Filtered data based on search and filters
   const filteredFabricLots = fabricLots.filter(lot => {
     const searchLower = fabricSearch.toLowerCase();
