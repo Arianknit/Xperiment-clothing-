@@ -3609,17 +3609,40 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
     if not catalog:
         raise HTTPException(status_code=404, detail="Catalog not found")
     
+    # Get master pack ratio from catalog or use default (1 of each size)
+    master_pack_ratio = catalog.get('master_pack_ratio', {})
+    size_distribution = catalog.get('size_distribution', {})
+    
+    # If no master pack ratio is set, create a default one (1 of each available size)
+    if not master_pack_ratio:
+        master_pack_ratio = {size: 1 for size in size_distribution.keys()}
+    
+    # Calculate size-wise dispatch quantities from master packs and loose pcs
+    dispatch_quantity = {}
+    for size in size_distribution.keys():
+        # Quantity from master packs
+        pack_qty = dispatch.master_packs * master_pack_ratio.get(size, 0)
+        # Add loose pieces for this size
+        loose_qty = dispatch.loose_pcs.get(size, 0)
+        dispatch_quantity[size] = pack_qty + loose_qty
+    
     # Calculate total dispatch quantity
-    total_dispatch = sum(dispatch.dispatch_quantity.values())
+    total_dispatch = sum(dispatch_quantity.values())
     
     if total_dispatch > catalog.get('available_stock', 0):
         raise HTTPException(status_code=400, detail="Insufficient stock for dispatch")
     
+    # Validate dispatch doesn't exceed available size-wise quantities
+    for size, qty in dispatch_quantity.items():
+        available_qty = size_distribution.get(size, 0)
+        if qty > available_qty:
+            raise HTTPException(status_code=400, detail=f"Insufficient stock for size {size}. Available: {available_qty}, Requested: {qty}")
+    
     # Update available stock and size distribution
     new_available_stock = catalog.get('available_stock', 0) - total_dispatch
-    new_size_distribution = catalog.get('size_distribution', {}).copy()
+    new_size_distribution = size_distribution.copy()
     
-    for size, qty in dispatch.dispatch_quantity.items():
+    for size, qty in dispatch_quantity.items():
         if size in new_size_distribution:
             new_size_distribution[size] = max(0, new_size_distribution[size] - qty)
     
@@ -3639,7 +3662,9 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
         "catalog_id": catalog_id,
         "catalog_name": catalog.get('catalog_name'),
         "lot_number": dispatch.lot_number,
-        "dispatch_quantity": dispatch.dispatch_quantity,
+        "master_packs": dispatch.master_packs,
+        "loose_pcs": dispatch.loose_pcs,
+        "dispatch_quantity": dispatch_quantity,  # Calculated size-wise quantities
         "total_dispatched": total_dispatch,
         "customer_name": dispatch.customer_name,
         "dispatch_date": dispatch.dispatch_date,
@@ -3650,7 +3675,7 @@ async def dispatch_from_catalog(catalog_id: str, dispatch: CatalogDispatch):
     }
     await db.catalog_dispatches.insert_one(dispatch_record)
     
-    return {"message": "Dispatch recorded successfully", "new_available_stock": new_available_stock}
+    return {"message": "Dispatch recorded successfully", "new_available_stock": new_available_stock, "dispatched_qty": dispatch_quantity}
 
 
 @api_router.delete("/catalogs/{catalog_id}")
