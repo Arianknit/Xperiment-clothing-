@@ -1285,7 +1285,8 @@ function App() {
       const color = cuttingOrder?.color || 'N/A';
       
       await axios.post(`${API}/catalogs/${selectedCatalog.id}/dispatch`, {
-        dispatch_quantity: dispatchForm.size_quantities,
+        master_packs: parseInt(dispatchForm.master_packs) || 0,
+        loose_pcs: dispatchForm.loose_pcs,
         customer_name: dispatchForm.customer_name,
         dispatch_date: new Date().toISOString(),
         bora_number: dispatchForm.bora_number,
@@ -1296,7 +1297,7 @@ function App() {
       toast.success("Dispatch recorded successfully");
       
       setDispatchDialogOpen(false);
-      setDispatchForm({ customer_name: '', bora_number: '', notes: '', size_quantities: {} });
+      setDispatchForm({ customer_name: '', bora_number: '', notes: '', master_packs: 0, loose_pcs: {} });
       setSelectedCatalog(null);
       setSelectedDispatchLot(null);
       fetchCatalogs();
