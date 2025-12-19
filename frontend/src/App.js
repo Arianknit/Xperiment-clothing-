@@ -4109,7 +4109,7 @@ _Arian Knit Fab_`;
                               </Badge>
                             )}
                           </div>
-                          {user?.role === 'admin' && (
+                          {currentUser?.role === 'admin' && (
                             <Button 
                               size="sm" 
                               variant="outline" 
