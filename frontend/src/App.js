@@ -4475,25 +4475,35 @@ _Arian Knit Fab_`;
                           </div>
                         </div>
 
-                        {order.master_pack_ratio && Object.keys(order.master_pack_ratio).length > 0 && (
-                          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
-                            <p className="text-xs text-slate-600 mb-2">📦 Master Pack Details:</p>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="bg-white p-2 rounded border">
-                                <p className="text-xs text-slate-500">Complete Packs</p>
-                                <p className="text-xl font-bold text-purple-600">{order.complete_packs || 0}</p>
+                        {order.master_pack_ratio && Object.keys(order.master_pack_ratio).length > 0 && (() => {
+                          const { completePacks, loosePieces, looseDistribution } = calculateMasterPacks(order.size_distribution, order.master_pack_ratio);
+                          return (
+                            <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                              <p className="text-xs text-slate-600 mb-2">📦 Stock (Master Pack Format):</p>
+                              <div className="flex items-center gap-4">
+                                <div className="bg-white px-4 py-2 rounded border border-purple-300">
+                                  <span className="text-xs text-purple-600 font-semibold">Master Packs:</span>
+                                  <span className="text-2xl font-bold text-purple-700 ml-2">{completePacks}</span>
+                                </div>
+                                <span className="text-slate-400 text-xl">+</span>
+                                <div className="bg-white px-4 py-2 rounded border border-amber-300">
+                                  <span className="text-xs text-amber-600 font-semibold">Loose:</span>
+                                  <span className="text-2xl font-bold text-amber-700 ml-2">{loosePieces}</span>
+                                  <span className="text-sm text-amber-600 ml-1">pcs</span>
+                                </div>
                               </div>
-                              <div className="bg-white p-2 rounded border">
-                                <p className="text-xs text-slate-500">Loose Pieces</p>
-                                <p className="text-xl font-bold text-amber-600">{order.loose_pieces || 0}</p>
+                              {loosePieces > 0 && Object.keys(looseDistribution).length > 0 && (
+                                <div className="mt-2 text-xs text-slate-500">
+                                  Loose breakdown: {Object.entries(looseDistribution).filter(([_, q]) => q > 0).map(([s, q]) => `${s}:${q}`).join(', ')}
+                                </div>
+                              )}
+                              <div className="mt-2 text-xs text-slate-600">
+                                <span className="font-semibold">Pack Ratio: </span>
+                                {Object.entries(order.master_pack_ratio).filter(([_, qty]) => qty > 0).map(([size, qty]) => `${size}:${qty}`).join('-')}
                               </div>
                             </div>
-                            <div className="mt-2 text-xs text-slate-600">
-                              <span className="font-semibold">Ratio: </span>
-                              {Object.entries(order.master_pack_ratio).filter(([_, qty]) => qty > 0).map(([size, qty]) => `${size}:${qty}`).join(', ')}
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
 
                         {order.payment_status !== 'Paid' && (
                           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
