@@ -492,3 +492,24 @@ Date: 2025-12-19
 - **Date:** 2025-12-19
 - **Viewport:** Desktop (1920x1080)
 - **Test Coverage:** Complete end-to-end flow tested successfully for both features
+
+## Test Session: Master Pack Stock Display Feature
+Date: 2025-12-19
+
+### Feature Description:
+Added stock display in Master Pack + Loose Pcs format across all screens using the master pack ratio from ironing orders.
+
+### Screens Updated:
+1. **Cutting Cards** - Show stock as Master Packs + Loose based on ironing order ratio
+2. **Ironing Cards** - Show stock as Master Packs + Loose from their own master_pack_ratio
+3. **Catalog Cards** - Show available stock as Master Packs + Loose based on lot's ironing ratio
+
+### Calculation Logic:
+- Master Packs = min(qty_per_size / ratio_per_size) for all sizes
+- Loose Pieces = total - (master_packs × sum_of_ratio)
+- Loose breakdown shows remaining pieces per size
+
+### Test Verification:
+- Ironing (cut 003): 160 pcs with ratio 2:2:2:2 = 20 packs + 0 loose ✅
+- Catalog: 490 pcs with ratio 2:2:2:2 = 57 packs + 34 loose ✅
+- Cutting (cut 001): Shows ratio from associated ironing order ✅
