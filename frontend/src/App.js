@@ -5576,6 +5576,129 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Edit Receipt Dialog */}
+      <Dialog open={editReceiptDialogOpen} onOpenChange={(open) => {
+        setEditReceiptDialogOpen(open);
+        if (!open) {
+          setSelectedEditReceipt(null);
+          setEditReceiptForm({ receipt_date: '', received_distribution: {}, mistake_distribution: {} });
+        }
+      }}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="edit-receipt-dialog">
+          <DialogHeader>
+            <DialogTitle>✏️ Edit Receipt</DialogTitle>
+            <DialogDescription>
+              {selectedEditReceipt && `${selectedEditReceipt.type} Receipt - DC: ${selectedEditReceipt.dc_number}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEditReceipt && (
+            <form onSubmit={handleEditReceiptSubmit} className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-sm text-slate-700">
+                  <strong>Unit:</strong> {selectedEditReceipt.unit_name} | 
+                  <strong> Total Sent:</strong> {selectedEditReceipt.total_sent} pcs
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-receipt-date">Receipt Date</Label>
+                <Input 
+                  id="edit-receipt-date"
+                  type="date" 
+                  value={editReceiptForm.receipt_date} 
+                  onChange={(e) => setEditReceiptForm({...editReceiptForm, receipt_date: e.target.value})} 
+                  required 
+                  data-testid="edit-receipt-date"
+                />
+              </div>
+
+              <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                <h4 className="font-semibold text-green-800">✅ Received Quantities</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(selectedEditReceipt.sent_distribution || {}).map(([size, sentQty]) => (
+                    sentQty > 0 && (
+                      <div key={size} className="space-y-1">
+                        <Label className="text-xs text-green-700">{size} (Sent: {sentQty})</Label>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          max={sentQty}
+                          value={editReceiptForm.received_distribution[size] || ''} 
+                          onChange={(e) => setEditReceiptForm(prev => ({
+                            ...prev,
+                            received_distribution: {
+                              ...prev.received_distribution,
+                              [size]: parseInt(e.target.value) || 0
+                            }
+                          }))}
+                          placeholder="0"
+                          className="h-8"
+                          data-testid={`edit-received-${size}`}
+                        />
+                      </div>
+                    )
+                  ))}
+                </div>
+                <p className="text-sm text-green-700 pt-2 border-t border-green-200">
+                  Total Received: <strong>{getTotalQty(editReceiptForm.received_distribution)} pcs</strong>
+                </p>
+              </div>
+
+              <div className="space-y-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                <h4 className="font-semibold text-red-800">⚠️ Mistakes (Defective pieces)</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(selectedEditReceipt.sent_distribution || {}).map(([size, sentQty]) => (
+                    sentQty > 0 && (
+                      <div key={size} className="space-y-1">
+                        <Label className="text-xs text-red-700">{size}</Label>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          value={editReceiptForm.mistake_distribution[size] || ''} 
+                          onChange={(e) => setEditReceiptForm(prev => ({
+                            ...prev,
+                            mistake_distribution: {
+                              ...prev.mistake_distribution,
+                              [size]: parseInt(e.target.value) || 0
+                            }
+                          }))}
+                          placeholder="0"
+                          className="h-8"
+                          data-testid={`edit-mistake-${size}`}
+                        />
+                      </div>
+                    )
+                  ))}
+                </div>
+                <p className="text-sm text-red-700 pt-2 border-t border-red-200">
+                  Total Mistakes: <strong>{getTotalQty(editReceiptForm.mistake_distribution)} pcs</strong>
+                </p>
+              </div>
+
+              <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                <p className="text-sm text-amber-800">
+                  <strong>Shortage:</strong> {selectedEditReceipt.total_sent - getTotalQty(editReceiptForm.received_distribution)} pcs
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditReceiptDialogOpen(false)} data-testid="edit-receipt-cancel">
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700" 
+                  disabled={loading}
+                  data-testid="edit-receipt-submit"
+                >
+                  {loading ? "Updating..." : "💾 Update Receipt"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Barcode View Dialog */}
       <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
         <DialogContent className="sm:max-w-[500px]" data-testid="barcode-dialog">
