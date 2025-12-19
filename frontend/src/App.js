@@ -5149,7 +5149,7 @@ _Arian Knit Fab_`;
         setDispatchDialogOpen(open);
         if (!open) {
           setSelectedDispatchLot(null);
-          setDispatchForm({ customer_name: '', bora_number: '', notes: '', size_quantities: {} });
+          setDispatchForm({ customer_name: '', bora_number: '', notes: '', master_packs: 0, loose_pcs: {} });
         }
       }}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="dispatch-dialog">
@@ -5163,6 +5163,15 @@ _Arian Knit Fab_`;
             <form onSubmit={handleDispatchSubmit} className="space-y-4">
               <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
                 <p className="text-sm text-slate-700"><strong>Total Available Stock:</strong> {selectedCatalog.available_stock} pcs</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {Object.entries(selectedCatalog.size_distribution).map(([size, qty]) => (
+                    qty > 0 && (
+                      <span key={size} className="text-xs bg-white px-2 py-1 rounded border">
+                        {size}: {qty}
+                      </span>
+                    )
+                  ))}
+                </div>
               </div>
 
               {/* Customer & Bora Details */}
@@ -5207,7 +5216,7 @@ _Arian Knit Fab_`;
                         type="button"
                         onClick={() => {
                           setSelectedDispatchLot(lotNum);
-                          setDispatchForm(prev => ({...prev, size_quantities: {}}));
+                          setDispatchForm(prev => ({...prev, master_packs: 0, loose_pcs: {}}));
                         }}
                         className={`p-3 rounded-lg border-2 text-left transition-all ${
                           isSelected 
@@ -5229,12 +5238,12 @@ _Arian Knit Fab_`;
                 </div>
               </div>
 
-              {/* Size-wise dispatch for selected lot */}
+              {/* Master Pack and Loose Pcs dispatch for selected lot */}
               {selectedDispatchLot && (
-                <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                <div className="space-y-4 p-4 bg-slate-50 rounded-lg border">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-slate-700">
-                      Dispatch Quantities for: <span className="text-indigo-600">{selectedDispatchLot}</span>
+                      Dispatch for: <span className="text-indigo-600">{selectedDispatchLot}</span>
                     </h4>
                     {(() => {
                       const co = cuttingOrders.find(c => c.lot_number === selectedDispatchLot);
@@ -5243,35 +5252,87 @@ _Arian Knit Fab_`;
                       ) : null;
                     })()}
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {Object.entries(selectedCatalog.size_distribution).map(([size, availableQty]) => (
-                      availableQty > 0 && (
-                        <div key={size} className="space-y-1">
-                          <Label htmlFor={`dispatch-${size}`} className="text-xs">{size} (Available: {availableQty})</Label>
-                          <Input 
-                            id={`dispatch-${size}`}
-                            type="number" 
-                            value={dispatchForm.size_quantities[size] || ''} 
-                            onChange={(e) => setDispatchForm(prev => ({
-                              ...prev,
-                              size_quantities: {
-                                ...prev.size_quantities,
-                                [size]: parseInt(e.target.value) || 0
-                              }
-                            }))}
-                            placeholder="0"
-                            max={availableQty}
-                            className="h-8"
-                            data-testid={`dispatch-input-${size}`}
-                          />
-                        </div>
-                      )
-                    ))}
+
+                  {/* Master Pack Section */}
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="dispatch-master-packs" className="font-semibold text-green-800">📦 Master Packs</Label>
+                      <span className="text-xs text-green-600">
+                        (1 pack = {Object.keys(selectedCatalog.size_distribution).length} pcs - 1 of each size)
+                      </span>
+                    </div>
+                    <Input 
+                      id="dispatch-master-packs"
+                      type="number" 
+                      min="0"
+                      value={dispatchForm.master_packs || ''} 
+                      onChange={(e) => setDispatchForm(prev => ({
+                        ...prev,
+                        master_packs: parseInt(e.target.value) || 0
+                      }))}
+                      placeholder="Enter number of master packs"
+                      className="h-10"
+                      data-testid="dispatch-master-packs"
+                    />
+                    {dispatchForm.master_packs > 0 && (
+                      <p className="text-xs text-green-700 mt-1">
+                        = {dispatchForm.master_packs * Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).length} pcs 
+                        ({Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).map(s => `${dispatchForm.master_packs} ${s}`).join(', ')})
+                      </p>
+                    )}
                   </div>
-                  <div className="pt-2 border-t">
-                    <p className="text-sm text-slate-600">Total Dispatch: <strong>{getTotalQty(dispatchForm.size_quantities)} pcs</strong></p>
-                    {getTotalQty(dispatchForm.size_quantities) > selectedCatalog.available_stock && (
-                      <p className="text-sm text-red-600 font-bold">⚠️ Exceeds available stock!</p>
+
+                  {/* Loose Pieces Section */}
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <Label className="font-semibold text-amber-800 block mb-2">👕 Loose Pieces (Size-wise)</Label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {Object.entries(selectedCatalog.size_distribution).map(([size, availableQty]) => {
+                        const usedByPacks = dispatchForm.master_packs || 0;
+                        const remainingForLoose = Math.max(0, availableQty - usedByPacks);
+                        return availableQty > 0 && (
+                          <div key={size} className="space-y-1">
+                            <Label htmlFor={`loose-${size}`} className="text-xs text-amber-700">{size}</Label>
+                            <Input 
+                              id={`loose-${size}`}
+                              type="number" 
+                              min="0"
+                              max={remainingForLoose}
+                              value={dispatchForm.loose_pcs[size] || ''} 
+                              onChange={(e) => setDispatchForm(prev => ({
+                                ...prev,
+                                loose_pcs: {
+                                  ...prev.loose_pcs,
+                                  [size]: parseInt(e.target.value) || 0
+                                }
+                              }))}
+                              placeholder="0"
+                              className="h-8"
+                              data-testid={`dispatch-loose-${size}`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {getTotalQty(dispatchForm.loose_pcs) > 0 && (
+                      <p className="text-xs text-amber-700 mt-2">
+                        Loose total: {getTotalQty(dispatchForm.loose_pcs)} pcs
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Total Summary */}
+                  <div className="pt-3 border-t border-slate-300">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-600">Total Dispatch:</span>
+                      <span className="text-lg font-bold text-indigo-600">
+                        {(dispatchForm.master_packs || 0) * Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).length + getTotalQty(dispatchForm.loose_pcs)} pcs
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      ({dispatchForm.master_packs || 0} packs × {Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).length} = {(dispatchForm.master_packs || 0) * Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).length} pcs) + ({getTotalQty(dispatchForm.loose_pcs)} loose pcs)
+                    </div>
+                    {((dispatchForm.master_packs || 0) * Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).length + getTotalQty(dispatchForm.loose_pcs)) > selectedCatalog.available_stock && (
+                      <p className="text-sm text-red-600 font-bold mt-2">⚠️ Exceeds available stock!</p>
                     )}
                   </div>
                 </div>
@@ -5295,7 +5356,7 @@ _Arian Knit Fab_`;
                 <Button 
                   type="submit" 
                   className="bg-green-600 hover:bg-green-700" 
-                  disabled={loading || !selectedDispatchLot || !dispatchForm.customer_name || !dispatchForm.bora_number || getTotalQty(dispatchForm.size_quantities) === 0 || getTotalQty(dispatchForm.size_quantities) > selectedCatalog.available_stock} 
+                  disabled={loading || !selectedDispatchLot || !dispatchForm.customer_name || !dispatchForm.bora_number || ((dispatchForm.master_packs || 0) === 0 && getTotalQty(dispatchForm.loose_pcs) === 0) || ((dispatchForm.master_packs || 0) * Object.keys(selectedCatalog.size_distribution).filter(s => selectedCatalog.size_distribution[s] > 0).length + getTotalQty(dispatchForm.loose_pcs)) > selectedCatalog.available_stock} 
                   data-testid="dispatch-submit-button"
                 >
                   {loading ? "Recording..." : "📦 Record Dispatch"}
