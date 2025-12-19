@@ -284,3 +284,22 @@ The lot-wise catalog dispatch feature allows users to:
 - **Date:** 2025-12-18
 - **Viewport:** Desktop (1920x1080)
 - **Test Duration:** Complete end-to-end flow tested successfully
+
+## Test Session: Master Pack & Loose Pcs Dispatch Feature
+Date: 2025-12-19
+
+### Feature Description:
+Updated the catalog dispatch feature to use:
+1. **Master Packs** - Number of complete packs (each pack contains 1 of each size)
+2. **Loose Pieces** - Individual pieces per size that don't form complete packs
+
+### UI Changes:
+- Replaced size-wise quantity inputs with Master Packs input section (green background)
+- Added Loose Pieces section (amber background) for per-size loose quantities
+- Shows calculation breakdown: "(X packs × Y = Z pcs) + (N loose pcs)"
+
+### Test Scenarios:
+1. Open dispatch dialog - verify Master Packs and Loose Pieces sections appear
+2. Enter master packs count and verify calculation (pack × number_of_sizes)
+3. Enter loose pieces per size and verify total
+4. Submit dispatch and verify stock update
