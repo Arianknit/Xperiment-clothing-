@@ -7285,7 +7285,7 @@ async def record_unit_payment(payment: UnitPayment):
     
     # Record transaction in unit_transactions collection
     transaction_record = {
-        "id": str(uuid4()),
+        "id": str(uuid.uuid4()),
         "unit_name": unit_name,
         "amount": amount,
         "transaction_type": transaction_type,
