@@ -517,26 +517,36 @@ function App() {
   // Unified Lot QR Scanner
   useEffect(() => {
     let scanner = null;
+    let timeoutId = null;
     
-    if (unifiedScannerOpen && document.getElementById('unified-qr-reader')) {
-      scanner = new Html5QrcodeScanner('unified-qr-reader', {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      });
-      
-      scanner.render(
-        (decodedText) => {
-          scanner.clear();
-          handleLotQRScan(decodedText);
-        },
-        (error) => {
-          // Ignore scan errors
+    if (unifiedScannerOpen) {
+      // Small delay to ensure DOM element is rendered
+      timeoutId = setTimeout(() => {
+        const element = document.getElementById('unified-qr-reader');
+        if (element) {
+          scanner = new Html5QrcodeScanner('unified-qr-reader', {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          });
+          
+          scanner.render(
+            (decodedText) => {
+              scanner.clear();
+              handleLotQRScan(decodedText);
+            },
+            (error) => {
+              // Ignore scan errors
+            }
+          );
         }
-      );
+      }, 100);
     }
     
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (scanner) {
         scanner.clear().catch(() => {});
       }
