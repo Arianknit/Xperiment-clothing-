@@ -5507,14 +5507,44 @@ _Arian Knit Fab_`;
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold text-slate-800">🚚 Bulk Dispatch</h2>
-                <Button 
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => setBulkDispatchDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Dispatch
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={() => setScanMode('dispatch')}
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Scan to Dispatch
+                  </Button>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => setBulkDispatchDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Dispatch
+                  </Button>
+                </div>
               </div>
+
+              {/* QR Scanner for Dispatch */}
+              {scanMode === 'dispatch' && (
+                <Card className="bg-gradient-to-br from-amber-900 to-amber-800 text-white">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold">📷 Scan Stock QR to Add to Dispatch</h3>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-white border-white hover:bg-white/20"
+                        onClick={() => setScanMode(null)}
+                      >
+                        ✕ Cancel
+                      </Button>
+                    </div>
+                    <div id="qr-reader-dispatch" className="w-full max-w-md mx-auto rounded-lg overflow-hidden"></div>
+                    <p className="text-sm text-amber-200 mt-3 text-center">Scan a stock QR code to add it to your dispatch</p>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
