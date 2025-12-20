@@ -7369,6 +7369,136 @@ async def record_unit_payment(payment: UnitPayment):
     }
 
 
+# ==================== CUSTOMER RETURNS MANAGEMENT ====================
+
+@api_router.get("/returns")
+async def get_returns(current_user: dict = Depends(get_current_user)):
+    """Get all customer/production returns"""
+    returns = await db.customer_returns.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return returns
+
+@api_router.post("/returns")
+async def create_return(return_data: CustomerReturnCreate, current_user: dict = Depends(get_current_user)):
+    """Record a new customer/production return"""
+    return_dict = return_data.model_dump()
+    return_dict['id'] = str(uuid.uuid4())
+    return_dict['status'] = "Pending"
+    return_dict['stock_restored'] = False
+    return_dict['created_by'] = current_user.get('username', 'system')
+    return_dict['created_at'] = datetime.now(timezone.utc)
+    return_dict['return_date'] = return_data.return_date
+    
+    await db.customer_returns.insert_one(return_dict)
+    
+    # Log activity
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "Return Recorded",
+        "entity_type": "return",
+        "entity_id": return_dict['id'],
+        "details": f"Return from {return_data.source_type}: {return_data.quantity} pcs - {return_data.reason}",
+        "user": current_user.get('username', 'system'),
+        "timestamp": datetime.now(timezone.utc)
+    })
+    
+    return {"message": "Return recorded successfully", "id": return_dict['id']}
+
+@api_router.put("/returns/{return_id}/process")
+async def process_return(return_id: str, action: str, current_user: dict = Depends(get_current_user)):
+    """Process a return - accept (restore stock) or reject"""
+    if action not in ['accept', 'reject']:
+        raise HTTPException(status_code=400, detail="Action must be 'accept' or 'reject'")
+    
+    # Get the return record
+    return_record = await db.customer_returns.find_one({"id": return_id}, {"_id": 0})
+    if not return_record:
+        raise HTTPException(status_code=404, detail="Return not found")
+    
+    if return_record.get('status') != 'Pending':
+        raise HTTPException(status_code=400, detail="Return has already been processed")
+    
+    new_status = "Accepted" if action == 'accept' else "Rejected"
+    
+    update_data = {
+        "status": new_status,
+        "processed_by": current_user.get('username', 'system'),
+        "processed_at": datetime.now(timezone.utc)
+    }
+    
+    # If accepting, try to restore stock
+    if action == 'accept':
+        source_type = return_record.get('source_type')
+        source_id = return_record.get('source_id')
+        quantity = return_record.get('quantity', 0)
+        
+        stock_updated = False
+        
+        if source_type == 'dispatch':
+            # Find the bulk dispatch and associated stock items
+            dispatch = await db.bulk_dispatches.find_one({"id": source_id}, {"_id": 0})
+            if dispatch and dispatch.get('items'):
+                # For simplicity, add returned quantity to first stock item in dispatch
+                # In a real scenario, you might want to track which specific item was returned
+                first_item = dispatch['items'][0] if dispatch['items'] else None
+                if first_item and first_item.get('stock_id'):
+                    stock_item = await db.stock_items.find_one({"id": first_item['stock_id']}, {"_id": 0})
+                    if stock_item:
+                        new_available = stock_item.get('available_quantity', 0) + quantity
+                        await db.stock_items.update_one(
+                            {"id": first_item['stock_id']},
+                            {"$set": {"available_quantity": new_available, "updated_at": datetime.now(timezone.utc)}}
+                        )
+                        stock_updated = True
+        
+        # For outsourcing/ironing returns, you might want different logic
+        # For now, we just mark it as accepted without stock restoration
+        
+        update_data['stock_restored'] = stock_updated
+    
+    await db.customer_returns.update_one(
+        {"id": return_id},
+        {"$set": update_data}
+    )
+    
+    # Log activity
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": f"Return {new_status}",
+        "entity_type": "return",
+        "entity_id": return_id,
+        "details": f"Return {new_status.lower()} by {current_user.get('username', 'system')}",
+        "user": current_user.get('username', 'system'),
+        "timestamp": datetime.now(timezone.utc)
+    })
+    
+    return {"message": f"Return {new_status.lower()} successfully", "status": new_status}
+
+@api_router.delete("/returns/{return_id}")
+async def delete_return(return_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a return record (admin only)"""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Only admins can delete returns")
+    
+    return_record = await db.customer_returns.find_one({"id": return_id}, {"_id": 0})
+    if not return_record:
+        raise HTTPException(status_code=404, detail="Return not found")
+    
+    await db.customer_returns.delete_one({"id": return_id})
+    
+    # Log activity
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "Return Deleted",
+        "entity_type": "return",
+        "entity_id": return_id,
+        "details": f"Return record deleted",
+        "user": current_user.get('username', 'system'),
+        "timestamp": datetime.now(timezone.utc)
+    })
+    
+    return {"message": "Return deleted successfully"}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
