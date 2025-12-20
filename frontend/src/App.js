@@ -2375,7 +2375,12 @@ function App() {
     setLoading(true);
     try {
       const lotNum = scannedLot.order.cutting_lot_number || scannedLot.order.lot_number;
-      await axios.post(`${API}/scan/send-outsourcing?lot_number=${encodeURIComponent(lotNum)}&unit_name=${encodeURIComponent(scanSendOutsourcingForm.unit_name)}&operation_type=${encodeURIComponent(scanSendOutsourcingForm.operation_type)}&rate_per_pcs=${scanSendOutsourcingForm.rate_per_pcs}`);
+      await axios.post(`${API}/scan/send-outsourcing`, {
+        lot_number: lotNum,
+        unit_name: scanSendOutsourcingForm.unit_name,
+        operation_type: scanSendOutsourcingForm.operation_type,
+        rate_per_pcs: scanSendOutsourcingForm.rate_per_pcs
+      });
       toast.success("Sent to outsourcing successfully!");
       setScanActionDialog(null);
       setScannedLot(null);
