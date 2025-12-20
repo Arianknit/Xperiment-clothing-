@@ -2540,6 +2540,57 @@ _Arian Knit Fab_`;
                 <FileText className="h-4 w-4 mr-2" />
                 Generate Bill Report
               </Button>
+              
+              {/* Notification Bell */}
+              <div className="relative">
+                <Button 
+                  variant="outline"
+                  size="icon"
+                  className="relative"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <Bell className="h-4 w-4" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {notifications.length > 9 ? '9+' : notifications.length}
+                    </span>
+                  )}
+                </Button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b bg-slate-50 flex justify-between items-center">
+                      <h3 className="font-semibold text-slate-800">🔔 Notifications</h3>
+                      <span className="text-xs text-slate-500">{notifications.length} alerts</span>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-slate-500">
+                        <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                        <p>All clear! No alerts.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {notifications.slice(0, 10).map((notif, idx) => (
+                          <div key={idx} className={`p-3 hover:bg-slate-50 ${
+                            notif.type === 'error' ? 'border-l-4 border-l-red-500' :
+                            notif.type === 'warning' ? 'border-l-4 border-l-amber-500' :
+                            'border-l-4 border-l-blue-500'
+                          }`}>
+                            <p className="font-medium text-sm text-slate-800">{notif.title}</p>
+                            <p className="text-xs text-slate-600 mt-1">{notif.message}</p>
+                          </div>
+                        ))}
+                        {notifications.length > 10 && (
+                          <div className="p-2 text-center text-xs text-slate-500 bg-slate-50">
+                            +{notifications.length - 10} more notifications
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
               <Button 
                 onClick={handleLogout}
                 variant="outline"
