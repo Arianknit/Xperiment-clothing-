@@ -166,6 +166,25 @@ function App() {
     description: ""
   });
   
+  // QR Scan State
+  const [scanMode, setScanMode] = useState(null); // 'dispatch', 'newlot', null
+  const [scannedStock, setScannedStock] = useState(null);
+  const [scanDispatchDialogOpen, setScanDispatchDialogOpen] = useState(false);
+  const [scanNewLotDialogOpen, setScanNewLotDialogOpen] = useState(false);
+  const [stockQRDialogOpen, setStockQRDialogOpen] = useState(false);
+  const [selectedStockForQR, setSelectedStockForQR] = useState(null);
+  const [scanDispatchForm, setScanDispatchForm] = useState({
+    customer_name: "",
+    bora_number: "",
+    master_packs: 1,
+    loose_pcs: {}
+  });
+  const [scanNewLotForm, setScanNewLotForm] = useState({
+    lot_number: "",
+    size_distribution: { M: 0, L: 0, XL: 0, XXL: 0 },
+    notes: ""
+  });
+  
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
     cutting_master_name: "",
