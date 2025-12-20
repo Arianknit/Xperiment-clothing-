@@ -1441,13 +1441,13 @@ async def scan_receive_outsourcing(data: dict):
 
 
 @api_router.post("/scan/create-ironing")
-async def scan_create_ironing(
-    lot_number: str,
-    unit_name: str,
-    master_pack_ratio: Dict[str, int],
-    rate_per_pcs: float = 0
-):
+async def scan_create_ironing(data: dict):
     """Quick create ironing order by scanning lot QR"""
+    lot_number = data.get('lot_number')
+    unit_name = data.get('unit_name')
+    master_pack_ratio = data.get('master_pack_ratio', {})
+    rate_per_pcs = data.get('rate_per_pcs', 0)
+    
     # Find cutting order
     order = await db.cutting_orders.find_one({
         "$or": [
