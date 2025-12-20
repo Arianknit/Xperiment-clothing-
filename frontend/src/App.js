@@ -3540,6 +3540,19 @@ _Arian Knit Fab_`;
                           </div>
                         </div>
                         <div className="ml-4 flex gap-1">
+                          {/* QR Code Button */}
+                          <Button 
+                            size="icon" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedLotForQR(order);
+                              setLotQRDialogOpen(true);
+                            }}
+                            className="h-8 w-8 text-slate-600 border-slate-200 hover:bg-slate-50"
+                            data-testid={`qr-lot-${order.id}`}
+                          >
+                            <QrCode className="h-4 w-4" />
+                          </Button>
                           <Button 
                             size="sm" 
                             variant="outline"
@@ -3548,7 +3561,7 @@ _Arian Knit Fab_`;
                             data-testid={`lot-report-${order.id}`}
                           >
                             <FileText className="h-4 w-4 mr-1" />
-                            Lot Report
+                            Report
                           </Button>
                           <Button size="icon" variant="ghost" onClick={() => openEditCuttingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-cutting-order-${order.id}`}>
                             <Pencil className="h-4 w-4" />
