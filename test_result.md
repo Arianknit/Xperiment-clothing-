@@ -1056,3 +1056,24 @@ Date: 2025-12-20
 1. **Frontend Integration:** Verify UI displays custom lot names and colors correctly in Stock tab
 2. **User Experience:** Ensure form validation provides clear feedback for custom fields
 3. **Documentation:** Update API documentation to reflect new stock_lot_name and stock_color fields
+
+## Test Session: Bulk Dispatch Tab
+Date: 2025-12-20
+
+### Features to Test:
+1. **New Dispatch Tab** - Added to navigation with truck icon
+2. **Dispatch Summary Cards** - Shows total dispatches, items, quantity
+3. **Create Bulk Dispatch Dialog** - Customer details, item selection, master packs, loose pcs
+4. **Dispatch History** - List of past dispatches with print and delete options
+5. **Printable Dispatch Sheet** - HTML sheet with all goods details
+
+### API Endpoints:
+- POST /api/bulk-dispatches - Create bulk dispatch
+- GET /api/bulk-dispatches - Get all dispatches
+- GET /api/bulk-dispatches/{id} - Get single dispatch
+- DELETE /api/bulk-dispatches/{id} - Delete dispatch (restores stock)
+- GET /api/bulk-dispatches/{id}/print - Print dispatch sheet
+
+### Test Credentials:
+- Username: admin
+- Password: admin
