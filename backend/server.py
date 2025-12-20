@@ -1316,14 +1316,14 @@ async def get_lot_by_number(lot_number: str):
 
 
 @api_router.post("/scan/send-outsourcing")
-async def scan_send_outsourcing(
-    lot_number: str,
-    unit_name: str,
-    operation_type: str,
-    rate_per_pcs: float = 0,
-    expected_return_date: str = None
-):
+async def scan_send_outsourcing(data: dict):
     """Quick send to outsourcing by scanning lot QR"""
+    lot_number = data.get('lot_number')
+    unit_name = data.get('unit_name')
+    operation_type = data.get('operation_type')
+    rate_per_pcs = data.get('rate_per_pcs', 0)
+    expected_return_date = data.get('expected_return_date')
+    
     # Find cutting order
     order = await db.cutting_orders.find_one({
         "$or": [
