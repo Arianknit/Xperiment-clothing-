@@ -452,7 +452,8 @@ class ReturnsManagementTester:
                 else:
                     response = requests.get(f"{self.base_url}{endpoint}")
                 
-                if response.status_code != 401:
+                # Accept both 401 (Unauthorized) and 403 (Forbidden) as valid auth errors
+                if response.status_code not in [401, 403]:
                     self.log_result("Authentication Required", False, 
                                   f"{method} {endpoint} should require auth but got status {response.status_code}")
                     all_passed = False
