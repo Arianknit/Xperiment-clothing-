@@ -1834,6 +1834,16 @@ _Arian Knit Fab_`;
     return matchesSearch && matchesCategory;
   });
 
+  const filteredStocks = stocks.filter(stock => {
+    const searchLower = stockSearch.toLowerCase();
+    return !stockSearch || 
+      stock.lot_number?.toLowerCase().includes(searchLower) ||
+      stock.stock_code?.toLowerCase().includes(searchLower) ||
+      stock.category?.toLowerCase().includes(searchLower) ||
+      stock.style_type?.toLowerCase().includes(searchLower) ||
+      stock.color?.toLowerCase().includes(searchLower);
+  });
+
   // Show loading while checking auth
   if (authLoading) {
     return (
