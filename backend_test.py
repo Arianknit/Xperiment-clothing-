@@ -13,7 +13,7 @@ import os
 # Get backend URL from environment
 BACKEND_URL = "https://garmentpro-2.preview.emergentagent.com/api"
 
-class StockLotNameColorTester:
+class ReturnsManagementTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.test_results = []
