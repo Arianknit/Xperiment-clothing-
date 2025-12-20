@@ -794,6 +794,24 @@ function App() {
     }
   };
 
+  const fetchAnalytics = async () => {
+    try {
+      const response = await axios.get(`${API}/dashboard/analytics`);
+      setAnalyticsData(response.data);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(`${API}/dashboard/notifications`);
+      setNotifications(response.data.notifications || []);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
   const fetchCatalogs = async () => {
     try {
       const response = await axios.get(`${API}/catalogs`);
