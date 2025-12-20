@@ -6155,6 +6155,300 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Add Stock Dialog */}
+      <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="add-stock-dialog">
+          <DialogHeader>
+            <DialogTitle>📦 Add Historical Stock</DialogTitle>
+            <DialogDescription>Add stock that was not tracked through the system</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleStockSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="stock-lot">Lot Number *</Label>
+                <Input 
+                  id="stock-lot"
+                  value={stockForm.lot_number}
+                  onChange={(e) => setStockForm({...stockForm, lot_number: e.target.value})}
+                  placeholder="e.g., HIST-001"
+                  required
+                  data-testid="stock-lot-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock-color">Color</Label>
+                <Input 
+                  id="stock-color"
+                  value={stockForm.color}
+                  onChange={(e) => setStockForm({...stockForm, color: e.target.value})}
+                  placeholder="e.g., Navy Blue"
+                  data-testid="stock-color-input"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="stock-category">Category *</Label>
+                <Select value={stockForm.category} onValueChange={(value) => setStockForm({...stockForm, category: value})}>
+                  <SelectTrigger data-testid="stock-category-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Mens">Mens</SelectItem>
+                    <SelectItem value="Ladies">Ladies</SelectItem>
+                    <SelectItem value="Kids">Kids</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock-style">Style Type *</Label>
+                <Input 
+                  id="stock-style"
+                  value={stockForm.style_type}
+                  onChange={(e) => setStockForm({...stockForm, style_type: e.target.value})}
+                  placeholder="e.g., Round Neck, Polo"
+                  required
+                  data-testid="stock-style-input"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-800">Size Distribution *</h4>
+              <div className="grid grid-cols-4 gap-3">
+                {['M', 'L', 'XL', 'XXL'].map((size) => (
+                  <div key={size} className="space-y-1">
+                    <Label className="text-xs">{size}</Label>
+                    <Input 
+                      type="number"
+                      min="0"
+                      value={stockForm.size_distribution[size] || ''}
+                      onChange={(e) => setStockForm({
+                        ...stockForm, 
+                        size_distribution: {...stockForm.size_distribution, [size]: parseInt(e.target.value) || 0}
+                      })}
+                      placeholder="0"
+                      className="h-9"
+                      data-testid={`stock-size-${size}`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-blue-700">Total: {getTotalQty(stockForm.size_distribution)} pcs</p>
+            </div>
+
+            <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <h4 className="font-semibold text-purple-800">Master Pack Ratio</h4>
+              <p className="text-xs text-purple-600">Define how many of each size makes 1 master pack</p>
+              <div className="grid grid-cols-4 gap-3">
+                {['M', 'L', 'XL', 'XXL'].map((size) => (
+                  <div key={size} className="space-y-1">
+                    <Label className="text-xs">{size}</Label>
+                    <Input 
+                      type="number"
+                      min="0"
+                      value={stockForm.master_pack_ratio[size] || ''}
+                      onChange={(e) => setStockForm({
+                        ...stockForm, 
+                        master_pack_ratio: {...stockForm.master_pack_ratio, [size]: parseInt(e.target.value) || 0}
+                      })}
+                      placeholder="1"
+                      className="h-9"
+                      data-testid={`stock-ratio-${size}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="stock-notes">Notes</Label>
+              <Input 
+                id="stock-notes"
+                value={stockForm.notes}
+                onChange={(e) => setStockForm({...stockForm, notes: e.target.value})}
+                placeholder="Additional notes..."
+                data-testid="stock-notes-input"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setStockDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading} data-testid="stock-submit-btn">
+                {loading ? "Adding..." : "📦 Add Stock"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stock Dispatch Dialog */}
+      <Dialog open={stockDispatchDialogOpen} onOpenChange={(open) => {
+        setStockDispatchDialogOpen(open);
+        if (!open) setSelectedStock(null);
+      }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="stock-dispatch-dialog">
+          <DialogHeader>
+            <DialogTitle>📦 Dispatch from Stock</DialogTitle>
+            <DialogDescription>
+              {selectedStock && `${selectedStock.stock_code} - ${selectedStock.lot_number}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStock && (
+            <form onSubmit={handleStockDispatch} className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-sm"><strong>Available:</strong> {selectedStock.available_quantity} pcs</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {Object.entries(selectedStock.size_distribution || {}).map(([size, qty]) => (
+                    qty > 0 && (
+                      <span key={size} className="text-xs bg-white px-2 py-1 rounded border">{size}: {qty}</span>
+                    )
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Customer Name *</Label>
+                  <Input 
+                    value={stockDispatchForm.customer_name}
+                    onChange={(e) => setStockDispatchForm({...stockDispatchForm, customer_name: e.target.value})}
+                    placeholder="Customer name"
+                    required
+                    data-testid="stock-dispatch-customer"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bora Number *</Label>
+                  <Input 
+                    value={stockDispatchForm.bora_number}
+                    onChange={(e) => setStockDispatchForm({...stockDispatchForm, bora_number: e.target.value})}
+                    placeholder="Bora/Bundle number"
+                    required
+                    data-testid="stock-dispatch-bora"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                <Label className="font-semibold text-green-800">📦 Master Packs</Label>
+                <Input 
+                  type="number"
+                  min="0"
+                  value={stockDispatchForm.master_packs || ''}
+                  onChange={(e) => setStockDispatchForm({...stockDispatchForm, master_packs: parseInt(e.target.value) || 0})}
+                  placeholder="0"
+                  className="mt-2"
+                  data-testid="stock-dispatch-packs"
+                />
+              </div>
+
+              <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                <Label className="font-semibold text-amber-800">👕 Loose Pieces</Label>
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {Object.keys(selectedStock.size_distribution || {}).map((size) => (
+                    <div key={size} className="space-y-1">
+                      <Label className="text-xs">{size}</Label>
+                      <Input 
+                        type="number"
+                        min="0"
+                        value={stockDispatchForm.loose_pcs[size] || ''}
+                        onChange={(e) => setStockDispatchForm({
+                          ...stockDispatchForm,
+                          loose_pcs: {...stockDispatchForm.loose_pcs, [size]: parseInt(e.target.value) || 0}
+                        })}
+                        placeholder="0"
+                        className="h-8"
+                        data-testid={`stock-dispatch-loose-${size}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input 
+                  value={stockDispatchForm.notes}
+                  onChange={(e) => setStockDispatchForm({...stockDispatchForm, notes: e.target.value})}
+                  placeholder="Additional notes..."
+                  data-testid="stock-dispatch-notes"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setStockDispatchDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading} data-testid="stock-dispatch-submit">
+                  {loading ? "Dispatching..." : "📦 Dispatch"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Catalog from Stock Dialog */}
+      <Dialog open={stockCatalogDialogOpen} onOpenChange={(open) => {
+        setStockCatalogDialogOpen(open);
+        if (!open) setSelectedStock(null);
+      }}>
+        <DialogContent className="sm:max-w-[500px]" data-testid="stock-catalog-dialog">
+          <DialogHeader>
+            <DialogTitle>📚 Create Catalog from Stock</DialogTitle>
+            <DialogDescription>
+              {selectedStock && `${selectedStock.stock_code} - ${selectedStock.lot_number}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStock && (
+            <form onSubmit={handleCreateCatalogFromStock} className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-sm"><strong>Stock:</strong> {selectedStock.available_quantity} pcs available</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Catalog Name *</Label>
+                <Input 
+                  value={stockCatalogForm.catalog_name}
+                  onChange={(e) => setStockCatalogForm({...stockCatalogForm, catalog_name: e.target.value})}
+                  placeholder="e.g., Summer Collection"
+                  required
+                  data-testid="stock-catalog-name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Catalog Code *</Label>
+                <Input 
+                  value={stockCatalogForm.catalog_code}
+                  onChange={(e) => setStockCatalogForm({...stockCatalogForm, catalog_code: e.target.value})}
+                  placeholder="e.g., SUM-001"
+                  required
+                  data-testid="stock-catalog-code"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Input 
+                  value={stockCatalogForm.description}
+                  onChange={(e) => setStockCatalogForm({...stockCatalogForm, description: e.target.value})}
+                  placeholder="Optional description..."
+                  data-testid="stock-catalog-desc"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setStockCatalogDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading} data-testid="stock-catalog-submit">
+                  {loading ? "Creating..." : "📚 Create Catalog"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Barcode View Dialog */}
       <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
         <DialogContent className="sm:max-w-[500px]" data-testid="barcode-dialog">
