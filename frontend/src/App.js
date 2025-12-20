@@ -1718,6 +1718,31 @@ function App() {
     }
   };
 
+  const handleScanReceiveIroning = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const lotNum = scannedLot.order.cutting_lot_number || scannedLot.order.lot_number;
+      const response = await axios.post(`${API}/scan/receive-ironing`, {
+        lot_number: lotNum,
+        received_distribution: scanReceiveIroningForm.received_distribution,
+        mistake_distribution: scanReceiveIroningForm.mistake_distribution
+      });
+      toast.success(`🎉 Ironing received & Stock created! Code: ${response.data.stock_code}`);
+      setScanActionDialog(null);
+      setScannedLot(null);
+      fetchIroningReceipts();
+      fetchIroningOrders();
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error receiving ironing:", error);
+      toast.error(error.response?.data?.detail || "Failed to receive from ironing");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleScanCreateIroning = async (e) => {
     e.preventDefault();
     setLoading(true);
