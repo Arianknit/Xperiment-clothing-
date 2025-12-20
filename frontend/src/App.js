@@ -448,6 +448,7 @@ function App() {
       fetchBulkDispatches();
       fetchAnalytics();
       fetchNotifications();
+      fetchReturns();
     }
   }, [isAuthenticated]);
 
