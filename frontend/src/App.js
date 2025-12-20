@@ -2781,6 +2781,30 @@ _Arian Knit Fab_`;
                 )}
               </div>
               
+              {/* Lot Tracking Button */}
+              <Button 
+                variant="outline"
+                size="icon"
+                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                onClick={() => { setLotTrackingDialogOpen(true); fetchSettings(); }}
+                title="Track Lot Journey"
+              >
+                <History className="h-4 w-4" />
+              </Button>
+              
+              {/* Settings Button (Admin Only) */}
+              {isAdmin && (
+                <Button 
+                  variant="outline"
+                  size="icon"
+                  className="border-slate-300 text-slate-600 hover:bg-slate-50"
+                  onClick={() => { fetchSettings(); setSettingsDialogOpen(true); }}
+                  title="Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              )}
+              
               <Button 
                 onClick={handleLogout}
                 variant="outline"
