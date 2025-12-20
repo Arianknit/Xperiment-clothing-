@@ -6578,6 +6578,49 @@ _Arian Knit Fab_`;
                 </div>
               </div>
 
+              {/* Profit/Loss Report Section */}
+              <div className="mt-8">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">💰 Financial Report</h3>
+                <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-emerald-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-emerald-700">
+                      <DollarSign className="h-5 w-5" />
+                      Profit & Loss Report
+                    </CardTitle>
+                    <CardDescription>Complete cost breakdown and stock valuation</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                      <p className="text-xs text-slate-600 mb-2">📊 This report includes:</p>
+                      <ul className="text-xs text-slate-600 space-y-1 ml-4">
+                        <li>• Total cost breakdown (Fabric, Cutting, Outsourcing, Ironing)</li>
+                        <li>• Shortage deductions</li>
+                        <li>• Cost per piece calculation</li>
+                        <li>• Production vs Dispatch summary</li>
+                        <li>• Current stock valuation</li>
+                      </ul>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => window.open(`${API}/reports/profit-loss?format=html`, '_blank')}
+                      >
+                        <Printer className="h-4 w-4 mr-1" />
+                        Print Report
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="flex-1 border-emerald-300 text-emerald-600"
+                        onClick={() => window.open(`${API}/reports/profit-loss?format=csv`, '_blank')}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        CSV
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Unit-wise Bill Section */}
               <div className="mt-8">
                 <h3 className="text-2xl font-bold text-slate-800 mb-4">Unit-wise Bill Generation</h3>
