@@ -8626,14 +8626,16 @@ _Arian Knit Fab_`;
       </Dialog>
 
       {/* Unified Lot Scanner Dialog */}
-      <Dialog open={unifiedScannerOpen} onOpenChange={(open) => {
-        setUnifiedScannerOpen(open);
-        if (!open) setScannedLot(null);
+      <Dialog open={unifiedScannerOpen || scannedLot !== null} onOpenChange={(open) => {
+        if (!open) {
+          setUnifiedScannerOpen(false);
+          setScannedLot(null);
+        }
       }}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="unified-scanner-dialog">
           <DialogHeader>
-            <DialogTitle>📷 Scan Lot QR Code</DialogTitle>
-            <DialogDescription>Scan any lot QR to view status and take action</DialogDescription>
+            <DialogTitle>{scannedLot ? '📋 Lot Details' : '📷 Scan Lot QR Code'}</DialogTitle>
+            <DialogDescription>{scannedLot ? `Lot: ${scannedLot.order?.cutting_lot_number || scannedLot.order?.lot_number}` : 'Scan any lot QR to view status and take action'}</DialogDescription>
           </DialogHeader>
           
           {!scannedLot ? (
