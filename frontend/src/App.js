@@ -542,7 +542,12 @@ function App() {
           scanner = new Html5QrcodeScanner('unified-qr-reader', {
             fps: 10,
             qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
+            aspectRatio: 1.0,
+            supportedScanTypes: [
+              Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+              Html5QrcodeScanType.SCAN_TYPE_FILE
+            ],
+            rememberLastUsedCamera: true
           });
           
           scanner.render(
