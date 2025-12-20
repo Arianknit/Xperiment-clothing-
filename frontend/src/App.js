@@ -5611,14 +5611,18 @@ _Arian Knit Fab_`;
                               <Printer className="h-4 w-4 mr-1" />
                               Print
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="text-red-600 hover:bg-red-50"
-                              onClick={() => handleDeleteBulkDispatch(dispatch.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {isAdmin ? (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-red-600 hover:bg-red-50"
+                                onClick={() => handleDeleteBulkDispatch(dispatch.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-slate-400 italic px-2">Contact admin to delete</span>
+                            )}
                           </div>
                         </div>
                       </CardContent>
