@@ -8903,14 +8903,15 @@ _Arian Knit Fab_`;
                   </Button>
                   <Button 
                     className="bg-orange-600 hover:bg-orange-700 text-white h-16 flex-col"
-                    disabled={scannedLot.ironing}
+                    disabled={scannedLot.ironing || !scannedLot.stitching_completed}
+                    title={!scannedLot.stitching_completed ? "Complete stitching first" : ""}
                     onClick={() => {
                       setScanIroningForm({ unit_name: "", rate_per_pcs: 0, master_pack_ratio: { M: 2, L: 2, XL: 2, XXL: 2 } });
                       setScanActionDialog('ironing');
                     }}
                   >
                     <Factory className="h-5 w-5 mb-1" />
-                    <span className="text-xs">Send Iron</span>
+                    <span className="text-xs">{scannedLot.stitching_completed ? 'Send Iron' : 'Stitch First'}</span>
                   </Button>
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700 text-white h-16 flex-col"
