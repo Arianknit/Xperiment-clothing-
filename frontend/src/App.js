@@ -2208,6 +2208,15 @@ _Arian Knit Fab_`;
             
             {/* Desktop Header Actions */}
             <div className="hidden md:flex items-center gap-3">
+              {/* Scan Lot Button */}
+              <Button 
+                onClick={() => setUnifiedScannerOpen(true)}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg"
+                data-testid="scan-lot-btn"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Scan Lot
+              </Button>
               <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
                 <User className="h-4 w-4 text-slate-600" />
                 <span className="text-sm font-medium text-slate-700">{currentUser?.full_name}</span>
