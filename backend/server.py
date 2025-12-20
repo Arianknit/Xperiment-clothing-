@@ -6255,6 +6255,329 @@ async def get_dashboard_stats():
     }
 
 
+# ==================== ANALYTICS & NOTIFICATIONS ====================
+
+@api_router.get("/dashboard/analytics")
+async def get_dashboard_analytics():
+    """Get analytics data for charts"""
+    
+    # Category-wise production data
+    cutting_orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
+    category_data = {}
+    for order in cutting_orders:
+        cat = order.get('category', 'Unknown')
+        if cat not in category_data:
+            category_data[cat] = {'quantity': 0, 'cost': 0}
+        category_data[cat]['quantity'] += order.get('total_quantity', 0)
+        category_data[cat]['cost'] += order.get('total_fabric_cost', 0) + order.get('total_cutting_amount', 0)
+    
+    production_by_category = [
+        {'name': cat, 'quantity': data['quantity'], 'cost': round(data['cost'], 2)}
+        for cat, data in category_data.items()
+    ]
+    
+    # Stock status data
+    stocks = await db.stock.find({}, {"_id": 0}).to_list(1000)
+    in_stock = sum(1 for s in stocks if s.get('available_quantity', 0) >= 50)
+    low_stock = sum(1 for s in stocks if 0 < s.get('available_quantity', 0) < 50)
+    out_of_stock = sum(1 for s in stocks if s.get('available_quantity', 0) == 0)
+    
+    stock_status_data = [
+        {'name': 'In Stock', 'value': in_stock, 'color': '#10B981'},
+        {'name': 'Low Stock', 'value': low_stock, 'color': '#F59E0B'},
+        {'name': 'Out of Stock', 'value': out_of_stock, 'color': '#EF4444'}
+    ]
+    
+    # Dispatch trend (last 7 days)
+    dispatches = await db.bulk_dispatches.find({}, {"_id": 0}).to_list(1000)
+    dispatch_by_date = {}
+    for d in dispatches:
+        date_str = d.get('dispatch_date', '')[:10] if d.get('dispatch_date') else ''
+        if date_str:
+            if date_str not in dispatch_by_date:
+                dispatch_by_date[date_str] = {'quantity': 0, 'dispatches': 0}
+            dispatch_by_date[date_str]['quantity'] += d.get('grand_total_quantity', 0)
+            dispatch_by_date[date_str]['dispatches'] += 1
+    
+    dispatch_trend = [
+        {'date': date, 'quantity': data['quantity'], 'dispatches': data['dispatches']}
+        for date, data in sorted(dispatch_by_date.items())[-7:]
+    ]
+    
+    # Cost breakdown
+    outsourcing_orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
+    ironing_orders = await db.ironing_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    total_fabric_cost = sum(o.get('total_fabric_cost', 0) for o in cutting_orders)
+    total_cutting_cost = sum(o.get('total_cutting_amount', 0) for o in cutting_orders)
+    total_outsourcing_cost = sum(o.get('total_amount', 0) for o in outsourcing_orders)
+    total_ironing_cost = sum(o.get('total_amount', 0) for o in ironing_orders)
+    
+    cost_breakdown = [
+        {'name': 'Fabric', 'value': round(total_fabric_cost, 2), 'color': '#6366F1'},
+        {'name': 'Cutting', 'value': round(total_cutting_cost, 2), 'color': '#3B82F6'},
+        {'name': 'Outsourcing', 'value': round(total_outsourcing_cost, 2), 'color': '#8B5CF6'},
+        {'name': 'Ironing', 'value': round(total_ironing_cost, 2), 'color': '#F59E0B'}
+    ]
+    
+    # Operation-wise outsourcing
+    operation_data = {}
+    for o in outsourcing_orders:
+        op = o.get('operation_type', 'Unknown')
+        if op not in operation_data:
+            operation_data[op] = {'quantity': 0, 'cost': 0}
+        operation_data[op]['quantity'] += o.get('total_quantity', 0)
+        operation_data[op]['cost'] += o.get('total_amount', 0)
+    
+    outsourcing_by_operation = [
+        {'name': op, 'quantity': data['quantity'], 'cost': round(data['cost'], 2)}
+        for op, data in operation_data.items()
+    ]
+    
+    return {
+        "production_by_category": production_by_category,
+        "stock_status": stock_status_data,
+        "dispatch_trend": dispatch_trend,
+        "cost_breakdown": cost_breakdown,
+        "outsourcing_by_operation": outsourcing_by_operation
+    }
+
+
+@api_router.get("/dashboard/notifications")
+async def get_notifications():
+    """Get system notifications and alerts"""
+    notifications = []
+    
+    # Low stock alerts
+    stocks = await db.stock.find({}, {"_id": 0}).to_list(1000)
+    for stock in stocks:
+        if 0 < stock.get('available_quantity', 0) < 50:
+            notifications.append({
+                "type": "warning",
+                "title": "Low Stock Alert",
+                "message": f"{stock.get('stock_code')}: {stock.get('lot_number')} has only {stock.get('available_quantity')} pcs left",
+                "category": "stock"
+            })
+        elif stock.get('available_quantity', 0) == 0:
+            notifications.append({
+                "type": "error",
+                "title": "Out of Stock",
+                "message": f"{stock.get('stock_code')}: {stock.get('lot_number')} is out of stock",
+                "category": "stock"
+            })
+    
+    # Pending outsourcing (overdue > 7 days)
+    from datetime import timedelta
+    seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    pending_outsourcing = await db.outsourcing_orders.find(
+        {"status": "Sent"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for order in pending_outsourcing:
+        dc_date = order.get('dc_date')
+        if dc_date:
+            if isinstance(dc_date, str):
+                try:
+                    dc_date = datetime.fromisoformat(dc_date.replace('Z', '+00:00'))
+                except:
+                    continue
+            if dc_date < seven_days_ago:
+                notifications.append({
+                    "type": "warning",
+                    "title": "Overdue Outsourcing",
+                    "message": f"DC {order.get('dc_number')} to {order.get('unit_name')} is pending for over 7 days",
+                    "category": "outsourcing"
+                })
+    
+    # Pending ironing
+    pending_ironing = await db.ironing_orders.find(
+        {"status": "Sent"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for order in pending_ironing:
+        dc_date = order.get('dc_date')
+        if dc_date:
+            if isinstance(dc_date, str):
+                try:
+                    dc_date = datetime.fromisoformat(dc_date.replace('Z', '+00:00'))
+                except:
+                    continue
+            if dc_date < seven_days_ago:
+                notifications.append({
+                    "type": "warning",
+                    "title": "Overdue Ironing",
+                    "message": f"DC {order.get('dc_number')} to {order.get('unit_name')} is pending for over 7 days",
+                    "category": "ironing"
+                })
+    
+    # Unpaid bills alerts
+    unpaid_outsourcing = await db.outsourcing_orders.find(
+        {"payment_status": "Unpaid", "balance": {"$gt": 1000}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for order in unpaid_outsourcing[:5]:  # Limit to 5
+        notifications.append({
+            "type": "info",
+            "title": "Pending Payment",
+            "message": f"₹{order.get('balance', 0)} pending for {order.get('unit_name')} ({order.get('dc_number')})",
+            "category": "payment"
+        })
+    
+    return {
+        "notifications": notifications,
+        "total": len(notifications),
+        "by_type": {
+            "error": sum(1 for n in notifications if n['type'] == 'error'),
+            "warning": sum(1 for n in notifications if n['type'] == 'warning'),
+            "info": sum(1 for n in notifications if n['type'] == 'info')
+        }
+    }
+
+
+@api_router.get("/reports/profit-loss")
+async def get_profit_loss_report(format: str = "html"):
+    """Generate profit/loss report based on costs and dispatches"""
+    
+    # Get all costs
+    cutting_orders = await db.cutting_orders.find({}, {"_id": 0}).to_list(1000)
+    outsourcing_orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
+    ironing_orders = await db.ironing_orders.find({}, {"_id": 0}).to_list(1000)
+    receipts = await db.outsourcing_receipts.find({}, {"_id": 0}).to_list(1000)
+    ironing_receipts = await db.ironing_receipts.find({}, {"_id": 0}).to_list(1000)
+    
+    # Calculate total costs
+    fabric_cost = sum(o.get('total_fabric_cost', 0) for o in cutting_orders)
+    cutting_cost = sum(o.get('total_cutting_amount', 0) for o in cutting_orders)
+    outsourcing_cost = sum(o.get('total_amount', 0) for o in outsourcing_orders)
+    ironing_cost = sum(o.get('total_amount', 0) for o in ironing_orders)
+    
+    # Shortage deductions
+    outsourcing_shortage = sum(r.get('shortage_debit_amount', 0) for r in receipts)
+    ironing_shortage = sum(r.get('shortage_debit_amount', 0) for r in ironing_receipts)
+    total_shortage_deduction = outsourcing_shortage + ironing_shortage
+    
+    total_cost = fabric_cost + cutting_cost + outsourcing_cost + ironing_cost - total_shortage_deduction
+    
+    # Get total production
+    total_pieces_produced = sum(o.get('total_quantity', 0) for o in cutting_orders)
+    
+    # Calculate cost per piece
+    cost_per_piece = total_cost / total_pieces_produced if total_pieces_produced > 0 else 0
+    
+    # Get dispatches (potential revenue indicator)
+    dispatches = await db.bulk_dispatches.find({}, {"_id": 0}).to_list(1000)
+    total_dispatched = sum(d.get('grand_total_quantity', 0) for d in dispatches)
+    
+    # Stock value
+    stocks = await db.stock.find({}, {"_id": 0}).to_list(1000)
+    total_stock_quantity = sum(s.get('available_quantity', 0) for s in stocks)
+    estimated_stock_value = total_stock_quantity * cost_per_piece
+    
+    if format == "csv":
+        csv_content = "Category,Amount\n"
+        csv_content += f"Fabric Cost,{fabric_cost}\n"
+        csv_content += f"Cutting Cost,{cutting_cost}\n"
+        csv_content += f"Outsourcing Cost,{outsourcing_cost}\n"
+        csv_content += f"Ironing Cost,{ironing_cost}\n"
+        csv_content += f"Shortage Deduction,-{total_shortage_deduction}\n"
+        csv_content += f"Total Cost,{total_cost}\n"
+        csv_content += f"Total Pieces Produced,{total_pieces_produced}\n"
+        csv_content += f"Cost Per Piece,{cost_per_piece}\n"
+        csv_content += f"Total Dispatched,{total_dispatched}\n"
+        csv_content += f"Current Stock,{total_stock_quantity}\n"
+        csv_content += f"Estimated Stock Value,{estimated_stock_value}\n"
+        
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=profit_loss_report.csv"}
+        )
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Profit & Loss Report - Arian Knit Fab</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }}
+            .header {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }}
+            .header h1 {{ margin: 0; color: #059669; }}
+            .section {{ margin-bottom: 30px; }}
+            .section-title {{ background: #f3f4f6; padding: 10px; border-left: 4px solid #059669; margin-bottom: 15px; font-weight: bold; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+            th {{ background-color: #059669; color: white; }}
+            .amount {{ text-align: right; font-family: monospace; }}
+            .total-row {{ background: #d1fae5; font-weight: bold; }}
+            .deduction {{ color: #dc2626; }}
+            .highlight {{ background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+            .highlight h2 {{ margin: 0; font-size: 24px; }}
+            .grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }}
+            .card {{ background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #86efac; text-align: center; }}
+            .card h3 {{ margin: 0; font-size: 24px; color: #059669; }}
+            .card p {{ margin: 5px 0 0 0; color: #666; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>💰 Profit & Loss Report</h1>
+            <p>Generated on {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📊 Cost Breakdown</div>
+            <table>
+                <tr><th>Category</th><th class="amount">Amount (₹)</th></tr>
+                <tr><td>Fabric Cost</td><td class="amount">{fabric_cost:,.2f}</td></tr>
+                <tr><td>Cutting Cost</td><td class="amount">{cutting_cost:,.2f}</td></tr>
+                <tr><td>Outsourcing Cost</td><td class="amount">{outsourcing_cost:,.2f}</td></tr>
+                <tr><td>Ironing Cost</td><td class="amount">{ironing_cost:,.2f}</td></tr>
+                <tr class="deduction"><td>Less: Shortage Deduction</td><td class="amount">-{total_shortage_deduction:,.2f}</td></tr>
+                <tr class="total-row"><td><strong>Total Cost</strong></td><td class="amount"><strong>₹{total_cost:,.2f}</strong></td></tr>
+            </table>
+        </div>
+        
+        <div class="highlight">
+            <h2>Cost Per Piece: ₹{cost_per_piece:.2f}</h2>
+            <p>Based on {total_pieces_produced:,} pieces produced</p>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>{total_pieces_produced:,}</h3>
+                <p>Total Produced</p>
+            </div>
+            <div class="card">
+                <h3>{total_dispatched:,}</h3>
+                <p>Total Dispatched</p>
+            </div>
+            <div class="card">
+                <h3>{total_stock_quantity:,}</h3>
+                <p>Current Stock</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📦 Stock Valuation</div>
+            <table>
+                <tr><td>Current Stock Quantity</td><td class="amount">{total_stock_quantity:,} pcs</td></tr>
+                <tr><td>Cost Per Piece</td><td class="amount">₹{cost_per_piece:.2f}</td></tr>
+                <tr class="total-row"><td><strong>Estimated Stock Value</strong></td><td class="amount"><strong>₹{estimated_stock_value:,.2f}</strong></td></tr>
+            </table>
+        </div>
+        
+        <div style="text-align:center;margin-top:30px;color:#666;">
+            Arian Knit Fab Production Pro | Profit & Loss Report
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
 # Unit Payment Endpoint
 class UnitPayment(BaseModel):
     unit_name: str
