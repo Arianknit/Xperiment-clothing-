@@ -13,7 +13,7 @@ import os
 # Get backend URL from environment
 BACKEND_URL = "https://arian-textiles.preview.emergentagent.com/api"
 
-class QuickActionTester:
+class StitchingBusinessRuleTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.test_results = []
