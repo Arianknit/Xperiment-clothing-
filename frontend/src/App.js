@@ -4853,7 +4853,7 @@ _Arian Knit Fab_`;
                               </Badge>
                             )}
                           </div>
-                          {currentUser?.role === 'admin' && (
+                          {isAdmin ? (
                             <Button 
                               size="sm" 
                               variant="outline" 
@@ -4864,6 +4864,8 @@ _Arian Knit Fab_`;
                               <Pencil className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">Contact admin to edit</span>
                           )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
