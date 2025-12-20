@@ -8719,20 +8719,130 @@ _Arian Knit Fab_`;
                     <Badge className="bg-green-100 text-green-700">{scannedLot.stock.stock_code}</Badge>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2 text-xs">
-                  <span className="px-2 py-1 rounded bg-green-100 text-green-700">✅ Cut</span>
-                  <span className={`px-2 py-1 rounded ${scannedLot.outsourcing ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.outsourcing ? '✅ Out' : '⏳ Out'}
-                  </span>
-                  <span className={`px-2 py-1 rounded ${scannedLot.outsourcing?.status === 'Received' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.outsourcing?.status === 'Received' ? '✅ Recv' : '⏳ Recv'}
-                  </span>
-                  <span className={`px-2 py-1 rounded ${scannedLot.ironing ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.ironing ? '✅ Iron' : '⏳ Iron'}
-                  </span>
-                  <span className={`px-2 py-1 rounded ${scannedLot.stock ? 'bg-green-100 text-green-700 font-bold' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.stock ? '✅ Stock' : '⏳ Stock'}
-                  </span>
+                
+                {/* Detailed Stage Timeline */}
+                <div className="mt-3 space-y-2">
+                  {/* Stage 1: Cutting */}
+                  <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
+                    <span className="text-green-600">✅</span>
+                    <div className="flex-1">
+                      <span className="font-medium text-green-800">✂️ Cutting</span>
+                      <p className="text-xs text-green-600">
+                        {scannedLot.order.cutting_lot_number} • {scannedLot.order.total_quantity} pcs
+                      </p>
+                    </div>
+                    <span className="text-xs text-green-600">Done</span>
+                  </div>
+                  
+                  {/* Stage 2: Outsourcing (with Operation Type) */}
+                  <div className={`flex items-center gap-2 p-2 rounded ${scannedLot.outsourcing ? 'bg-green-50 border border-green-200' : 'bg-slate-100 border border-slate-200'}`}>
+                    <span className={scannedLot.outsourcing ? 'text-green-600' : 'text-slate-400'}>
+                      {scannedLot.outsourcing ? '✅' : '⏳'}
+                    </span>
+                    <div className="flex-1">
+                      <span className={`font-medium ${scannedLot.outsourcing ? 'text-green-800' : 'text-slate-500'}`}>
+                        {scannedLot.outsourcing?.operation_type === 'Printing' && '🖨️ '}
+                        {scannedLot.outsourcing?.operation_type === 'Embroidery' && '🧵 '}
+                        {scannedLot.outsourcing?.operation_type === 'Stone Work' && '💎 '}
+                        {scannedLot.outsourcing?.operation_type === 'Washing' && '🧺 '}
+                        {scannedLot.outsourcing?.operation_type || '🏭'} Outsourcing
+                        {scannedLot.outsourcing?.operation_type && ` - ${scannedLot.outsourcing.operation_type}`}
+                      </span>
+                      {scannedLot.outsourcing && (
+                        <p className="text-xs text-green-600">
+                          {scannedLot.outsourcing.unit_name} • DC: {scannedLot.outsourcing.dc_number}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`text-xs ${scannedLot.outsourcing ? 'text-green-600' : 'text-slate-400'}`}>
+                      {scannedLot.outsourcing ? (scannedLot.outsourcing.status === 'Received' ? 'Received' : 'Sent') : 'Pending'}
+                    </span>
+                  </div>
+                  
+                  {/* Stage 2b: Outsourcing Receipt */}
+                  {scannedLot.outsourcing && (
+                    <div className={`flex items-center gap-2 p-2 rounded ml-4 ${scannedLot.outsourcing?.status === 'Received' ? 'bg-green-50 border border-green-200' : 'bg-slate-100 border border-slate-200'}`}>
+                      <span className={scannedLot.outsourcing?.status === 'Received' ? 'text-green-600' : 'text-slate-400'}>
+                        {scannedLot.outsourcing?.status === 'Received' ? '✅' : '⏳'}
+                      </span>
+                      <div className="flex-1">
+                        <span className={`font-medium text-sm ${scannedLot.outsourcing?.status === 'Received' ? 'text-green-800' : 'text-slate-500'}`}>
+                          📥 Received from {scannedLot.outsourcing?.operation_type || 'Outsourcing'}
+                        </span>
+                        {scannedLot.outsourcingReceipt && (
+                          <p className="text-xs text-green-600">
+                            Received: {scannedLot.outsourcingReceipt.total_received} pcs
+                            {scannedLot.outsourcingReceipt.total_shortage > 0 && ` • Shortage: ${scannedLot.outsourcingReceipt.total_shortage}`}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`text-xs ${scannedLot.outsourcing?.status === 'Received' ? 'text-green-600' : 'text-slate-400'}`}>
+                        {scannedLot.outsourcing?.status === 'Received' ? 'Done' : 'Pending'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Stage 3: Ironing */}
+                  <div className={`flex items-center gap-2 p-2 rounded ${scannedLot.ironing ? 'bg-green-50 border border-green-200' : 'bg-slate-100 border border-slate-200'}`}>
+                    <span className={scannedLot.ironing ? 'text-green-600' : 'text-slate-400'}>
+                      {scannedLot.ironing ? '✅' : '⏳'}
+                    </span>
+                    <div className="flex-1">
+                      <span className={`font-medium ${scannedLot.ironing ? 'text-green-800' : 'text-slate-500'}`}>
+                        🔥 Ironing & Packing
+                      </span>
+                      {scannedLot.ironing && (
+                        <p className="text-xs text-green-600">
+                          {scannedLot.ironing.unit_name} • DC: {scannedLot.ironing.dc_number}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`text-xs ${scannedLot.ironing ? 'text-green-600' : 'text-slate-400'}`}>
+                      {scannedLot.ironing ? (scannedLot.ironing.status === 'Received' ? 'Received' : 'Sent') : 'Pending'}
+                    </span>
+                  </div>
+                  
+                  {/* Stage 3b: Ironing Receipt */}
+                  {scannedLot.ironing && (
+                    <div className={`flex items-center gap-2 p-2 rounded ml-4 ${scannedLot.ironing?.status === 'Received' ? 'bg-green-50 border border-green-200' : 'bg-slate-100 border border-slate-200'}`}>
+                      <span className={scannedLot.ironing?.status === 'Received' ? 'text-green-600' : 'text-slate-400'}>
+                        {scannedLot.ironing?.status === 'Received' ? '✅' : '⏳'}
+                      </span>
+                      <div className="flex-1">
+                        <span className={`font-medium text-sm ${scannedLot.ironing?.status === 'Received' ? 'text-green-800' : 'text-slate-500'}`}>
+                          📥 Received from Ironing
+                        </span>
+                        {scannedLot.ironingReceipt && (
+                          <p className="text-xs text-green-600">
+                            Packs: {scannedLot.ironingReceipt.complete_packs} • Loose: {scannedLot.ironingReceipt.loose_pieces}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`text-xs ${scannedLot.ironing?.status === 'Received' ? 'text-green-600' : 'text-slate-400'}`}>
+                        {scannedLot.ironing?.status === 'Received' ? 'Done' : 'Pending'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Stage 4: Stock */}
+                  <div className={`flex items-center gap-2 p-2 rounded ${scannedLot.stock ? 'bg-green-50 border border-green-200' : 'bg-slate-100 border border-slate-200'}`}>
+                    <span className={scannedLot.stock ? 'text-green-600' : 'text-slate-400'}>
+                      {scannedLot.stock ? '✅' : '⏳'}
+                    </span>
+                    <div className="flex-1">
+                      <span className={`font-medium ${scannedLot.stock ? 'text-green-800' : 'text-slate-500'}`}>
+                        📦 Added to Stock
+                      </span>
+                      {scannedLot.stock && (
+                        <p className="text-xs text-green-600">
+                          {scannedLot.stock.stock_code} • {scannedLot.stock.available_quantity} pcs available
+                        </p>
+                      )}
+                    </div>
+                    <span className={`text-xs ${scannedLot.stock ? 'text-green-600' : 'text-slate-400'}`}>
+                      {scannedLot.stock ? 'Done' : 'Pending'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
