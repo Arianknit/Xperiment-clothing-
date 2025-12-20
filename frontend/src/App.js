@@ -5610,28 +5610,91 @@ _Arian Knit Fab_`;
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-3xl font-bold text-slate-800">📦 Stock Management</h2>
                 <div className="flex flex-wrap gap-2">
+                  {/* Bulk Operations Toggle */}
                   <Button 
-                    variant="outline"
-                    className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                    onClick={() => setScanMode('newlot')}
-                    data-testid="scan-newlot-btn"
+                    variant={bulkSelectMode ? "default" : "outline"}
+                    className={bulkSelectMode ? "bg-purple-600 hover:bg-purple-700" : "border-purple-300 text-purple-600 hover:bg-purple-50"}
+                    onClick={() => {
+                      setBulkSelectMode(!bulkSelectMode);
+                      setSelectedStockIds([]);
+                    }}
                   >
-                    <QrCode className="h-4 w-4 mr-2" />
-                    Scan to Add Lot
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {bulkSelectMode ? "Exit Bulk Mode" : "Bulk Select"}
                   </Button>
-                  <Button 
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                    onClick={() => setStockDialogOpen(true)}
-                    data-testid="add-stock-btn"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Stock
-                  </Button>
+                  
+                  {bulkSelectMode && selectedStockIds.length > 0 && (
+                    <>
+                      <Button 
+                        variant="outline"
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                        onClick={handlePrintStockLabels}
+                      >
+                        <Barcode className="h-4 w-4 mr-2" />
+                        Print Labels ({selectedStockIds.length})
+                      </Button>
+                      <Button 
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={handleBulkAddToDispatch}
+                      >
+                        <Truck className="h-4 w-4 mr-2" />
+                        Add to Dispatch ({selectedStockIds.length})
+                      </Button>
+                      {isAdmin && (
+                        <Button 
+                          variant="outline"
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                          onClick={handleBulkDeleteStock}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete ({selectedStockIds.length})
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  
+                  {!bulkSelectMode && (
+                    <>
+                      <Button 
+                        variant="outline"
+                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                        onClick={() => setScanMode('newlot')}
+                        data-testid="scan-newlot-btn"
+                      >
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Scan to Add Lot
+                      </Button>
+                      <Button 
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        onClick={() => setStockDialogOpen(true)}
+                        data-testid="add-stock-btn"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Stock
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
 
+              {/* Bulk Select All */}
+              {bulkSelectMode && (
+                <div className="flex items-center gap-4 bg-purple-50 p-3 rounded-lg border border-purple-200">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedStockIds.length === stocks.length && stocks.length > 0}
+                    onChange={selectAllStocks}
+                    className="h-5 w-5 accent-purple-600"
+                  />
+                  <span className="text-purple-800 font-medium">
+                    {selectedStockIds.length === stocks.length ? "Deselect All" : "Select All"} 
+                    ({selectedStockIds.length} of {stocks.length} selected)
+                  </span>
+                </div>
+              )}
+
               {/* QR Scanner */}
-              {scanMode && (
+              {scanMode && !bulkSelectMode && (
                 <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between mb-4">
