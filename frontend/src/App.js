@@ -865,6 +865,53 @@ function App() {
     }
   };
 
+  // Phase 3 Fetch Functions
+  const fetchLotJourney = async (lotNumber) => {
+    try {
+      const response = await axios.get(`${API}/tracking/lot/${encodeURIComponent(lotNumber)}`);
+      setLotJourney(response.data);
+    } catch (error) {
+      console.error("Error fetching lot journey:", error);
+      toast.error("Failed to track lot");
+    }
+  };
+
+  const fetchReturns = async () => {
+    try {
+      const response = await axios.get(`${API}/returns`);
+      setReturns(response.data);
+    } catch (error) {
+      console.error("Error fetching returns:", error);
+    }
+  };
+
+  const fetchQualityChecks = async () => {
+    try {
+      const response = await axios.get(`${API}/quality-checks`);
+      setQualityChecks(response.data);
+    } catch (error) {
+      console.error("Error fetching quality checks:", error);
+    }
+  };
+
+  const fetchActivityLogs = async () => {
+    try {
+      const response = await axios.get(`${API}/activity-logs?limit=50`);
+      setActivityLogs(response.data);
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/settings`);
+      setAppSettings(response.data);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+  };
+
   const handleLotSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
