@@ -788,3 +788,42 @@ New dedicated Stock tab with stock management features:
 - **Date:** 2025-12-20
 - **Viewport:** Desktop (1920x1080)
 - **Test Coverage:** Complete end-to-end flow tested successfully for all scenarios
+
+## Test Session: Auto-Stock Creation from Ironing Receipt
+Date: 2025-12-20
+
+### Features to Test:
+1. **Manual Ironing Receipt Creation** - Creating an ironing receipt via the standard form should auto-create a stock entry
+2. **Scan-based Ironing Receipt** - Using `/api/scan/receive-ironing` endpoint should auto-create a stock entry
+3. **Stock Entry Verification** - Verify the new stock entry appears in the Stock tab with:
+   - Correct stock code (STK-XXXX)
+   - Lot number from the ironing order
+   - Size distribution from the received quantities
+   - Master pack ratio inherited from ironing order
+   - Source marked as "ironing"
+
+### Test Credentials:
+- Username: admin
+- Password: admin
+
+### Test Flow:
+1. Login with admin/admin
+2. Navigate to Ironing tab
+3. Find or create an ironing order with status "Sent"
+4. Create an ironing receipt (receive the lot)
+5. Navigate to Stock tab
+6. Verify new stock entry was auto-created with correct details
+7. Verify QR code can be generated for the new stock entry
+
+### Test Endpoints:
+- POST /api/ironing-receipts - Creates ironing receipt and auto-creates stock
+- POST /api/scan/receive-ironing - Scan-based receive that auto-creates stock
+- GET /api/stock - Verify stock entries
+- GET /api/stock/{id}/qr - Generate QR for stock entry
+
+### Expected Behavior:
+- When an ironing receipt is created, a stock entry should automatically be created
+- Stock entry should have source="ironing" and reference the ironing receipt
+- Stock should inherit category, style_type, color from cutting order
+- Master pack calculations should be correct
+- Stock should appear in the Stock tab immediately
