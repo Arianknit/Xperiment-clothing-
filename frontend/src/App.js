@@ -366,6 +366,35 @@ function App() {
     }
   }, [isAuthenticated]);
 
+  // QR Scanner for Stock
+  useEffect(() => {
+    let scanner = null;
+    
+    if (scanMode && document.getElementById('stock-qr-reader')) {
+      scanner = new Html5QrcodeScanner('stock-qr-reader', {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      });
+      
+      scanner.render(
+        (decodedText) => {
+          scanner.clear();
+          handleQRScanResult(decodedText);
+        },
+        (error) => {
+          // Ignore scan errors
+        }
+      );
+    }
+    
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(() => {});
+      }
+    };
+  }, [scanMode]);
+
   // Mobile detection and PWA install prompt
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
