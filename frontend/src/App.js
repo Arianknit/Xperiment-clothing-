@@ -702,10 +702,13 @@ function App() {
             }
           };
           
+          console.log("Initializing barcode scanner...");
           scanner = new Html5QrcodeScanner('barcode-scanner', config, false);
           
           scanner.render(
             (decodedText) => {
+              console.log("Barcode scanned:", decodedText);
+              toast.info("QR code detected! Processing...");
               scanner.clear().then(() => {
                 setScannerDialogOpen(false);
                 // Handle scanned barcode - try to find matching lot
@@ -716,9 +719,10 @@ function App() {
               });
             },
             (errorMessage) => {
-              // Ignore scan errors
+              // Ignore scan errors - they happen continuously while scanning
             }
           );
+          console.log("Barcode scanner initialized");
         }
       }, 300);
     }
