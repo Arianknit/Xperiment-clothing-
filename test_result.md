@@ -1314,3 +1314,34 @@ Date: 2025-12-20
 - Professional styling and layout consistent across all reports
 - Filter functionality working correctly for all supported parameters
 - Data export complete and accurate for both HTML and CSV formats
+
+---
+
+### Returns Management Feature Testing - December 2025
+
+#### Feature Overview
+Complete customer/production returns management system with accept/reject functionality.
+
+#### Test Cases to Verify
+
+1. **Backend API Tests**
+   - `POST /api/returns` - Create a new return record
+   - `GET /api/returns` - Fetch all returns
+   - `PUT /api/returns/{id}/process?action=accept` - Accept a return
+   - `PUT /api/returns/{id}/process?action=reject` - Reject a return
+   - `DELETE /api/returns/{id}` - Delete a return (admin only)
+
+2. **Frontend UI Tests**
+   - Returns & Rejections section visible in Reports tab
+   - Summary cards showing Pending/Accepted/Rejected counts
+   - Record Return dialog opens and has all required fields
+   - Accept/Reject buttons visible for Pending returns (admin only)
+   - Delete button visible for admin users
+
+3. **Stock Restoration Tests**
+   - When accepting a dispatch return, stock should be restored
+   - Non-dispatch returns should not affect stock
+
+#### Test Credentials
+- Admin: username=admin, password=admin
+- User: username=test, password=user
