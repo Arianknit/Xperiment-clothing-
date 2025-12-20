@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Package, TrendingUp, Scissors, Plus, Trash2, Factory, Barcode, Users, Send, Printer, PackageCheck, AlertCircle, Pencil, DollarSign, FileText, BookOpen, Weight, ImageIcon, X, Eye, LogOut, User, Lock, UserPlus, MessageCircle, Phone, Search, Filter, Menu, Home, Camera, QrCode, Download, CheckCircle, Truck } from "lucide-react";
+import { Package, TrendingUp, Scissors, Plus, Trash2, Factory, Barcode, Users, Send, Printer, PackageCheck, AlertCircle, Pencil, DollarSign, FileText, BookOpen, Weight, ImageIcon, X, Eye, LogOut, User, Lock, UserPlus, MessageCircle, Phone, Search, Filter, Menu, Home, Camera, QrCode, Download, CheckCircle, Truck, Bell, Activity } from "lucide-react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
