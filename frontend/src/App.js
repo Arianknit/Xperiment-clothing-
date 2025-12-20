@@ -5431,7 +5431,7 @@ _Arian Knit Fab_`;
                               >
                                 <QrCode className="h-4 w-4" />
                               </Button>
-                              {currentUser?.role === 'admin' && (
+                              {isAdmin ? (
                                 <Button 
                                   size="sm" 
                                   variant="outline" 
@@ -5441,6 +5441,8 @@ _Arian Knit Fab_`;
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">Contact admin to delete</span>
                               )}
                             </div>
                           </div>
