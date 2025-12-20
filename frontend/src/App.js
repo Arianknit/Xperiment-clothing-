@@ -1901,6 +1901,78 @@ function App() {
     window.open(`${API}/bulk-dispatches/${dispatchId}/print`, '_blank');
   };
 
+  // Bulk Operations Handlers
+  const toggleStockSelection = (stockId) => {
+    if (selectedStockIds.includes(stockId)) {
+      setSelectedStockIds(selectedStockIds.filter(id => id !== stockId));
+    } else {
+      setSelectedStockIds([...selectedStockIds, stockId]);
+    }
+  };
+
+  const selectAllStocks = () => {
+    if (selectedStockIds.length === stocks.length) {
+      setSelectedStockIds([]);
+    } else {
+      setSelectedStockIds(stocks.map(s => s.id));
+    }
+  };
+
+  const handleBulkDeleteStock = async () => {
+    if (selectedStockIds.length === 0) {
+      toast.error("No items selected");
+      return;
+    }
+    
+    if (!window.confirm(`Delete ${selectedStockIds.length} selected stock items? This cannot be undone.`)) {
+      return;
+    }
+    
+    setLoading(true);
+    let deleted = 0;
+    let failed = 0;
+    
+    for (const stockId of selectedStockIds) {
+      try {
+        await axios.delete(`${API}/stock/${stockId}`);
+        deleted++;
+      } catch (error) {
+        failed++;
+        console.error(`Failed to delete stock ${stockId}:`, error);
+      }
+    }
+    
+    setLoading(false);
+    setSelectedStockIds([]);
+    setBulkSelectMode(false);
+    fetchStocks();
+    fetchStockSummary();
+    
+    if (failed > 0) {
+      toast.warning(`Deleted ${deleted} items, ${failed} failed`);
+    } else {
+      toast.success(`Deleted ${deleted} items successfully`);
+    }
+  };
+
+  const handlePrintStockLabels = () => {
+    const ids = selectedStockIds.join(',');
+    window.open(`${API}/stock/labels/print?stock_ids=${ids}`, '_blank');
+  };
+
+  const handleBulkAddToDispatch = () => {
+    const selectedItems = stocks.filter(s => selectedStockIds.includes(s.id) && s.available_quantity > 0);
+    selectedItems.forEach(stock => {
+      if (!selectedStocksForDispatch.find(s => s.stock_id === stock.id)) {
+        addItemToDispatch(stock);
+      }
+    });
+    setBulkSelectMode(false);
+    setSelectedStockIds([]);
+    setBulkDispatchDialogOpen(true);
+    toast.success(`Added ${selectedItems.length} items to dispatch`);
+  };
+
   // Unified Lot QR Scan Handler
   const handleLotQRScan = async (decodedText) => {
     try {
