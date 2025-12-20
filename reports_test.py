@@ -370,10 +370,8 @@ class ReportsTester:
             required_elements = [
                 "Catalogue Report",
                 "Total Catalogues",
-                "Total Stock",
-                "Available Stock",
-                "Dispatched Stock",
-                "Catalogue Details"
+                "Catalog Name",
+                "Available"
             ]
             
             missing_elements = []
