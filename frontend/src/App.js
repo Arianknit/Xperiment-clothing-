@@ -634,6 +634,24 @@ function App() {
     }
   };
 
+  const fetchStocks = async () => {
+    try {
+      const response = await axios.get(`${API}/stock`);
+      setStocks(response.data);
+    } catch (error) {
+      console.error("Error fetching stocks:", error);
+    }
+  };
+
+  const fetchStockSummary = async () => {
+    try {
+      const response = await axios.get(`${API}/stock/report/summary`);
+      setStockSummary(response.data);
+    } catch (error) {
+      console.error("Error fetching stock summary:", error);
+    }
+  };
+
   const handleLotSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
