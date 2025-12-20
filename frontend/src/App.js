@@ -2030,6 +2030,35 @@ function App() {
     toast.success(`Added ${selectedItems.length} items to dispatch`);
   };
 
+  // Phase 3 Handlers
+  const handleTrackLot = async () => {
+    if (!trackingLotNumber.trim()) {
+      toast.error("Please enter a lot number");
+      return;
+    }
+    await fetchLotJourney(trackingLotNumber);
+  };
+
+  const handleExportAllData = () => {
+    window.open(`${API}/export/all`, '_blank');
+    toast.success("Downloading backup...");
+  };
+
+  const handleExportCollection = (collection) => {
+    window.open(`${API}/export/csv/${collection}`, '_blank');
+    toast.success(`Downloading ${collection}...`);
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      await axios.put(`${API}/settings`, appSettings);
+      toast.success("Settings saved!");
+      setSettingsDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to save settings");
+    }
+  };
+
   // Unified Lot QR Scan Handler
   const handleLotQRScan = async (decodedText) => {
     try {
