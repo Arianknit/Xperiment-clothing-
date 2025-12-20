@@ -9908,13 +9908,6 @@ _Arian Knit Fab_`;
                   }
                 }}
               />
-                    } catch (err) {
-                      toast.error("Could not read barcode from image");
-                    }
-                    e.target.value = '';
-                  }
-                }}
-              />
               <Button 
                 variant="outline"
                 className="w-full mb-2"
