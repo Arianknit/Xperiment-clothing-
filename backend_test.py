@@ -75,185 +75,75 @@ class StitchingBusinessRuleTester:
             return {}
         return {"Authorization": f"Bearer {self.auth_token}"}
 
-    def test_send_outsourcing(self):
-        """Test POST /api/scan/send-outsourcing - Send lot to outsourcing"""
+    def test_lot_by_number_stitching_completed_field(self):
+        """Test GET /api/lot/by-number/{lot_number} returns stitching_completed field"""
         try:
-            # Since all lots might be sent, let's test with a lot that might not exist yet
-            # or skip this test if no lots are available
-            
-            # First check if there are any available lots
-            cutting_response = requests.get(f"{self.base_url}/cutting-orders", headers=self.get_headers())
-            outsourcing_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
-            
-            if cutting_response.status_code != 200 or outsourcing_response.status_code != 200:
-                self.log_result("Send to Outsourcing", False, "Failed to get orders for validation")
-                return False, None
-            
-            cutting_orders = cutting_response.json()
-            outsourcing_orders = outsourcing_response.json()
-            
-            # Get sent lots
-            sent_lots = set()
-            for order in outsourcing_orders:
-                lot_nums = order.get('cutting_lot_number', '')
-                if lot_nums:
-                    for lot in lot_nums.split(', '):
-                        sent_lots.add(lot.strip())
-            
-            # Find available lot
-            available_lot = None
-            for order in cutting_orders:
-                lot_num = order.get('cutting_lot_number', '')
-                if lot_num and lot_num not in sent_lots:
-                    available_lot = lot_num
-                    break
-            
-            if not available_lot:
-                self.log_result("Send to Outsourcing", True, 
-                              "SKIPPED - All lots already sent to outsourcing (expected in production)")
-                return True, "SKIPPED"
-            
-            # Test data
-            outsourcing_data = {
-                "lot_number": available_lot,
-                "unit_name": "Satish Printing House",
-                "operation_type": "Embroidery",
-                "rate_per_pcs": 5.0
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/scan/send-outsourcing",
-                json=outsourcing_data,
-                headers=self.get_headers()
-            )
+            # Test with lot that has stitching complete (cut 001)
+            response = requests.get(f"{self.base_url}/lot/by-number/cut 001", headers=self.get_headers())
             
             if response.status_code != 200:
-                self.log_result("Send to Outsourcing", False, 
-                              f"Failed to send to outsourcing. Status: {response.status_code}", 
+                self.log_result("GET lot/by-number - cut 001", False, 
+                              f"Failed to get lot info. Status: {response.status_code}", 
                               response.text)
-                return False, None
+                return False
                 
-            result = response.json()
+            data = response.json()
             
-            # Validate response message
-            if result.get('message') != "Sent to outsourcing successfully":
-                self.log_result("Send to Outsourcing", False, 
-                              f"Unexpected message: {result.get('message')}", result)
-                return False, None
+            # Validate stitching_completed field exists
+            if 'stitching_completed' not in data:
+                self.log_result("GET lot/by-number - cut 001", False, 
+                              "stitching_completed field missing from response", data)
+                return False
             
-            self.log_result("Send to Outsourcing", True, 
-                          f"Successfully sent lot '{available_lot}' to outsourcing. DC: {result.get('dc_number', 'N/A')}")
-            return True, result.get('dc_number')
+            # Should be true for cut 001 (has stitching complete)
+            if not data['stitching_completed']:
+                self.log_result("GET lot/by-number - cut 001", False, 
+                              f"Expected stitching_completed=true for cut 001, got {data['stitching_completed']}", data)
+                return False
             
-        except Exception as e:
-            self.log_result("Send to Outsourcing", False, f"Exception occurred: {str(e)}")
-            return False, None
-
-    def test_receive_outsourcing(self):
-        """Test POST /api/scan/receive-outsourcing - Receive lot from outsourcing"""
-        try:
-            # Find a pending outsourcing order with status "Sent"
-            orders_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
-            if orders_response.status_code != 200:
-                self.log_result("Receive from Outsourcing", False, 
-                              "Failed to get outsourcing orders")
-                return False, None
+            self.log_result("GET lot/by-number - cut 001", True, 
+                          f"Successfully returned stitching_completed=true for cut 001")
             
-            orders = orders_response.json()
-            pending_order = None
-            
-            # Look for an order with status "Sent" (not "Received" or "Partial")
-            for order in orders:
-                if order.get('status') == 'Sent' and order.get('cutting_lot_number'):
-                    pending_order = order
-                    break
-            
-            if not pending_order:
-                self.log_result("Receive from Outsourcing", False, 
-                              "No pending outsourcing orders with status 'Sent' found for testing")
-                return False, None
-            
-            lot_number = pending_order.get('cutting_lot_number')
-            size_dist = pending_order.get('size_distribution', {})
-            
-            # Create receive data based on the sent sizes
-            receive_data = {
-                "lot_number": lot_number,
-                "received_distribution": {},
-                "mistake_distribution": {}
-            }
-            
-            # Use the first few sizes from the order
-            sizes_to_receive = list(size_dist.keys())[:3] if size_dist else ["S", "M", "L"]
-            for size in sizes_to_receive:
-                receive_data["received_distribution"][size] = 10
-                receive_data["mistake_distribution"][size] = 0
-            
-            response = requests.post(
-                f"{self.base_url}/scan/receive-outsourcing",
-                json=receive_data,
-                headers=self.get_headers()
-            )
+            # Test with lot that has no stitching complete (cut 002)
+            response = requests.get(f"{self.base_url}/lot/by-number/cut 002", headers=self.get_headers())
             
             if response.status_code != 200:
-                self.log_result("Receive from Outsourcing", False, 
-                              f"Failed to receive from outsourcing. Status: {response.status_code}", 
+                self.log_result("GET lot/by-number - cut 002", False, 
+                              f"Failed to get lot info. Status: {response.status_code}", 
                               response.text)
-                return False, None
+                return False
                 
-            result = response.json()
+            data = response.json()
             
-            # Validate response
-            if "Receipt recorded successfully" not in result.get('message', ''):
-                self.log_result("Receive from Outsourcing", False, 
-                              f"Unexpected message: {result.get('message')}", result)
-                return False, None
+            # Validate stitching_completed field exists
+            if 'stitching_completed' not in data:
+                self.log_result("GET lot/by-number - cut 002", False, 
+                              "stitching_completed field missing from response", data)
+                return False
             
-            # Verify receipt was created
-            receipts_response = requests.get(f"{self.base_url}/outsourcing-receipts", headers=self.get_headers())
-            if receipts_response.status_code == 200:
-                receipts = receipts_response.json()
-                matching_receipt = next((receipt for receipt in receipts 
-                                       if receipt.get('dc_number') == pending_order.get('dc_number')), None)
-                
-                if matching_receipt:
-                    self.created_resources.append(('outsourcing_receipt', matching_receipt.get('id')))
+            # Should be false for cut 002 (no stitching complete)
+            if data['stitching_completed']:
+                self.log_result("GET lot/by-number - cut 002", False, 
+                              f"Expected stitching_completed=false for cut 002, got {data['stitching_completed']}", data)
+                return False
             
-            self.log_result("Receive from Outsourcing", True, 
-                          f"Successfully received lot '{lot_number}' from outsourcing. Received: {result.get('received', 0)} pieces")
-            return True, lot_number
+            self.log_result("GET lot/by-number - cut 002", True, 
+                          f"Successfully returned stitching_completed=false for cut 002")
+            
+            return True
             
         except Exception as e:
-            self.log_result("Receive from Outsourcing", False, f"Exception occurred: {str(e)}")
-            return False, None
+            self.log_result("GET lot/by-number", False, f"Exception occurred: {str(e)}")
+            return False
 
-    def test_create_ironing(self, lot_from_outsourcing):
-        """Test POST /api/scan/create-ironing - Create ironing order"""
+    def test_create_ironing_validation_without_stitching(self):
+        """Test POST /api/scan/create-ironing validation - should reject if stitching not complete"""
         try:
-            # If we skipped the outsourcing test, skip this too
-            if lot_from_outsourcing == "SKIPPED":
-                self.log_result("Create Ironing Order", True, 
-                              "SKIPPED - No lot available from outsourcing test")
-                return True, "SKIPPED"
-            
-            # Check if ironing order already exists for this lot
-            ironing_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
-            if ironing_response.status_code == 200:
-                ironing_orders = ironing_response.json()
-                existing_order = next((order for order in ironing_orders 
-                                     if order.get('cutting_lot_number') == lot_from_outsourcing), None)
-                
-                if existing_order:
-                    self.log_result("Create Ironing Order", True, 
-                                  f"SKIPPED - Ironing order already exists for lot '{lot_from_outsourcing}' (expected in production)")
-                    return True, existing_order.get('dc_number', 'EXISTING')
-            
-            # Test data for creating ironing order
+            # Try to create ironing for "cut 002" (NO stitching complete)
             ironing_data = {
-                "lot_number": lot_from_outsourcing,
-                "unit_name": "Satish Printing House",
-                "master_pack_ratio": {"S": 2, "M": 3, "L": 2},
-                "rate_per_pcs": 3.0
+                "lot_number": "cut 002",
+                "unit_name": "Test Unit",
+                "rate_per_pcs": 5
             }
             
             response = requests.post(
@@ -262,115 +152,130 @@ class StitchingBusinessRuleTester:
                 headers=self.get_headers()
             )
             
-            if response.status_code != 200:
-                self.log_result("Create Ironing Order", False, 
-                              f"Failed to create ironing order. Status: {response.status_code}", 
+            # Should FAIL with 400 status
+            if response.status_code != 400:
+                self.log_result("Create Ironing - No Stitching", False, 
+                              f"Expected 400 status for lot without stitching, got {response.status_code}", 
                               response.text)
-                return False, None
+                return False
                 
-            result = response.json()
+            # Check error message contains "stitching required" or similar
+            error_text = response.text.lower()
+            if "stitching" not in error_text or "required" not in error_text:
+                self.log_result("Create Ironing - No Stitching", False, 
+                              f"Error message should mention stitching requirement. Got: {response.text}")
+                return False
             
-            # Validate response
-            if "Ironing order created successfully" not in result.get('message', ''):
-                self.log_result("Create Ironing Order", False, 
-                              f"Unexpected message: {result.get('message')}", result)
-                return False, None
+            self.log_result("Create Ironing - No Stitching", True, 
+                          f"Successfully rejected ironing for lot without stitching. Error: {response.text}")
             
-            # Verify ironing order was created
-            orders_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
-            if orders_response.status_code == 200:
-                orders = orders_response.json()
-                matching_order = next((order for order in orders 
-                                     if order.get('cutting_lot_number') == lot_from_outsourcing), None)
-                
-                if not matching_order:
-                    self.log_result("Create Ironing Order", False, 
-                                  "Ironing order not found after creation")
-                    return False, None
-                
-                self.created_resources.append(('ironing_order', matching_order.get('id')))
-            
-            self.log_result("Create Ironing Order", True, 
-                          f"Successfully created ironing order for lot '{lot_from_outsourcing}'. DC: {result.get('dc_number', 'N/A')}")
-            return True, result.get('dc_number')
+            return True
             
         except Exception as e:
-            self.log_result("Create Ironing Order", False, f"Exception occurred: {str(e)}")
-            return False, None
+            self.log_result("Create Ironing - No Stitching", False, f"Exception occurred: {str(e)}")
+            return False
 
-    def test_receive_ironing(self):
-        """Test POST /api/scan/receive-ironing - Receive lot from ironing and auto-create stock"""
+    def test_create_ironing_with_stitching_complete(self):
+        """Test POST /api/scan/create-ironing works for lots WITH stitching complete"""
         try:
-            # Check if there are any ironing orders with status "Sent"
-            orders_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
-            if orders_response.status_code != 200:
-                self.log_result("Receive from Ironing", False, 
-                              "Failed to get ironing orders")
-                return False, None
+            # Check if ironing order already exists for cut 001
+            ironing_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
+            if ironing_response.status_code == 200:
+                ironing_orders = ironing_response.json()
+                existing_order = next((order for order in ironing_orders 
+                                     if order.get('cutting_lot_number') == 'cut 001'), None)
+                
+                if existing_order:
+                    self.log_result("Create Ironing - With Stitching", True, 
+                                  f"SKIPPED - Ironing order already exists for cut 001 (expected in production)")
+                    return True
             
-            orders = orders_response.json()
-            pending_order = None
-            
-            # Look for an order with status "Sent" (not "Received")
-            for order in orders:
-                if order.get('status') == 'Sent' and order.get('cutting_lot_number'):
-                    pending_order = order
-                    break
-            
-            if not pending_order:
-                self.log_result("Receive from Ironing", True, 
-                              "SKIPPED - No pending ironing orders with status 'Sent' found (all already received)")
-                return True, "SKIPPED"
-            
-            lot_number = pending_order.get('cutting_lot_number')
-            size_dist = pending_order.get('size_distribution', {})
-            
-            # Create receive data based on the sent sizes
-            receive_data = {
-                "lot_number": lot_number,
-                "received_distribution": {},
-                "mistake_distribution": {}
+            # Try to create ironing for "cut 001" (HAS stitching complete)
+            ironing_data = {
+                "lot_number": "cut 001",
+                "unit_name": "Test Unit",
+                "rate_per_pcs": 5
             }
             
-            # Use the first few sizes from the order
-            sizes_to_receive = list(size_dist.keys())[:3] if size_dist else ["S", "M", "L"]
-            for size in sizes_to_receive:
-                receive_data["received_distribution"][size] = 10
-                receive_data["mistake_distribution"][size] = 0
-            
             response = requests.post(
-                f"{self.base_url}/scan/receive-ironing",
-                json=receive_data,
+                f"{self.base_url}/scan/create-ironing",
+                json=ironing_data,
                 headers=self.get_headers()
             )
             
+            # Should succeed with 200 status
             if response.status_code != 200:
-                self.log_result("Receive from Ironing", False, 
-                              f"Failed to receive from ironing. Status: {response.status_code}", 
+                self.log_result("Create Ironing - With Stitching", False, 
+                              f"Expected 200 status for lot with stitching, got {response.status_code}", 
                               response.text)
-                return False, None
+                return False
                 
             result = response.json()
             
-            # Validate response
-            if "Stock created!" not in result.get('message', ''):
-                self.log_result("Receive from Ironing", False, 
+            # Validate success message
+            if "successfully" not in result.get('message', '').lower():
+                self.log_result("Create Ironing - With Stitching", False, 
                               f"Unexpected message: {result.get('message')}", result)
-                return False, None
+                return False
             
-            # Validate stock_code in response
-            if not result.get('stock_code'):
-                self.log_result("Receive from Ironing", False, 
-                              "No stock_code in response")
-                return False, None
+            self.log_result("Create Ironing - With Stitching", True, 
+                          f"Successfully created ironing for lot with stitching. DC: {result.get('dc_number', 'N/A')}")
             
-            self.log_result("Receive from Ironing", True, 
-                          f"Successfully received lot '{lot_number}' from ironing. Stock code: {result.get('stock_code')}")
-            return True, result.get('stock_code')
+            return True
             
         except Exception as e:
-            self.log_result("Receive from Ironing", False, f"Exception occurred: {str(e)}")
-            return False, None
+            self.log_result("Create Ironing - With Stitching", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_verify_existing_ironing_functionality(self):
+        """Verify existing ironing functionality still works for lots WITH stitching"""
+        try:
+            # Get lot info for "cut 001" - should have ironing data and stitching_completed: true
+            response = requests.get(f"{self.base_url}/lot/by-number/cut 001", headers=self.get_headers())
+            
+            if response.status_code != 200:
+                self.log_result("Verify Existing Ironing", False, 
+                              f"Failed to get lot info. Status: {response.status_code}", 
+                              response.text)
+                return False
+                
+            data = response.json()
+            
+            # Should have stitching_completed: true
+            if not data.get('stitching_completed'):
+                self.log_result("Verify Existing Ironing", False, 
+                              f"Expected stitching_completed=true for cut 001, got {data.get('stitching_completed')}")
+                return False
+            
+            # Should have ironing data if ironing has been done
+            ironing_data = data.get('ironing')
+            if ironing_data:
+                self.log_result("Verify Existing Ironing", True, 
+                              f"Successfully verified cut 001 has both stitching_completed=true and ironing data")
+            else:
+                # Check if there are any ironing orders for this lot
+                ironing_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
+                if ironing_response.status_code == 200:
+                    ironing_orders = ironing_response.json()
+                    existing_order = next((order for order in ironing_orders 
+                                         if order.get('cutting_lot_number') == 'cut 001'), None)
+                    
+                    if existing_order:
+                        self.log_result("Verify Existing Ironing", True, 
+                                      f"Successfully verified cut 001 has stitching_completed=true and ironing order exists")
+                    else:
+                        self.log_result("Verify Existing Ironing", True, 
+                                      f"Verified cut 001 has stitching_completed=true (no ironing order yet, which is fine)")
+                else:
+                    self.log_result("Verify Existing Ironing", False, 
+                                  "Failed to get ironing orders for verification")
+                    return False
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Verify Existing Ironing", False, f"Exception occurred: {str(e)}")
+            return False
 
     def test_authentication_required(self):
         """Test that all Quick Action endpoints require authentication"""
