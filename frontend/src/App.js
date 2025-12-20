@@ -1008,11 +1008,11 @@ function App() {
   const handleReturnFabricSubmit = async () => {
     try {
       setLoading(true);
-      await axios.post(`${API}/fabric-lots/${selectedLotForReturn.id}/return`, returnForm);
-      toast.success(`Fabric returned successfully! ${returnForm.quantity_returned}kg removed from inventory.`);
+      await axios.post(`${API}/fabric-lots/${selectedLotForReturn.id}/return`, fabricReturnForm);
+      toast.success(`Fabric returned successfully! ${fabricReturnForm.quantity_returned}kg removed from inventory.`);
       setReturnFabricDialogOpen(false);
       setSelectedLotForReturn(null);
-      setReturnForm({
+      setFabricReturnForm({
         returned_rolls: [],
         quantity_returned: '',
         reason: 'Wrong Color',
