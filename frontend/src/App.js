@@ -9361,6 +9361,127 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Record Return Dialog */}
+      <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PackageCheck className="h-5 w-5 text-orange-600" />
+              Record Return / Rejection
+            </DialogTitle>
+            <DialogDescription>Record goods returned from customer or processing units</DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleCreateReturn} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Return Source *</Label>
+              <Select 
+                value={returnForm.source_type} 
+                onValueChange={(v) => setReturnForm({...returnForm, source_type: v, source_id: ''})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dispatch">📦 Customer Dispatch Return</SelectItem>
+                  <SelectItem value="outsourcing">🏭 Outsourcing Unit Return</SelectItem>
+                  <SelectItem value="ironing">🔥 Ironing Unit Return</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Source Reference ID *</Label>
+              {returnForm.source_type === 'dispatch' ? (
+                <Select 
+                  value={returnForm.source_id} 
+                  onValueChange={(v) => setReturnForm({...returnForm, source_id: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select dispatch..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bulkDispatches.map(d => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.dispatch_number} - {d.customer_name} ({d.grand_total_quantity} pcs)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input 
+                  value={returnForm.source_id}
+                  onChange={(e) => setReturnForm({...returnForm, source_id: e.target.value})}
+                  placeholder="Enter DC number or Order ID"
+                />
+              )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Return Date *</Label>
+                <Input 
+                  type="date"
+                  value={returnForm.return_date}
+                  onChange={(e) => setReturnForm({...returnForm, return_date: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Quantity (pcs) *</Label>
+                <Input 
+                  type="number"
+                  min="1"
+                  value={returnForm.quantity}
+                  onChange={(e) => setReturnForm({...returnForm, quantity: e.target.value})}
+                  placeholder="0"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Reason *</Label>
+              <Select 
+                value={returnForm.reason} 
+                onValueChange={(v) => setReturnForm({...returnForm, reason: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select reason..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Defective">🔴 Defective / Damaged</SelectItem>
+                  <SelectItem value="Wrong Size">📏 Wrong Size</SelectItem>
+                  <SelectItem value="Wrong Color">🎨 Wrong Color</SelectItem>
+                  <SelectItem value="Quality Issue">⚠️ Quality Issue</SelectItem>
+                  <SelectItem value="Customer Rejection">❌ Customer Rejection</SelectItem>
+                  <SelectItem value="Excess Quantity">📦 Excess Quantity</SelectItem>
+                  <SelectItem value="Other">📝 Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Notes (Optional)</Label>
+              <Input 
+                value={returnForm.notes}
+                onChange={(e) => setReturnForm({...returnForm, notes: e.target.value})}
+                placeholder="Additional details..."
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setReturnDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-orange-600 hover:bg-orange-700" disabled={loading}>
+                {loading ? "Recording..." : "Record Return"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Barcode Scanner Dialog */}
       <Dialog open={scannerDialogOpen} onOpenChange={setScannerDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
