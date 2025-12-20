@@ -2344,9 +2344,8 @@ function App() {
         try {
           const response = await axios.get(`${API}/lot/by-number/${encodeURIComponent(decodedText)}`);
           setScannedLot(response.data);
-          setUnifiedScannerOpen(false);
-          setScannerDialogOpen(false);
-          toast.success(`Scanned: ${decodedText}`);
+          // Don't close dialog - the scannedLot being set will show lot details in same dialog
+          toast.success(`Found: ${decodedText}`);
           return;
         } catch (e) {
           toast.error(`Lot not found: ${decodedText}`);
@@ -2358,14 +2357,10 @@ function App() {
         // Fetch lot details with current status
         const response = await axios.get(`${API}/lot/by-number/${encodeURIComponent(data.lot)}`);
         setScannedLot(response.data);
-        setUnifiedScannerOpen(false);
-        setScannerDialogOpen(false);
-        toast.success(`Scanned: ${data.lot}`);
+        toast.success(`Found: ${data.lot}`);
       } else if (data.type === 'stock' && data.code) {
         // Stock QR code scanned
         toast.info(`Stock QR scanned: ${data.code}. Use Dispatch tab to scan stock.`);
-        setUnifiedScannerOpen(false);
-        setScannerDialogOpen(false);
       } else {
         toast.error("Invalid QR code format");
       }
