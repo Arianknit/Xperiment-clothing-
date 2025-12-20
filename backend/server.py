@@ -472,6 +472,42 @@ class CatalogDispatch(BaseModel):
     lot_number: str  # The lot being dispatched from
     notes: Optional[str] = None
 
+# Bulk Dispatch Models - For dispatching multiple items at once
+class BulkDispatchItem(BaseModel):
+    stock_id: str
+    stock_code: str
+    lot_number: str
+    category: str
+    style_type: str
+    color: Optional[str] = ""
+    master_packs: int
+    loose_pcs: Dict[str, int]  # {"M": 5, "L": 3}
+    master_pack_ratio: Optional[Dict[str, int]] = {}
+    size_distribution: Dict[str, int]  # Total dispatched per size
+    total_quantity: int
+
+class BulkDispatch(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    dispatch_number: str  # Auto-generated dispatch number
+    dispatch_date: datetime
+    customer_name: str
+    bora_number: str
+    items: List[BulkDispatchItem]
+    total_items: int
+    grand_total_quantity: int
+    notes: Optional[str] = None
+    remarks: Optional[str] = None
+    created_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BulkDispatchCreate(BaseModel):
+    dispatch_date: datetime
+    customer_name: str
+    bora_number: str
+    items: List[Dict]  # [{stock_id, master_packs, loose_pcs}]
+    notes: Optional[str] = None
+    remarks: Optional[str] = None
+
 
 # Helper function to calculate master packs
 def calculate_master_packs(size_distribution: Dict[str, int], master_pack_ratio: Dict[str, int]):
