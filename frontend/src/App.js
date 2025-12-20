@@ -1476,6 +1476,103 @@ function App() {
     }
   };
 
+  // QR Code & Scan Handlers
+  const handleQuickDispatch = async (stockId) => {
+    try {
+      const response = await axios.post(`${API}/stock/${stockId}/quick-dispatch`);
+      toast.success(`Quick dispatch: ${response.data.dispatched} pcs (Bora: ${response.data.bora_number})`);
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error in quick dispatch:", error);
+      toast.error(error.response?.data?.detail || "Quick dispatch failed");
+    }
+  };
+
+  const handleQRScanResult = async (decodedText) => {
+    try {
+      const data = JSON.parse(decodedText);
+      if (data.type === 'stock' && data.id) {
+        // Fetch full stock details
+        const response = await axios.get(`${API}/stock/${data.id}`);
+        setScannedStock(response.data);
+        
+        if (scanMode === 'dispatch') {
+          setScanDispatchForm({
+            customer_name: "",
+            bora_number: "",
+            master_packs: 1,
+            loose_pcs: {}
+          });
+          setScanDispatchDialogOpen(true);
+        } else if (scanMode === 'newlot') {
+          setScanNewLotForm({
+            lot_number: "",
+            size_distribution: { M: 0, L: 0, XL: 0, XXL: 0 },
+            notes: ""
+          });
+          setScanNewLotDialogOpen(true);
+        }
+        setScanMode(null);
+      } else {
+        toast.error("Invalid QR code format");
+      }
+    } catch (error) {
+      console.error("Error processing QR scan:", error);
+      toast.error("Failed to process QR code");
+    }
+  };
+
+  const handleScanDispatchSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/stock/${scannedStock.id}/dispatch`, {
+        master_packs: parseInt(scanDispatchForm.master_packs) || 0,
+        loose_pcs: scanDispatchForm.loose_pcs,
+        customer_name: scanDispatchForm.customer_name,
+        bora_number: scanDispatchForm.bora_number,
+        notes: ""
+      });
+      toast.success("Dispatch from scan successful!");
+      setScanDispatchDialogOpen(false);
+      setScannedStock(null);
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error dispatching from scan:", error);
+      toast.error(error.response?.data?.detail || "Dispatch failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScanNewLotSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/stock/copy-from/${scannedStock.id}`, {
+        lot_number: scanNewLotForm.lot_number,
+        category: scannedStock.category,
+        style_type: scannedStock.style_type,
+        color: scannedStock.color,
+        size_distribution: scanNewLotForm.size_distribution,
+        master_pack_ratio: scannedStock.master_pack_ratio,
+        notes: scanNewLotForm.notes
+      });
+      toast.success("New lot created from scan!");
+      setScanNewLotDialogOpen(false);
+      setScannedStock(null);
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error creating lot from scan:", error);
+      toast.error(error.response?.data?.detail || "Failed to create lot");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDispatchSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
