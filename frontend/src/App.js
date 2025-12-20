@@ -138,6 +138,34 @@ function App() {
   });
   const [availableCuttingOrders, setAvailableCuttingOrders] = useState([]);
   
+  // Stock state
+  const [stockSearch, setStockSearch] = useState("");
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+  const [stockDispatchDialogOpen, setStockDispatchDialogOpen] = useState(false);
+  const [stockCatalogDialogOpen, setStockCatalogDialogOpen] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [stockForm, setStockForm] = useState({
+    lot_number: "",
+    category: "Mens",
+    style_type: "",
+    color: "",
+    size_distribution: { M: 0, L: 0, XL: 0, XXL: 0 },
+    master_pack_ratio: { M: 1, L: 1, XL: 1, XXL: 1 },
+    notes: ""
+  });
+  const [stockDispatchForm, setStockDispatchForm] = useState({
+    master_packs: 0,
+    loose_pcs: {},
+    customer_name: "",
+    bora_number: "",
+    notes: ""
+  });
+  const [stockCatalogForm, setStockCatalogForm] = useState({
+    catalog_name: "",
+    catalog_code: "",
+    description: ""
+  });
+  
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
     cutting_master_name: "",
