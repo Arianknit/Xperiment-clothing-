@@ -455,59 +455,74 @@ function App() {
   // QR Scanner for Stock (Add Lot and Dispatch)
   useEffect(() => {
     let scanner = null;
+    let timeoutId = null;
     
-    // Scanner for Stock tab (Add New Lot)
-    if (scanMode === 'newlot' && document.getElementById('stock-qr-reader')) {
-      scanner = new Html5QrcodeScanner('stock-qr-reader', {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      });
-      
-      scanner.render(
-        (decodedText) => {
-          scanner.clear();
-          handleQRScanResult(decodedText);
-        },
-        (error) => {
-          // Ignore scan errors
-        }
-      );
-    }
-    
-    // Scanner for Dispatch tab (Scan to Add to Dispatch)
-    if (scanMode === 'dispatch' && document.getElementById('qr-reader-dispatch')) {
-      scanner = new Html5QrcodeScanner('qr-reader-dispatch', {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      });
-      
-      scanner.render(
-        async (decodedText) => {
-          scanner.clear();
-          setScanMode(null);
-          // Find stock by QR code (stock_code)
-          const stock = stocks.find(s => s.stock_code === decodedText);
-          if (stock) {
-            if (stock.available_quantity > 0) {
-              addItemToDispatch(stock);
-              setBulkDispatchDialogOpen(true);
-              toast.success(`Added ${stock.stock_code} to dispatch!`);
-            } else {
-              toast.error(`${stock.stock_code} has no available quantity`);
-            }
-          } else {
-            toast.error(`Stock not found: ${decodedText}`);
+    if (scanMode) {
+      // Small delay to ensure DOM element is rendered
+      timeoutId = setTimeout(() => {
+        // Scanner for Stock tab (Add New Lot)
+        if (scanMode === 'newlot') {
+          const element = document.getElementById('stock-qr-reader');
+          if (element) {
+            scanner = new Html5QrcodeScanner('stock-qr-reader', {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0
+            });
+            
+            scanner.render(
+              (decodedText) => {
+                scanner.clear();
+                handleQRScanResult(decodedText);
+              },
+              (error) => {
+                // Ignore scan errors
+              }
+            );
           }
-        },
-        (error) => {
-          // Ignore scan errors
         }
-      );
+        
+        // Scanner for Dispatch tab (Scan to Add to Dispatch)
+        if (scanMode === 'dispatch') {
+          const element = document.getElementById('qr-reader-dispatch');
+          if (element) {
+            scanner = new Html5QrcodeScanner('qr-reader-dispatch', {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0
+            });
+            
+            scanner.render(
+              async (decodedText) => {
+                scanner.clear();
+                setScanMode(null);
+                // Find stock by QR code (stock_code)
+                const stock = stocks.find(s => s.stock_code === decodedText);
+                if (stock) {
+                  if (stock.available_quantity > 0) {
+                    addItemToDispatch(stock);
+                    setBulkDispatchDialogOpen(true);
+                    toast.success(`Added ${stock.stock_code} to dispatch!`);
+                  } else {
+                    toast.error(`${stock.stock_code} has no available quantity`);
+                  }
+                } else {
+                  toast.error(`Stock not found: ${decodedText}`);
+                }
+              },
+              (error) => {
+                // Ignore scan errors
+              }
+            );
+          }
+        }
+      }, 100);
     }
     
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (scanner) {
         scanner.clear().catch(() => {});
       }
