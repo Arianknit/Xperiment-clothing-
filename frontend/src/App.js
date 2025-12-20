@@ -506,8 +506,20 @@ function App() {
               async (decodedText) => {
                 scanner.clear();
                 setScanMode(null);
+                
+                // Try to parse as JSON (stock QR codes contain JSON)
+                let stockCode = decodedText;
+                try {
+                  const data = JSON.parse(decodedText);
+                  if (data.type === 'stock' && data.code) {
+                    stockCode = data.code;
+                  }
+                } catch (e) {
+                  // Not JSON, use as plain text stock code
+                }
+                
                 // Find stock by QR code (stock_code)
-                const stock = stocks.find(s => s.stock_code === decodedText);
+                const stock = stocks.find(s => s.stock_code === stockCode);
                 if (stock) {
                   if (stock.available_quantity > 0) {
                     addItemToDispatch(stock);
@@ -517,7 +529,7 @@ function App() {
                     toast.error(`${stock.stock_code} has no available quantity`);
                   }
                 } else {
-                  toast.error(`Stock not found: ${decodedText}`);
+                  toast.error(`Stock not found: ${stockCode}`);
                 }
               },
               (error) => {
