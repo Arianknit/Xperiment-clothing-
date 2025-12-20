@@ -1950,7 +1950,7 @@ function App() {
   };
 
   const updateDispatchItem = (stockId, field, value) => {
-    setSelectedStocksForDispatch(selectedStocksForDispatch.map(item => {
+    setSelectedStocksForDispatch(prevItems => prevItems.map(item => {
       if (item.stock_id === stockId) {
         return { ...item, [field]: value };
       }
@@ -1959,7 +1959,7 @@ function App() {
   };
 
   const updateDispatchItemLoosePcs = (stockId, size, qty) => {
-    setSelectedStocksForDispatch(selectedStocksForDispatch.map(item => {
+    setSelectedStocksForDispatch(prevItems => prevItems.map(item => {
       if (item.stock_id === stockId) {
         return { 
           ...item, 
