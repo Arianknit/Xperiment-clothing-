@@ -1690,6 +1690,150 @@ function App() {
     }
   };
 
+  // Bulk Dispatch Handlers
+  const addItemToDispatch = (stock) => {
+    // Check if already added
+    if (selectedStocksForDispatch.find(s => s.stock_id === stock.id)) {
+      toast.error("Item already added to dispatch");
+      return;
+    }
+    
+    const newItem = {
+      stock_id: stock.id,
+      stock_code: stock.stock_code,
+      lot_number: stock.lot_number,
+      category: stock.category,
+      style_type: stock.style_type,
+      color: stock.color,
+      available_quantity: stock.available_quantity,
+      master_pack_ratio: stock.master_pack_ratio || {},
+      master_packs: 0,
+      loose_pcs: {}
+    };
+    setSelectedStocksForDispatch([...selectedStocksForDispatch, newItem]);
+    toast.success(`Added ${stock.stock_code} to dispatch`);
+  };
+
+  const removeItemFromDispatch = (stockId) => {
+    setSelectedStocksForDispatch(selectedStocksForDispatch.filter(s => s.stock_id !== stockId));
+  };
+
+  const updateDispatchItem = (stockId, field, value) => {
+    setSelectedStocksForDispatch(selectedStocksForDispatch.map(item => {
+      if (item.stock_id === stockId) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
+  };
+
+  const updateDispatchItemLoosePcs = (stockId, size, qty) => {
+    setSelectedStocksForDispatch(selectedStocksForDispatch.map(item => {
+      if (item.stock_id === stockId) {
+        return { 
+          ...item, 
+          loose_pcs: { ...item.loose_pcs, [size]: parseInt(qty) || 0 }
+        };
+      }
+      return item;
+    }));
+  };
+
+  const calculateItemTotal = (item) => {
+    let total = 0;
+    // Master packs quantity
+    if (item.master_packs > 0 && item.master_pack_ratio) {
+      for (const size in item.master_pack_ratio) {
+        total += item.master_packs * (item.master_pack_ratio[size] || 0);
+      }
+    }
+    // Loose pieces
+    for (const size in item.loose_pcs) {
+      total += item.loose_pcs[size] || 0;
+    }
+    return total;
+  };
+
+  const calculateGrandTotal = () => {
+    return selectedStocksForDispatch.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+  };
+
+  const handleBulkDispatchSubmit = async (e) => {
+    e.preventDefault();
+    if (selectedStocksForDispatch.length === 0) {
+      toast.error("Please add items to dispatch");
+      return;
+    }
+    
+    // Validate quantities
+    for (const item of selectedStocksForDispatch) {
+      const total = calculateItemTotal(item);
+      if (total === 0) {
+        toast.error(`Please enter quantity for ${item.stock_code}`);
+        return;
+      }
+      if (total > item.available_quantity) {
+        toast.error(`${item.stock_code}: Requested ${total} but only ${item.available_quantity} available`);
+        return;
+      }
+    }
+    
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/bulk-dispatches`, {
+        dispatch_date: new Date(bulkDispatchForm.dispatch_date).toISOString(),
+        customer_name: bulkDispatchForm.customer_name,
+        bora_number: bulkDispatchForm.bora_number,
+        notes: bulkDispatchForm.notes,
+        remarks: bulkDispatchForm.remarks,
+        items: selectedStocksForDispatch.map(item => ({
+          stock_id: item.stock_id,
+          master_packs: item.master_packs,
+          loose_pcs: item.loose_pcs
+        }))
+      });
+      
+      toast.success(`Dispatch ${response.data.dispatch_number} created! Total: ${response.data.grand_total_quantity} pcs`);
+      setBulkDispatchDialogOpen(false);
+      setBulkDispatchForm({
+        dispatch_date: new Date().toISOString().split('T')[0],
+        customer_name: "",
+        bora_number: "",
+        notes: "",
+        remarks: "",
+        items: []
+      });
+      setSelectedStocksForDispatch([]);
+      fetchBulkDispatches();
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error creating bulk dispatch:", error);
+      toast.error(error.response?.data?.detail || "Failed to create dispatch");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteBulkDispatch = async (dispatchId) => {
+    if (!window.confirm("Delete this dispatch? Stock quantities will be restored.")) return;
+    
+    try {
+      await axios.delete(`${API}/bulk-dispatches/${dispatchId}`);
+      toast.success("Dispatch deleted and stock restored");
+      fetchBulkDispatches();
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error deleting dispatch:", error);
+      toast.error(error.response?.data?.detail || "Failed to delete dispatch");
+    }
+  };
+
+  const handlePrintDispatch = (dispatchId) => {
+    window.open(`${API}/bulk-dispatches/${dispatchId}/print`, '_blank');
+  };
+
   // Unified Lot QR Scan Handler
   const handleLotQRScan = async (decodedText) => {
     try {
