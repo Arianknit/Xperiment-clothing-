@@ -326,192 +326,21 @@ class QuickActionTester:
             self.log_result("Receive from Ironing", False, f"Exception occurred: {str(e)}")
             return False, None
 
-    def test_reject_return(self, return_id):
-        """Test PUT /api/returns/{id}/process?action=reject - Reject a return"""
-        try:
-            response = requests.put(
-                f"{self.base_url}/returns/{return_id}/process?action=reject",
-                headers=self.get_headers()
-            )
-            
-            if response.status_code != 200:
-                self.log_result("Reject Return", False, 
-                              f"Failed to reject return. Status: {response.status_code}", 
-                              response.text)
-                return False
-                
-            result = response.json()
-            
-            # Validate response
-            if result.get('message') != "Return rejected":
-                self.log_result("Reject Return", False, 
-                              f"Unexpected message: {result.get('message')}", result)
-                return False
-            
-            # Verify the return was updated
-            get_response = requests.get(f"{self.base_url}/returns", headers=self.get_headers())
-            if get_response.status_code == 200:
-                returns = get_response.json()
-                updated_return = next((r for r in returns if r.get('id') == return_id), None)
-                
-                if updated_return:
-                    if updated_return.get('status') != 'Rejected':
-                        self.log_result("Reject Return", False, 
-                                      f"Return status not updated. Expected 'Rejected', got '{updated_return.get('status')}'")
-                        return False
-            
-            self.log_result("Reject Return", True, 
-                          f"Successfully rejected return {return_id}. Status changed to 'Rejected'")
-            return True
-            
-        except Exception as e:
-            self.log_result("Reject Return", False, f"Exception occurred: {str(e)}")
-            return False
-
-    def test_delete_return(self, return_id):
-        """Test DELETE /api/returns/{id} - Delete a return (admin only)"""
-        try:
-            response = requests.delete(
-                f"{self.base_url}/returns/{return_id}",
-                headers=self.get_headers()
-            )
-            
-            if response.status_code != 200:
-                self.log_result("Delete Return", False, 
-                              f"Failed to delete return. Status: {response.status_code}", 
-                              response.text)
-                return False
-                
-            result = response.json()
-            
-            # Validate response
-            if result.get('message') != "Return deleted":
-                self.log_result("Delete Return", False, 
-                              f"Unexpected message: {result.get('message')}", result)
-                return False
-            
-            # Verify the return was deleted
-            get_response = requests.get(f"{self.base_url}/returns", headers=self.get_headers())
-            if get_response.status_code == 200:
-                returns = get_response.json()
-                deleted_return = next((r for r in returns if r.get('id') == return_id), None)
-                
-                if deleted_return:
-                    self.log_result("Delete Return", False, 
-                                  "Return still exists after deletion")
-                    return False
-            
-            self.log_result("Delete Return", True, 
-                          f"Successfully deleted return {return_id}")
-            return True
-            
-        except Exception as e:
-            self.log_result("Delete Return", False, f"Exception occurred: {str(e)}")
-            return False
-
-    def test_validation_already_processed(self, return_id):
-        """Test validation: Try processing an already-processed return"""
-        try:
-            response = requests.put(
-                f"{self.base_url}/returns/{return_id}/process?action=accept",
-                headers=self.get_headers()
-            )
-            
-            # Should fail with 400 status
-            if response.status_code != 400:
-                self.log_result("Validation - Already Processed", False, 
-                              f"Expected 400 status, got {response.status_code}", 
-                              response.text)
-                return False
-            
-            result = response.json()
-            
-            # Check error message
-            if "already been processed" not in result.get('detail', ''):
-                self.log_result("Validation - Already Processed", False, 
-                              f"Unexpected error message: {result.get('detail')}")
-                return False
-            
-            self.log_result("Validation - Already Processed", True, 
-                          "Correctly prevented processing already-processed return")
-            return True
-            
-        except Exception as e:
-            self.log_result("Validation - Already Processed", False, f"Exception occurred: {str(e)}")
-            return False
-
-    def test_validation_invalid_action(self):
-        """Test validation: Try invalid action parameter"""
-        try:
-            # Create a test return first
-            return_data = {
-                "source_type": "dispatch",
-                "source_id": "test-validation-123",
-                "return_date": "2025-12-20T00:00:00Z",
-                "quantity": 5,
-                "reason": "Test validation",
-                "notes": "For validation testing"
-            }
-            
-            create_response = requests.post(
-                f"{self.base_url}/returns",
-                json=return_data,
-                headers=self.get_headers()
-            )
-            
-            if create_response.status_code != 200:
-                self.log_result("Validation - Invalid Action", False, 
-                              "Failed to create test return for validation")
-                return False
-            
-            return_id = create_response.json()['id']
-            self.created_resources.append(('return', return_id))
-            
-            # Try invalid action
-            response = requests.put(
-                f"{self.base_url}/returns/{return_id}/process?action=invalid",
-                headers=self.get_headers()
-            )
-            
-            # Should fail with 400 status
-            if response.status_code != 400:
-                self.log_result("Validation - Invalid Action", False, 
-                              f"Expected 400 status, got {response.status_code}", 
-                              response.text)
-                return False
-            
-            result = response.json()
-            
-            # Check error message
-            if "accept" not in result.get('detail', '') or "reject" not in result.get('detail', ''):
-                self.log_result("Validation - Invalid Action", False, 
-                              f"Unexpected error message: {result.get('detail')}")
-                return False
-            
-            self.log_result("Validation - Invalid Action", True, 
-                          "Correctly rejected invalid action parameter")
-            return True
-            
-        except Exception as e:
-            self.log_result("Validation - Invalid Action", False, f"Exception occurred: {str(e)}")
-            return False
-
     def test_authentication_required(self):
-        """Test that all endpoints require authentication"""
+        """Test that all Quick Action endpoints require authentication"""
         try:
             # Test without auth headers
             endpoints_to_test = [
-                ("POST", "/returns", {"source_type": "dispatch", "source_id": "test", "return_date": "2025-12-20T00:00:00Z", "quantity": 1, "reason": "test"}),
-                ("GET", "/returns", None),
+                ("POST", "/scan/send-outsourcing", {"lot_number": "test", "unit_name": "test", "operation_type": "test", "rate_per_pcs": 1.0}),
+                ("POST", "/scan/receive-outsourcing", {"lot_number": "test", "received_distribution": {"S": 1}, "mistake_distribution": {}}),
+                ("POST", "/scan/create-ironing", {"lot_number": "test", "unit_name": "test", "master_pack_ratio": {"S": 1}, "rate_per_pcs": 1.0}),
+                ("POST", "/scan/receive-ironing", {"lot_number": "test", "received_distribution": {"S": 1}, "mistake_distribution": {}}),
             ]
             
             all_passed = True
             
             for method, endpoint, data in endpoints_to_test:
-                if method == "POST":
-                    response = requests.post(f"{self.base_url}{endpoint}", json=data)
-                else:
-                    response = requests.get(f"{self.base_url}{endpoint}")
+                response = requests.post(f"{self.base_url}{endpoint}", json=data)
                 
                 # Accept both 401 (Unauthorized) and 403 (Forbidden) as valid auth errors
                 if response.status_code not in [401, 403]:
@@ -522,7 +351,7 @@ class QuickActionTester:
             
             if all_passed:
                 self.log_result("Authentication Required", True, 
-                              "All endpoints correctly require authentication")
+                              "All Quick Action endpoints correctly require authentication")
             
             return all_passed
             
@@ -531,8 +360,8 @@ class QuickActionTester:
             return False
 
     def run_comprehensive_tests(self):
-        """Run all returns management tests"""
-        print("🧪 Starting Returns Management Feature Tests")
+        """Run all Quick Action endpoint tests"""
+        print("🧪 Starting Quick Action Endpoints Tests")
         print("=" * 60)
         
         # Test 1: Login
@@ -543,46 +372,28 @@ class QuickActionTester:
         # Test 2: Authentication required
         self.test_authentication_required()
         
-        # Test 3: Create first return
-        success, return_id_1 = self.test_create_return()
+        # Test 3: Send to outsourcing
+        success, dc_number = self.test_send_outsourcing()
         if not success:
-            print("❌ Cannot proceed without creating return")
+            print("❌ Send to outsourcing test failed")
             return False
         
-        # Test 4: Get all returns
-        success, test_return = self.test_get_returns()
+        # Test 4: Receive from outsourcing
+        success, lot_number = self.test_receive_outsourcing()
         if not success:
-            print("❌ Cannot proceed without getting returns")
+            print("❌ Receive from outsourcing test failed")
             return False
         
-        # Test 5: Accept the first return
-        success = self.test_accept_return(return_id_1)
+        # Test 5: Create ironing order
+        success, ironing_dc = self.test_create_ironing(lot_number)
         if not success:
-            print("❌ Accept return test failed")
+            print("❌ Create ironing order test failed")
             return False
         
-        # Test 6: Create second return for reject testing
-        success, return_id_2 = self.test_create_second_return()
+        # Test 6: Receive from ironing (auto-creates stock)
+        success, stock_code = self.test_receive_ironing()
         if not success:
-            print("❌ Cannot create second return")
-            return False
-        
-        # Test 7: Reject the second return
-        success = self.test_reject_return(return_id_2)
-        if not success:
-            print("❌ Reject return test failed")
-            return False
-        
-        # Test 8: Validation - try to process already processed return
-        self.test_validation_already_processed(return_id_1)
-        
-        # Test 9: Validation - invalid action parameter
-        self.test_validation_invalid_action()
-        
-        # Test 10: Delete return (admin only)
-        success = self.test_delete_return(return_id_2)
-        if not success:
-            print("❌ Delete return test failed")
+            print("❌ Receive from ironing test failed")
             return False
         
         # Summary
