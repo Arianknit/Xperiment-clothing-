@@ -185,6 +185,29 @@ function App() {
     notes: ""
   });
   
+  // Unified Scanner State
+  const [unifiedScannerOpen, setUnifiedScannerOpen] = useState(false);
+  const [scannedLot, setScannedLot] = useState(null);
+  const [lotQRDialogOpen, setLotQRDialogOpen] = useState(false);
+  const [selectedLotForQR, setSelectedLotForQR] = useState(null);
+  
+  // Scan Action Forms
+  const [scanSendOutsourcingForm, setScanSendOutsourcingForm] = useState({
+    unit_name: "",
+    operation_type: "Printing",
+    rate_per_pcs: 0
+  });
+  const [scanReceiveForm, setScanReceiveForm] = useState({
+    received_distribution: {},
+    mistake_distribution: {}
+  });
+  const [scanIroningForm, setScanIroningForm] = useState({
+    unit_name: "",
+    rate_per_pcs: 0,
+    master_pack_ratio: { M: 2, L: 2, XL: 2, XXL: 2 }
+  });
+  const [scanActionDialog, setScanActionDialog] = useState(null); // 'send', 'receive', 'ironing'
+  
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
     cutting_master_name: "",
