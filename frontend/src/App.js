@@ -3542,17 +3542,17 @@ _Arian Knit Fab_`;
                                 <input
                                   type="checkbox"
                                   id={`return-roll-${index}`}
-                                  checked={returnForm.returned_rolls.includes(roll)}
+                                  checked={fabricReturnForm.returned_rolls.includes(roll)}
                                   onChange={(e) => {
                                     if (e.target.checked) {
-                                      setReturnForm({
-                                        ...returnForm,
-                                        returned_rolls: [...returnForm.returned_rolls, roll]
+                                      setFabricReturnForm({
+                                        ...fabricReturnForm,
+                                        returned_rolls: [...fabricReturnForm.returned_rolls, roll]
                                       });
                                     } else {
-                                      setReturnForm({
-                                        ...returnForm,
-                                        returned_rolls: returnForm.returned_rolls.filter(r => r !== roll)
+                                      setFabricReturnForm({
+                                        ...fabricReturnForm,
+                                        returned_rolls: fabricReturnForm.returned_rolls.filter(r => r !== roll)
                                       });
                                     }
                                   }}
@@ -3571,7 +3571,7 @@ _Arian Knit Fab_`;
                               </div>
                             ))}
                           </div>
-                          <p className="text-xs text-slate-500">{returnForm.returned_rolls.length} roll(s) selected</p>
+                          <p className="text-xs text-slate-500">{fabricReturnForm.returned_rolls.length} roll(s) selected</p>
                         </div>
                       )}
 
@@ -3582,8 +3582,8 @@ _Arian Knit Fab_`;
                           id="return-quantity"
                           type="number"
                           step="0.01"
-                          value={returnForm.quantity_returned}
-                          onChange={(e) => setReturnForm({...returnForm, quantity_returned: e.target.value})}
+                          value={fabricReturnForm.quantity_returned}
+                          onChange={(e) => setFabricReturnForm({...fabricReturnForm, quantity_returned: e.target.value})}
                           placeholder="Enter kg"
                           required
                         />
@@ -3593,8 +3593,8 @@ _Arian Knit Fab_`;
                       <div className="space-y-2">
                         <Label htmlFor="return-reason">Reason for Return *</Label>
                         <Select 
-                          value={returnForm.reason} 
-                          onValueChange={(value) => setReturnForm({...returnForm, reason: value})}
+                          value={fabricReturnForm.reason} 
+                          onValueChange={(value) => setFabricReturnForm({...fabricReturnForm, reason: value})}
                         >
                           <SelectTrigger id="return-reason">
                             <SelectValue />
@@ -3616,21 +3616,21 @@ _Arian Knit Fab_`;
                         <Label htmlFor="return-comments">Additional Comments</Label>
                         <textarea
                           id="return-comments"
-                          value={returnForm.comments}
-                          onChange={(e) => setReturnForm({...returnForm, comments: e.target.value})}
+                          value={fabricReturnForm.comments}
+                          onChange={(e) => setFabricReturnForm({...fabricReturnForm, comments: e.target.value})}
                           placeholder="Enter additional details about the return..."
                           className="w-full min-h-[80px] p-2 border rounded-md"
                         />
                       </div>
 
                       {/* Summary */}
-                      {returnForm.quantity_returned && (
+                      {fabricReturnForm.quantity_returned && (
                         <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                           <h4 className="font-semibold text-red-900 mb-2">Return Summary:</h4>
                           <ul className="text-sm text-red-800 space-y-1">
-                            <li>• Returning: <strong>{returnForm.quantity_returned} kg</strong></li>
-                            <li>• Rolls: <strong>{returnForm.returned_rolls.length > 0 ? returnForm.returned_rolls.join(', ') : 'None selected'}</strong></li>
-                            <li>• New remaining quantity: <strong>{(selectedLotForReturn.remaining_quantity - parseFloat(returnForm.quantity_returned || 0)).toFixed(2)} kg</strong></li>
+                            <li>• Returning: <strong>{fabricReturnForm.quantity_returned} kg</strong></li>
+                            <li>• Rolls: <strong>{fabricReturnForm.returned_rolls.length > 0 ? fabricReturnForm.returned_rolls.join(', ') : 'None selected'}</strong></li>
+                            <li>• New remaining quantity: <strong>{(selectedLotForReturn.remaining_quantity - parseFloat(fabricReturnForm.quantity_returned || 0)).toFixed(2)} kg</strong></li>
                           </ul>
                         </div>
                       )}
@@ -3648,7 +3648,7 @@ _Arian Knit Fab_`;
                         </Button>
                         <Button 
                           onClick={handleReturnFabricSubmit}
-                          disabled={loading || !returnForm.quantity_returned || returnForm.returned_rolls.length === 0}
+                          disabled={loading || !fabricReturnForm.quantity_returned || fabricReturnForm.returned_rolls.length === 0}
                           className="bg-red-600 hover:bg-red-700"
                         >
                           {loading ? "Processing..." : "Confirm Return"}
