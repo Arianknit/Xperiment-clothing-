@@ -4813,6 +4813,131 @@ async def print_bulk_dispatch(dispatch_id: str):
     return HTMLResponse(content=html)
 
 
+@api_router.get("/stock/labels/print")
+async def print_stock_labels(stock_ids: str = ""):
+    """Generate printable labels for stock items"""
+    ids = stock_ids.split(",") if stock_ids else []
+    
+    if ids:
+        stocks = await db.stock.find({"id": {"$in": ids}}, {"_id": 0}).to_list(100)
+    else:
+        # Get all active stock items
+        stocks = await db.stock.find({"available_quantity": {"$gt": 0}}, {"_id": 0}).to_list(100)
+    
+    labels_html = ""
+    for stock in stocks:
+        sizes = ", ".join([f"{k}:{v}" for k, v in stock.get('size_distribution', {}).items() if v > 0])
+        labels_html += f"""
+        <div class="label">
+            <div class="label-header">{stock.get('stock_code', '')}</div>
+            <div class="label-lot">{stock.get('lot_number', '')}</div>
+            <div class="label-info">
+                <span>{stock.get('category', '')} | {stock.get('style_type', '')}</span>
+                <span class="color">{stock.get('color', '')}</span>
+            </div>
+            <div class="label-qty">
+                <span class="big">{stock.get('available_quantity', 0)}</span>
+                <span>pcs</span>
+            </div>
+            <div class="label-sizes">{sizes}</div>
+            <div class="label-packs">
+                Packs: {stock.get('complete_packs', 0)} | Loose: {stock.get('loose_pieces', 0)}
+            </div>
+            <div class="label-barcode">
+                <img src="/api/stock/{stock.get('id')}/qr" alt="QR" style="width:60px;height:60px;" />
+            </div>
+        </div>
+        """
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Stock Labels - Arian Knit Fab</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 10px; }}
+            .labels-container {{ display: flex; flex-wrap: wrap; gap: 10px; }}
+            .label {{
+                width: 280px;
+                height: 180px;
+                border: 2px solid #333;
+                border-radius: 8px;
+                padding: 10px;
+                position: relative;
+                page-break-inside: avoid;
+            }}
+            .label-header {{
+                font-size: 18px;
+                font-weight: bold;
+                color: #4F46E5;
+                border-bottom: 2px solid #4F46E5;
+                padding-bottom: 5px;
+                margin-bottom: 5px;
+            }}
+            .label-lot {{
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+            }}
+            .label-info {{
+                font-size: 11px;
+                color: #666;
+                display: flex;
+                justify-content: space-between;
+                margin: 5px 0;
+            }}
+            .label-info .color {{
+                background: #8B5CF6;
+                color: white;
+                padding: 1px 6px;
+                border-radius: 4px;
+                font-size: 10px;
+            }}
+            .label-qty {{
+                font-size: 12px;
+                margin: 5px 0;
+            }}
+            .label-qty .big {{
+                font-size: 24px;
+                font-weight: bold;
+                color: #059669;
+            }}
+            .label-sizes {{
+                font-size: 10px;
+                color: #666;
+                margin: 5px 0;
+            }}
+            .label-packs {{
+                font-size: 10px;
+                color: #666;
+            }}
+            .label-barcode {{
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+            }}
+            @media print {{
+                .no-print {{ display: none; }}
+                .label {{ margin: 5px; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="no-print" style="margin-bottom:20px;">
+            <button onclick="window.print()" style="padding:10px 20px;background:#4F46E5;color:white;border:none;border-radius:4px;cursor:pointer;">
+                🖨️ Print Labels
+            </button>
+            <span style="margin-left:10px;color:#666;">{len(stocks)} labels</span>
+        </div>
+        <div class="labels-container">
+            {labels_html}
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
 # Catalog Routes
 @api_router.post("/catalogs", response_model=Catalog)
 async def create_catalog(catalog: CatalogCreate):
