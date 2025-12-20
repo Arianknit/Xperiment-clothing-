@@ -1245,7 +1245,9 @@ function App() {
         receipt_id: "",
         unit_name: "",
         rate_per_pcs: "",
-        master_pack_ratio: {}
+        master_pack_ratio: {},
+        stock_lot_name: "",
+        stock_color: ""
       });
       fetchIroningOrders();
       fetchOutsourcingReceipts();
