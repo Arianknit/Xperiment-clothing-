@@ -647,11 +647,11 @@ function App() {
             (decodedText) => {
               // Stop scanner and process result
               scanner.clear().then(() => {
-                setUnifiedScannerOpen(false);
+                // Don't close dialog - just process the scan
+                // The scannedLot being set will switch the dialog content automatically
                 handleLotQRScan(decodedText);
               }).catch(err => {
                 console.log("Clear error:", err);
-                setUnifiedScannerOpen(false);
                 handleLotQRScan(decodedText);
               });
             },
