@@ -6263,9 +6263,60 @@ _Arian Knit Fab_`;
                       {/* Scanner */}
                       <div>
                         <div id="qr-reader-dispatch" className="w-full max-w-md mx-auto rounded-lg overflow-hidden"></div>
-                        <p className="text-sm text-amber-200 mt-3 text-center">
-                          Scan stock QR codes continuously. Click "Done" when finished.
-                        </p>
+                        
+                        {/* Always show file upload option */}
+                        <div className="mt-4 text-center">
+                          <input 
+                            type="file" 
+                            id="dispatch-qr-file-upload" 
+                            accept="image/*" 
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  const html5QrCode = new Html5Qrcode("temp-qr-reader");
+                                  const result = await html5QrCode.scanFile(file, true);
+                                  
+                                  // Parse QR code
+                                  let stockCode = result;
+                                  try {
+                                    const data = JSON.parse(result);
+                                    if (data.type === 'stock' && data.code) {
+                                      stockCode = data.code;
+                                    }
+                                  } catch (err) {}
+                                  
+                                  // Find and add stock
+                                  const stock = stocks.find(s => s.stock_code === stockCode);
+                                  if (stock) {
+                                    if (stock.available_quantity > 0) {
+                                      addItemToDispatch(stock);
+                                      toast.success(`Added ${stock.stock_code}! Scan next or click Done.`);
+                                    } else {
+                                      toast.error(`${stock.stock_code} has no available quantity`);
+                                    }
+                                  } else {
+                                    toast.error(`Stock not found: ${stockCode}`);
+                                  }
+                                } catch (err) {
+                                  toast.error("Could not read QR code from image");
+                                }
+                                e.target.value = ''; // Reset for next scan
+                              }
+                            }}
+                          />
+                          <Button 
+                            variant="outline"
+                            className="bg-amber-600 hover:bg-amber-700 text-white border-amber-500"
+                            onClick={() => document.getElementById('dispatch-qr-file-upload')?.click()}
+                          >
+                            📁 Upload QR Code Image
+                          </Button>
+                          <p className="text-sm text-amber-200 mt-2">
+                            Use camera above or upload image files
+                          </p>
+                        </div>
                       </div>
                       
                       {/* Scanned Items List */}
