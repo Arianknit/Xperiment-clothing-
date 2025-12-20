@@ -130,28 +130,14 @@ class QuickActionTester:
     def test_receive_outsourcing(self):
         """Test POST /api/scan/receive-outsourcing - Receive lot from outsourcing"""
         try:
-            # First, find a pending outsourcing order
-            orders_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
-            if orders_response.status_code != 200:
-                self.log_result("Receive from Outsourcing", False, 
-                              "Failed to get outsourcing orders")
-                return False, None
+            # Use the lot we just sent to outsourcing (cut 006)
+            lot_number = "cut 006"
             
-            orders = orders_response.json()
-            pending_order = next((order for order in orders if order.get('status') != 'Received'), None)
-            
-            if not pending_order:
-                self.log_result("Receive from Outsourcing", False, 
-                              "No pending outsourcing orders found for testing")
-                return False, None
-            
-            lot_number = pending_order.get('cutting_lot_number')
-            
-            # Test data for receiving
+            # Test data for receiving - using appropriate sizes for cut 006
             receive_data = {
                 "lot_number": lot_number,
-                "received_distribution": {"S": 10, "M": 10, "L": 10},
-                "mistake_distribution": {"S": 0, "M": 0, "L": 0}
+                "received_distribution": {"2/3": 10, "3/4": 10, "9/10": 10},
+                "mistake_distribution": {"2/3": 0, "3/4": 0, "9/10": 0}
             }
             
             response = requests.post(
@@ -178,7 +164,12 @@ class QuickActionTester:
             receipts_response = requests.get(f"{self.base_url}/outsourcing-receipts", headers=self.get_headers())
             if receipts_response.status_code == 200:
                 receipts = receipts_response.json()
-                matching_receipt = next((receipt for receipt in receipts if receipt.get('dc_number') == pending_order.get('dc_number')), None)
+                # Find receipt for cut 006
+                matching_receipt = None
+                for receipt in receipts:
+                    if receipt.get('cutting_lot_number') == 'cut 006':
+                        matching_receipt = receipt
+                        break
                 
                 if matching_receipt:
                     self.created_resources.append(('outsourcing_receipt', matching_receipt.get('id')))
