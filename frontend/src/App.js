@@ -208,6 +208,7 @@ function App() {
   const [scanNewLotDialogOpen, setScanNewLotDialogOpen] = useState(false);
   const [stockQRDialogOpen, setStockQRDialogOpen] = useState(false);
   const [selectedStockForQR, setSelectedStockForQR] = useState(null);
+  const [lastScannedCode, setLastScannedCode] = useState(null); // Prevent duplicate scans
   const [scanDispatchForm, setScanDispatchForm] = useState({
     customer_name: "",
     bora_number: "",
