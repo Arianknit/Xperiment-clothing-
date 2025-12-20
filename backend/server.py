@@ -3612,6 +3612,265 @@ async def upload_catalog_image(file: UploadFile = File(...)):
     return {"image_url": image_url, "filename": unique_filename}
 
 
+# Stock Routes
+@api_router.get("/stock", response_model=List[Stock])
+async def get_all_stock():
+    """Get all stock entries with calculated master packs"""
+    stocks = await db.stock.find({"is_active": True}, {"_id": 0}).to_list(1000)
+    
+    # Calculate master packs for each stock
+    for stock in stocks:
+        if stock.get('master_pack_ratio') and stock.get('size_distribution'):
+            packs, loose, loose_dist = calculate_master_packs(
+                stock['size_distribution'], 
+                stock['master_pack_ratio']
+            )
+            stock['complete_packs'] = packs
+            stock['loose_pieces'] = loose
+            stock['loose_distribution'] = loose_dist
+    
+    return stocks
+
+
+@api_router.post("/stock", response_model=Stock)
+async def create_stock(stock: StockCreate, username: str = None):
+    """Add historical stock entry"""
+    # Generate unique stock code
+    count = await db.stock.count_documents({})
+    stock_code = f"STK-{str(count + 1).zfill(4)}"
+    
+    total_qty = sum(stock.size_distribution.values())
+    
+    stock_dict = {
+        "id": str(uuid.uuid4()),
+        "stock_code": stock_code,
+        "lot_number": stock.lot_number,
+        "source": "historical",
+        "category": stock.category,
+        "style_type": stock.style_type,
+        "color": stock.color or "",
+        "size_distribution": stock.size_distribution,
+        "total_quantity": total_qty,
+        "available_quantity": total_qty,
+        "master_pack_ratio": stock.master_pack_ratio or {},
+        "notes": stock.notes,
+        "is_active": True,
+        "created_by": username,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": None
+    }
+    
+    await db.stock.insert_one(stock_dict)
+    return stock_dict
+
+
+@api_router.get("/stock/{stock_id}")
+async def get_stock(stock_id: str):
+    """Get single stock entry"""
+    stock = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Calculate master packs
+    if stock.get('master_pack_ratio') and stock.get('size_distribution'):
+        packs, loose, loose_dist = calculate_master_packs(
+            stock['size_distribution'], 
+            stock['master_pack_ratio']
+        )
+        stock['complete_packs'] = packs
+        stock['loose_pieces'] = loose
+        stock['loose_distribution'] = loose_dist
+    
+    return stock
+
+
+@api_router.put("/stock/{stock_id}")
+async def update_stock(stock_id: str, stock_update: StockCreate):
+    """Update stock entry"""
+    existing = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    total_qty = sum(stock_update.size_distribution.values())
+    
+    update_data = {
+        "lot_number": stock_update.lot_number,
+        "category": stock_update.category,
+        "style_type": stock_update.style_type,
+        "color": stock_update.color or "",
+        "size_distribution": stock_update.size_distribution,
+        "total_quantity": total_qty,
+        "available_quantity": total_qty,
+        "master_pack_ratio": stock_update.master_pack_ratio or {},
+        "notes": stock_update.notes,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stock.update_one({"id": stock_id}, {"$set": update_data})
+    return {"message": "Stock updated successfully"}
+
+
+@api_router.delete("/stock/{stock_id}")
+async def delete_stock(stock_id: str):
+    """Delete (deactivate) stock entry"""
+    result = await db.stock.update_one(
+        {"id": stock_id},
+        {"$set": {"is_active": False}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    return {"message": "Stock deleted successfully"}
+
+
+@api_router.post("/stock/{stock_id}/dispatch")
+async def dispatch_from_stock(stock_id: str, dispatch: StockDispatch):
+    """Dispatch from stock using master packs and loose pieces"""
+    stock = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Get master pack ratio
+    master_pack_ratio = stock.get('master_pack_ratio', {})
+    size_distribution = stock.get('size_distribution', {})
+    
+    # If no ratio, create default (1 of each size)
+    if not master_pack_ratio:
+        master_pack_ratio = {size: 1 for size in size_distribution.keys()}
+    
+    # Calculate dispatch quantities
+    dispatch_quantity = {}
+    for size in size_distribution.keys():
+        pack_qty = dispatch.master_packs * master_pack_ratio.get(size, 0)
+        loose_qty = dispatch.loose_pcs.get(size, 0)
+        dispatch_quantity[size] = pack_qty + loose_qty
+    
+    total_dispatch = sum(dispatch_quantity.values())
+    
+    if total_dispatch > stock.get('available_quantity', 0):
+        raise HTTPException(status_code=400, detail="Insufficient stock for dispatch")
+    
+    # Validate per-size availability
+    for size, qty in dispatch_quantity.items():
+        available = size_distribution.get(size, 0)
+        if qty > available:
+            raise HTTPException(status_code=400, detail=f"Insufficient stock for size {size}")
+    
+    # Update stock
+    new_size_dist = size_distribution.copy()
+    for size, qty in dispatch_quantity.items():
+        if size in new_size_dist:
+            new_size_dist[size] = max(0, new_size_dist[size] - qty)
+    
+    new_available = stock.get('available_quantity', 0) - total_dispatch
+    
+    await db.stock.update_one(
+        {"id": stock_id},
+        {"$set": {
+            "size_distribution": new_size_dist,
+            "available_quantity": new_available,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Record dispatch
+    dispatch_record = {
+        "id": str(uuid.uuid4()),
+        "stock_id": stock_id,
+        "stock_code": stock.get('stock_code'),
+        "lot_number": stock.get('lot_number'),
+        "master_packs": dispatch.master_packs,
+        "loose_pcs": dispatch.loose_pcs,
+        "dispatch_quantity": dispatch_quantity,
+        "total_dispatched": total_dispatch,
+        "customer_name": dispatch.customer_name,
+        "bora_number": dispatch.bora_number,
+        "dispatch_date": datetime.now(timezone.utc).isoformat(),
+        "notes": dispatch.notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.stock_dispatches.insert_one(dispatch_record)
+    
+    return {"message": "Dispatch recorded successfully", "dispatched": total_dispatch, "remaining": new_available}
+
+
+@api_router.post("/stock/{stock_id}/create-catalog")
+async def create_catalog_from_stock(stock_id: str, catalog_name: str, catalog_code: str, description: str = None):
+    """Create a catalog from stock entry"""
+    stock = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    catalog_dict = {
+        "id": str(uuid.uuid4()),
+        "catalog_name": catalog_name,
+        "catalog_code": catalog_code,
+        "description": description,
+        "color": stock.get('color', ''),
+        "image_url": None,
+        "lot_numbers": [stock.get('lot_number')],
+        "total_quantity": stock.get('available_quantity'),
+        "available_stock": stock.get('available_quantity'),
+        "size_distribution": stock.get('size_distribution', {}),
+        "master_pack_ratio": stock.get('master_pack_ratio', {}),
+        "source_stock_id": stock_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.catalogs.insert_one(catalog_dict)
+    
+    # Mark stock as used in catalog
+    await db.stock.update_one(
+        {"id": stock_id},
+        {"$set": {"used_in_catalog": catalog_name, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Catalog created successfully", "catalog_id": catalog_dict['id']}
+
+
+@api_router.get("/stock/report/summary")
+async def get_stock_summary():
+    """Get stock summary report"""
+    stocks = await db.stock.find({"is_active": True}, {"_id": 0}).to_list(1000)
+    
+    total_stock = 0
+    total_packs = 0
+    total_loose = 0
+    by_category = {}
+    by_style = {}
+    
+    for stock in stocks:
+        qty = stock.get('available_quantity', 0)
+        total_stock += qty
+        
+        # Calculate packs
+        if stock.get('master_pack_ratio'):
+            packs, loose, _ = calculate_master_packs(
+                stock.get('size_distribution', {}),
+                stock.get('master_pack_ratio', {})
+            )
+            total_packs += packs
+            total_loose += loose
+        else:
+            total_loose += qty
+        
+        # Group by category
+        cat = stock.get('category', 'Unknown')
+        by_category[cat] = by_category.get(cat, 0) + qty
+        
+        # Group by style
+        style = stock.get('style_type', 'Unknown')
+        by_style[style] = by_style.get(style, 0) + qty
+    
+    return {
+        "total_stock": total_stock,
+        "total_packs": total_packs,
+        "total_loose": total_loose,
+        "by_category": by_category,
+        "by_style": by_style,
+        "stock_count": len(stocks)
+    }
+
+
 # Catalog Routes
 @api_router.post("/catalogs", response_model=Catalog)
 async def create_catalog(catalog: CatalogCreate):
