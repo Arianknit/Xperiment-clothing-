@@ -1921,30 +1921,32 @@ function App() {
 
   // Bulk Dispatch Handlers
   const addItemToDispatch = (stock) => {
-    // Check if already added
-    if (selectedStocksForDispatch.find(s => s.stock_id === stock.id)) {
-      toast.error("Item already added to dispatch");
-      return;
-    }
-    
-    const newItem = {
-      stock_id: stock.id,
-      stock_code: stock.stock_code,
-      lot_number: stock.lot_number,
-      category: stock.category,
-      style_type: stock.style_type,
-      color: stock.color,
-      available_quantity: stock.available_quantity,
-      master_pack_ratio: stock.master_pack_ratio || {},
-      master_packs: 0,
-      loose_pcs: {}
-    };
-    setSelectedStocksForDispatch([...selectedStocksForDispatch, newItem]);
-    toast.success(`Added ${stock.stock_code} to dispatch`);
+    setSelectedStocksForDispatch(prevItems => {
+      // Check if already added
+      if (prevItems.find(s => s.stock_id === stock.id)) {
+        toast.error("Item already added to dispatch");
+        return prevItems;
+      }
+      
+      const newItem = {
+        stock_id: stock.id,
+        stock_code: stock.stock_code,
+        lot_number: stock.lot_number,
+        category: stock.category,
+        style_type: stock.style_type,
+        color: stock.color,
+        available_quantity: stock.available_quantity,
+        master_pack_ratio: stock.master_pack_ratio || {},
+        master_packs: 0,
+        loose_pcs: {}
+      };
+      toast.success(`Added ${stock.stock_code} to dispatch`);
+      return [...prevItems, newItem];
+    });
   };
 
   const removeItemFromDispatch = (stockId) => {
-    setSelectedStocksForDispatch(selectedStocksForDispatch.filter(s => s.stock_id !== stockId));
+    setSelectedStocksForDispatch(prevItems => prevItems.filter(s => s.stock_id !== stockId));
   };
 
   const updateDispatchItem = (stockId, field, value) => {
