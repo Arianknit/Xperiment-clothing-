@@ -673,6 +673,66 @@ function App() {
     };
   }, [unifiedScannerOpen]);
 
+  // Mobile Barcode Scanner (bottom nav)
+  useEffect(() => {
+    let scanner = null;
+    let timeoutId = null;
+    
+    if (scannerDialogOpen) {
+      timeoutId = setTimeout(() => {
+        const element = document.getElementById('barcode-scanner');
+        if (element) {
+          element.innerHTML = '';
+          
+          // iOS-optimized configuration
+          const config = {
+            fps: 10,
+            qrbox: { width: 200, height: 200 },
+            aspectRatio: 1.0,
+            supportedScanTypes: [
+              Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+              Html5QrcodeScanType.SCAN_TYPE_FILE
+            ],
+            rememberLastUsedCamera: true,
+            useBarCodeDetectorIfSupported: false,
+            videoConstraints: {
+              facingMode: "environment",
+              width: { min: 640, ideal: 1280, max: 1920 },
+              height: { min: 480, ideal: 720, max: 1080 }
+            }
+          };
+          
+          scanner = new Html5QrcodeScanner('barcode-scanner', config, false);
+          
+          scanner.render(
+            (decodedText) => {
+              scanner.clear().then(() => {
+                setScannerDialogOpen(false);
+                // Handle scanned barcode - try to find matching lot
+                handleLotQRScan(decodedText);
+              }).catch(err => {
+                setScannerDialogOpen(false);
+                handleLotQRScan(decodedText);
+              });
+            },
+            (errorMessage) => {
+              // Ignore scan errors
+            }
+          );
+        }
+      }, 300);
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (scanner) {
+        scanner.clear().catch(() => {});
+      }
+    };
+  }, [scannerDialogOpen]);
+
   // Mobile detection and PWA install prompt
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
