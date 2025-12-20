@@ -1356,7 +1356,12 @@ async def scan_send_outsourcing(data: dict):
     outsourcing_dict = {
         "id": str(uuid.uuid4()),
         "dc_number": dc_number,
+        "dc_date": datetime.now(timezone.utc).isoformat(),
+        "cutting_order_id": order.get('id', ''),
         "cutting_lot_number": lot_num,
+        "lot_number": lot_num,
+        "category": order.get('category', ''),
+        "style_type": order.get('style_type', ''),
         "unit_name": unit_name,
         "operation_type": operation_type,
         "size_distribution": order.get('bundle_distribution', {}),
