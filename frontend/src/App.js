@@ -97,6 +97,16 @@ function App() {
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedStockIds, setSelectedStockIds] = useState([]);
   
+  // Phase 3 State
+  const [lotTrackingDialogOpen, setLotTrackingDialogOpen] = useState(false);
+  const [trackingLotNumber, setTrackingLotNumber] = useState("");
+  const [lotJourney, setLotJourney] = useState(null);
+  const [returns, setReturns] = useState([]);
+  const [qualityChecks, setQualityChecks] = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [appSettings, setAppSettings] = useState(null);
+  
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
   const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
   const [scaleReadings, setScaleReadings] = useState([]);
