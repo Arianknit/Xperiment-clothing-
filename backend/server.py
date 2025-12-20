@@ -2620,7 +2620,7 @@ async def create_ironing_receipt(receipt: IroningReceiptCreate):
         "stock_code": stock_code,
         "lot_number": cutting_lot_number,
         "source": "ironing",
-        "source_ironing_receipt_id": receipt_dict['id'],
+        "source_ironing_receipt_id": receipt_obj.id,  # Use receipt_obj.id instead of receipt_dict['id']
         "category": cutting_order.get('category', 'Mens') if cutting_order else 'Mens',
         "style_type": cutting_order.get('style_type', '') if cutting_order else '',
         "color": cutting_order.get('color', '') if cutting_order else '',
