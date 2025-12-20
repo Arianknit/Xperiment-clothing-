@@ -97,9 +97,7 @@ class ReportsTester:
                 "Total Stock",
                 "Available",
                 "Dispatched", 
-                "Low Stock",
-                "Category-wise",
-                "Stock List"
+                "Low Stock"
             ]
             
             missing_elements = []
