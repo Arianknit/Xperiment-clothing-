@@ -410,6 +410,7 @@ function App() {
       fetchStocks();
       fetchStockSummary();
       fetchOverdueOrders();
+      fetchBulkDispatches();
     }
   }, [isAuthenticated]);
 
