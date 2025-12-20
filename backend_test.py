@@ -152,15 +152,42 @@ class QuickActionTester:
     def test_receive_outsourcing(self):
         """Test POST /api/scan/receive-outsourcing - Receive lot from outsourcing"""
         try:
-            # Use the lot we just sent to outsourcing (cut 006)
-            lot_number = "cut 006"
+            # Find a pending outsourcing order with status "Sent"
+            orders_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
+            if orders_response.status_code != 200:
+                self.log_result("Receive from Outsourcing", False, 
+                              "Failed to get outsourcing orders")
+                return False, None
             
-            # Test data for receiving - using appropriate sizes for cut 006
+            orders = orders_response.json()
+            pending_order = None
+            
+            # Look for an order with status "Sent" (not "Received" or "Partial")
+            for order in orders:
+                if order.get('status') == 'Sent' and order.get('cutting_lot_number'):
+                    pending_order = order
+                    break
+            
+            if not pending_order:
+                self.log_result("Receive from Outsourcing", False, 
+                              "No pending outsourcing orders with status 'Sent' found for testing")
+                return False, None
+            
+            lot_number = pending_order.get('cutting_lot_number')
+            size_dist = pending_order.get('size_distribution', {})
+            
+            # Create receive data based on the sent sizes
             receive_data = {
                 "lot_number": lot_number,
-                "received_distribution": {"2/3": 10, "3/4": 10, "9/10": 10},
-                "mistake_distribution": {"2/3": 0, "3/4": 0, "9/10": 0}
+                "received_distribution": {},
+                "mistake_distribution": {}
             }
+            
+            # Use the first few sizes from the order
+            sizes_to_receive = list(size_dist.keys())[:3] if size_dist else ["S", "M", "L"]
+            for size in sizes_to_receive:
+                receive_data["received_distribution"][size] = 10
+                receive_data["mistake_distribution"][size] = 0
             
             response = requests.post(
                 f"{self.base_url}/scan/receive-outsourcing",
@@ -186,12 +213,8 @@ class QuickActionTester:
             receipts_response = requests.get(f"{self.base_url}/outsourcing-receipts", headers=self.get_headers())
             if receipts_response.status_code == 200:
                 receipts = receipts_response.json()
-                # Find receipt for cut 006
-                matching_receipt = None
-                for receipt in receipts:
-                    if receipt.get('cutting_lot_number') == 'cut 006':
-                        matching_receipt = receipt
-                        break
+                matching_receipt = next((receipt for receipt in receipts 
+                                       if receipt.get('dc_number') == pending_order.get('dc_number')), None)
                 
                 if matching_receipt:
                     self.created_resources.append(('outsourcing_receipt', matching_receipt.get('id')))
