@@ -9892,11 +9892,22 @@ _Arian Knit Fab_`;
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
+                    toast.info("Processing image...");
                     try {
                       const tempQr = new Html5Qrcode("temp-qr-reader");
                       const result = await tempQr.scanFile(file, true);
+                      console.log("File scan result:", result);
+                      toast.success("QR code found in image!");
                       setScannerDialogOpen(false);
                       handleLotQRScan(result);
+                    } catch (err) {
+                      console.error("File scan error:", err);
+                      toast.error("Could not find QR code in image. Try again with better lighting.");
+                    }
+                    e.target.value = '';
+                  }
+                }}
+              />
                     } catch (err) {
                       toast.error("Could not read barcode from image");
                     }
