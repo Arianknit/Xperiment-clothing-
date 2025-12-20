@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Garment Manufacturing App - Quick Action Endpoints
-Tests the Scan Lot feature Quick Action endpoints for outsourcing and ironing workflow
+Backend Testing Suite for Garment Manufacturing App - Stitching Before Ironing Business Rule
+Tests the "Stitching Before Ironing" business rule implementation
 """
 
 import requests
