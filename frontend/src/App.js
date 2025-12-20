@@ -8838,8 +8838,8 @@ _Arian Knit Fab_`;
               <Select value={scanSendOutsourcingForm.unit_name} onValueChange={(v) => setScanSendOutsourcingForm({...scanSendOutsourcingForm, unit_name: v})}>
                 <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                 <SelectContent>
-                  {outsourcingUnits.map((unit) => (
-                    <SelectItem key={unit.name} value={unit.name}>{unit.name}</SelectItem>
+                  {outsourcingUnits.filter(u => u.is_active).map((unit) => (
+                    <SelectItem key={unit.unit_name} value={unit.unit_name}>{unit.unit_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
