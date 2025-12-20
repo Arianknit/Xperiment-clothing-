@@ -1529,15 +1529,19 @@ async def scan_receive_ironing(
     stock_count = await db.stock.count_documents({})
     stock_code = f"STK-{str(stock_count + 1).zfill(4)}"
     
+    # Use custom stock_lot_name and stock_color from ironing order if provided
+    stock_lot_name = ironing_order.get('stock_lot_name', '') or lot_number
+    stock_color = ironing_order.get('stock_color', '') or ironing_order.get('color', '') or (cutting_order.get('color', '') if cutting_order else '')
+    
     stock_entry = {
         "id": str(uuid.uuid4()),
         "stock_code": stock_code,
-        "lot_number": lot_number,
+        "lot_number": stock_lot_name,  # Use custom lot name if provided
         "source": "ironing",
         "source_ironing_receipt_id": receipt_id,
-        "category": cutting_order.get('category', 'Mens') if cutting_order else 'Mens',
-        "style_type": cutting_order.get('style_type', '') if cutting_order else '',
-        "color": cutting_order.get('color', '') if cutting_order else '',
+        "category": ironing_order.get('category', '') or (cutting_order.get('category', 'Mens') if cutting_order else 'Mens'),
+        "style_type": ironing_order.get('style_type', '') or (cutting_order.get('style_type', '') if cutting_order else ''),
+        "color": stock_color,  # Use custom color if provided
         "size_distribution": received_distribution,
         "total_quantity": total_received,
         "available_quantity": total_received,
