@@ -8540,10 +8540,50 @@ _Arian Knit Fab_`;
           
           {!scannedLot ? (
             <div className="space-y-4">
+              {/* iOS PWA Warning */}
+              {window.navigator.standalone && (
+                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-800 text-sm">
+                  <p className="font-semibold">📱 iOS App Mode Detected</p>
+                  <p>Camera may not work in app mode. Use "Scan an Image File" option below, or open in Safari browser for camera access.</p>
+                </div>
+              )}
+              
               <div id="unified-qr-reader" className="rounded-lg overflow-hidden" style={{ minHeight: '300px' }}></div>
-              <p className="text-center text-slate-500 text-sm">
-                Use camera to scan or click "Scan an Image File" below the scanner
-              </p>
+              
+              {/* Manual file upload for iOS */}
+              <div className="text-center pt-2 border-t">
+                <input 
+                  type="file" 
+                  id="ios-qr-upload" 
+                  accept="image/*" 
+                  capture="environment"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      try {
+                        const tempQr = new Html5Qrcode("temp-qr-reader");
+                        const result = await tempQr.scanFile(file, true);
+                        setUnifiedScannerOpen(false);
+                        handleLotQRScan(result);
+                      } catch (err) {
+                        toast.error("Could not read QR code from image");
+                      }
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => document.getElementById('ios-qr-upload')?.click()}
+                >
+                  📁 Take Photo or Choose Image
+                </Button>
+                <p className="text-center text-slate-500 text-xs mt-2">
+                  If camera doesn't work, tap above to take a photo of the QR code
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
