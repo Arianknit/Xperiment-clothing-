@@ -2070,6 +2070,68 @@ function App() {
     }
   };
 
+  // Returns Management Handlers
+  const handleCreateReturn = async (e) => {
+    e.preventDefault();
+    if (!returnForm.source_id || !returnForm.quantity || !returnForm.reason) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/returns`, {
+        ...returnForm,
+        return_date: new Date(returnForm.return_date).toISOString(),
+        quantity: parseInt(returnForm.quantity)
+      });
+      toast.success("Return recorded successfully!");
+      setReturnDialogOpen(false);
+      setReturnForm({
+        source_type: 'dispatch',
+        source_id: '',
+        return_date: new Date().toISOString().split('T')[0],
+        quantity: '',
+        reason: '',
+        notes: ''
+      });
+      fetchReturns();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to record return");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProcessReturn = async (returnId, action) => {
+    const actionText = action === 'accept' ? 'Accept' : 'Reject';
+    if (!window.confirm(`${actionText} this return?`)) return;
+    
+    try {
+      await axios.put(`${API}/returns/${returnId}/process?action=${action}`);
+      toast.success(`Return ${action === 'accept' ? 'accepted' : 'rejected'}!`);
+      fetchReturns();
+      if (action === 'accept') {
+        fetchStocks();
+        fetchStockSummary();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to process return");
+    }
+  };
+
+  const handleDeleteReturn = async (returnId) => {
+    if (!window.confirm("Delete this return record?")) return;
+    
+    try {
+      await axios.delete(`${API}/returns/${returnId}`);
+      toast.success("Return deleted");
+      fetchReturns();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete return");
+    }
+  };
+
   // Unified Lot QR Scan Handler
   const handleLotQRScan = async (decodedText) => {
     try {
