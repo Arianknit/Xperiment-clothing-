@@ -4526,6 +4526,293 @@ async def create_stock_from_existing(source_stock_id: str, stock: StockCreate):
     return stock_dict
 
 
+# ==================== BULK DISPATCH ROUTES ====================
+
+def generate_dispatch_number():
+    """Generate a unique dispatch number"""
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    return f"DSP-{timestamp}"
+
+@api_router.post("/bulk-dispatches")
+async def create_bulk_dispatch(dispatch: BulkDispatchCreate):
+    """Create a bulk dispatch with multiple stock items"""
+    dispatch_dict = dispatch.model_dump()
+    
+    # Generate dispatch number
+    dispatch_dict['id'] = str(uuid.uuid4())
+    dispatch_dict['dispatch_number'] = generate_dispatch_number()
+    dispatch_dict['dispatch_date'] = dispatch_dict['dispatch_date'].isoformat() if isinstance(dispatch_dict['dispatch_date'], datetime) else dispatch_dict['dispatch_date']
+    
+    # Process each item
+    processed_items = []
+    grand_total = 0
+    
+    for item in dispatch_dict['items']:
+        stock_id = item['stock_id']
+        master_packs = item.get('master_packs', 0)
+        loose_pcs = item.get('loose_pcs', {})
+        
+        # Get stock details
+        stock = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+        if not stock:
+            raise HTTPException(status_code=404, detail=f"Stock {stock_id} not found")
+        
+        # Calculate dispatch quantities
+        master_pack_ratio = stock.get('master_pack_ratio', {})
+        dispatch_distribution = {}
+        total_from_packs = 0
+        
+        # Calculate from master packs
+        if master_packs > 0 and master_pack_ratio:
+            for size, ratio in master_pack_ratio.items():
+                qty = master_packs * ratio
+                dispatch_distribution[size] = dispatch_distribution.get(size, 0) + qty
+                total_from_packs += qty
+        
+        # Add loose pieces
+        total_loose = 0
+        for size, qty in loose_pcs.items():
+            if qty > 0:
+                dispatch_distribution[size] = dispatch_distribution.get(size, 0) + qty
+                total_loose += qty
+        
+        total_quantity = total_from_packs + total_loose
+        
+        if total_quantity == 0:
+            continue  # Skip items with 0 quantity
+        
+        # Verify stock availability
+        available = stock.get('available_quantity', 0)
+        if total_quantity > available:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient stock for {stock['stock_code']}. Available: {available}, Requested: {total_quantity}"
+            )
+        
+        # Update stock quantities
+        new_available = available - total_quantity
+        new_size_distribution = {}
+        for size, qty in stock.get('size_distribution', {}).items():
+            dispatched = dispatch_distribution.get(size, 0)
+            new_size_distribution[size] = max(0, qty - dispatched)
+        
+        await db.stock.update_one(
+            {"id": stock_id},
+            {"$set": {
+                "available_quantity": new_available,
+                "size_distribution": new_size_distribution,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Create processed item
+        processed_item = {
+            "stock_id": stock_id,
+            "stock_code": stock.get('stock_code', ''),
+            "lot_number": stock.get('lot_number', ''),
+            "category": stock.get('category', ''),
+            "style_type": stock.get('style_type', ''),
+            "color": stock.get('color', ''),
+            "master_packs": master_packs,
+            "loose_pcs": loose_pcs,
+            "master_pack_ratio": master_pack_ratio,
+            "size_distribution": dispatch_distribution,
+            "total_quantity": total_quantity
+        }
+        processed_items.append(processed_item)
+        grand_total += total_quantity
+    
+    if not processed_items:
+        raise HTTPException(status_code=400, detail="No valid items to dispatch")
+    
+    # Save bulk dispatch
+    dispatch_dict['items'] = processed_items
+    dispatch_dict['total_items'] = len(processed_items)
+    dispatch_dict['grand_total_quantity'] = grand_total
+    dispatch_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.bulk_dispatches.insert_one(dispatch_dict)
+    
+    return {
+        "message": "Bulk dispatch created successfully",
+        "dispatch_number": dispatch_dict['dispatch_number'],
+        "total_items": len(processed_items),
+        "grand_total_quantity": grand_total,
+        "id": dispatch_dict['id']
+    }
+
+@api_router.get("/bulk-dispatches")
+async def get_bulk_dispatches():
+    """Get all bulk dispatches"""
+    dispatches = await db.bulk_dispatches.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return dispatches
+
+@api_router.get("/bulk-dispatches/{dispatch_id}")
+async def get_bulk_dispatch(dispatch_id: str):
+    """Get a single bulk dispatch by ID"""
+    dispatch = await db.bulk_dispatches.find_one({"id": dispatch_id}, {"_id": 0})
+    if not dispatch:
+        raise HTTPException(status_code=404, detail="Dispatch not found")
+    return dispatch
+
+@api_router.delete("/bulk-dispatches/{dispatch_id}")
+async def delete_bulk_dispatch(dispatch_id: str):
+    """Delete a bulk dispatch (and restore stock quantities)"""
+    dispatch = await db.bulk_dispatches.find_one({"id": dispatch_id}, {"_id": 0})
+    if not dispatch:
+        raise HTTPException(status_code=404, detail="Dispatch not found")
+    
+    # Restore stock quantities
+    for item in dispatch.get('items', []):
+        stock = await db.stock.find_one({"id": item['stock_id']}, {"_id": 0})
+        if stock:
+            # Restore available quantity
+            new_available = stock.get('available_quantity', 0) + item['total_quantity']
+            
+            # Restore size distribution
+            new_size_distribution = {}
+            for size, qty in stock.get('size_distribution', {}).items():
+                restored = item.get('size_distribution', {}).get(size, 0)
+                new_size_distribution[size] = qty + restored
+            
+            await db.stock.update_one(
+                {"id": item['stock_id']},
+                {"$set": {
+                    "available_quantity": new_available,
+                    "size_distribution": new_size_distribution,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+    
+    await db.bulk_dispatches.delete_one({"id": dispatch_id})
+    return {"message": "Dispatch deleted and stock restored"}
+
+@api_router.get("/bulk-dispatches/{dispatch_id}/print")
+async def print_bulk_dispatch(dispatch_id: str):
+    """Generate printable HTML dispatch sheet"""
+    dispatch = await db.bulk_dispatches.find_one({"id": dispatch_id}, {"_id": 0})
+    if not dispatch:
+        raise HTTPException(status_code=404, detail="Dispatch not found")
+    
+    # Build items table rows
+    items_html = ""
+    for idx, item in enumerate(dispatch.get('items', []), 1):
+        # Format size distribution
+        sizes = ", ".join([f"{s}:{q}" for s, q in item.get('size_distribution', {}).items() if q > 0])
+        # Format loose pcs
+        loose = ", ".join([f"{s}:{q}" for s, q in item.get('loose_pcs', {}).items() if q > 0]) or "-"
+        
+        items_html += f"""
+        <tr>
+            <td>{idx}</td>
+            <td><strong>{item.get('stock_code', '')}</strong></td>
+            <td>{item.get('lot_number', '')}</td>
+            <td>{item.get('category', '')}</td>
+            <td>{item.get('style_type', '')}</td>
+            <td>{item.get('color', '')}</td>
+            <td style="text-align:center;">{item.get('master_packs', 0)}</td>
+            <td>{loose}</td>
+            <td>{sizes}</td>
+            <td style="text-align:right;font-weight:bold;">{item.get('total_quantity', 0)}</td>
+        </tr>
+        """
+    
+    # Parse dispatch date
+    dispatch_date = dispatch.get('dispatch_date', '')
+    if isinstance(dispatch_date, str):
+        try:
+            dispatch_date = datetime.fromisoformat(dispatch_date.replace('Z', '+00:00')).strftime('%d-%m-%Y')
+        except:
+            pass
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Dispatch Sheet - {dispatch.get('dispatch_number', '')}</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }}
+            .header {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }}
+            .header h1 {{ margin: 0; color: #4F46E5; font-size: 24px; }}
+            .header h2 {{ margin: 5px 0; font-size: 18px; }}
+            .info-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
+            .info-item {{ padding: 8px; background: #f5f5f5; border-radius: 4px; }}
+            .info-item strong {{ color: #333; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #4F46E5; color: white; }}
+            tr:nth-child(even) {{ background-color: #f9f9f9; }}
+            .total-row {{ background-color: #e8e8e8 !important; font-weight: bold; }}
+            .grand-total {{ font-size: 18px; text-align: right; margin-top: 10px; padding: 15px; background: #4F46E5; color: white; border-radius: 4px; }}
+            .notes-section {{ margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 4px; }}
+            .signature-section {{ margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }}
+            .signature-box {{ border-top: 1px solid #333; padding-top: 10px; text-align: center; }}
+            @media print {{
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🏭 Arian Knit Fab Production Pro</h1>
+            <h2>📦 DISPATCH SHEET</h2>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item"><strong>Dispatch No:</strong> {dispatch.get('dispatch_number', '')}</div>
+            <div class="info-item"><strong>Date:</strong> {dispatch_date}</div>
+            <div class="info-item"><strong>Customer:</strong> {dispatch.get('customer_name', '')}</div>
+            <div class="info-item"><strong>Bora No:</strong> {dispatch.get('bora_number', '')}</div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Stock Code</th>
+                    <th>Lot Name</th>
+                    <th>Category</th>
+                    <th>Style</th>
+                    <th>Color</th>
+                    <th>Master Packs</th>
+                    <th>Loose Pcs</th>
+                    <th>Size Distribution</th>
+                    <th>Total Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {items_html}
+                <tr class="total-row">
+                    <td colspan="6" style="text-align:right;">TOTAL ITEMS: {dispatch.get('total_items', 0)}</td>
+                    <td colspan="3"></td>
+                    <td style="text-align:right;">{dispatch.get('grand_total_quantity', 0)}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="grand-total">
+            📦 GRAND TOTAL: {dispatch.get('grand_total_quantity', 0)} Pieces
+        </div>
+        
+        {"<div class='notes-section'><strong>📝 Notes:</strong> " + dispatch.get('notes', '') + "</div>" if dispatch.get('notes') else ""}
+        {"<div class='notes-section' style='background:#fef2f2;border-color:#ef4444;'><strong>⚠️ Remarks:</strong> " + dispatch.get('remarks', '') + "</div>" if dispatch.get('remarks') else ""}
+        
+        <div class="signature-section">
+            <div class="signature-box">Prepared By</div>
+            <div class="signature-box">Received By</div>
+        </div>
+        
+        <div style="text-align:center;margin-top:30px;color:#666;font-size:10px;">
+            Generated on {datetime.now().strftime('%d-%m-%Y %H:%M:%S')} | Arian Knit Fab Production Pro
+        </div>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html)
+
+
 # Catalog Routes
 @api_router.post("/catalogs", response_model=Catalog)
 async def create_catalog(catalog: CatalogCreate):
