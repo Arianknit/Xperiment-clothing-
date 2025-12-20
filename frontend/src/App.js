@@ -8656,13 +8656,16 @@ _Arian Knit Fab_`;
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      toast.info("Processing image...");
                       try {
                         const tempQr = new Html5Qrcode("temp-qr-reader");
                         const result = await tempQr.scanFile(file, true);
-                        setUnifiedScannerOpen(false);
+                        console.log("Unified scanner file result:", result);
+                        // Don't close - just call handler which will set scannedLot
                         handleLotQRScan(result);
                       } catch (err) {
-                        toast.error("Could not read QR code from image");
+                        console.error("Unified scanner file error:", err);
+                        toast.error("Could not read QR code from image. Try again.");
                       }
                       e.target.value = '';
                     }
