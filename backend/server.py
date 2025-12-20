@@ -1503,12 +1503,12 @@ async def scan_create_ironing(data: dict):
 
 
 @api_router.post("/scan/receive-ironing")
-async def scan_receive_ironing(
-    lot_number: str,
-    received_distribution: Dict[str, int],
-    mistake_distribution: Dict[str, int] = None
-):
+async def scan_receive_ironing(data: dict):
     """Quick receive from ironing by scanning lot QR - AUTO-CREATES STOCK ENTRY"""
+    lot_number = data.get('lot_number')
+    received_distribution = data.get('received_distribution', {})
+    mistake_distribution = data.get('mistake_distribution', {})
+    
     # Find ironing order
     ironing_order = await db.ironing_orders.find_one({
         "cutting_lot_number": lot_number,
