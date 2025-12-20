@@ -194,7 +194,7 @@ class ReportsTester:
             
             # Check for CSV headers
             header_line = lines[0]
-            expected_headers = ["Stock Code", "Lot Number", "Category", "Style", "Color", "Total Quantity", "Available"]
+            expected_headers = ["Stock Code", "Lot Number", "Category", "Style", "Color", "Total Qty", "Available"]
             
             missing_headers = []
             for header in expected_headers:
