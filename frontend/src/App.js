@@ -5768,46 +5768,62 @@ _Arian Knit Fab_`;
                     : calculateMasterPacks(stock.size_distribution, stock.master_pack_ratio || {});
                   
                   return (
-                    <Card key={stock.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`stock-card-${stock.id}`}>
+                    <Card 
+                      key={stock.id} 
+                      className={`shadow-lg hover:shadow-xl transition-shadow ${bulkSelectMode && selectedStockIds.includes(stock.id) ? 'ring-2 ring-purple-500 bg-purple-50' : ''}`}
+                      data-testid={`stock-card-${stock.id}`}
+                    >
                       <CardContent className="pt-6">
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
-                            <div>
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-xl font-bold text-slate-800">{stock.stock_code}</h3>
-                                <Badge className="bg-indigo-100 text-indigo-800 border">{stock.lot_number}</Badge>
-                                <Badge className="bg-slate-100 text-slate-700 border">{stock.category}</Badge>
-                                <Badge className="bg-blue-100 text-blue-700 border">{stock.style_type}</Badge>
-                                {stock.color && <Badge className="bg-purple-100 text-purple-700 border">🎨 {stock.color}</Badge>}
-                                {stock.source === 'historical' && <Badge className="bg-amber-100 text-amber-700 border">📜 Historical</Badge>}
-                                {stock.used_in_catalog && <Badge className="bg-green-100 text-green-700 border">📦 {stock.used_in_catalog}</Badge>}
+                            <div className="flex items-start gap-3">
+                              {/* Bulk Select Checkbox */}
+                              {bulkSelectMode && (
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedStockIds.includes(stock.id)}
+                                  onChange={() => toggleStockSelection(stock.id)}
+                                  className="h-5 w-5 mt-1 accent-purple-600"
+                                />
+                              )}
+                              <div>
+                                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                  <h3 className="text-xl font-bold text-slate-800">{stock.stock_code}</h3>
+                                  <Badge className="bg-indigo-100 text-indigo-800 border">{stock.lot_number}</Badge>
+                                  <Badge className="bg-slate-100 text-slate-700 border">{stock.category}</Badge>
+                                  <Badge className="bg-blue-100 text-blue-700 border">{stock.style_type}</Badge>
+                                  {stock.color && <Badge className="bg-purple-100 text-purple-700 border">🎨 {stock.color}</Badge>}
+                                  {stock.source === 'historical' && <Badge className="bg-amber-100 text-amber-700 border">📜 Historical</Badge>}
+                                  {stock.used_in_catalog && <Badge className="bg-green-100 text-green-700 border">📦 {stock.used_in_catalog}</Badge>}
+                                </div>
+                                {stock.notes && <p className="text-sm text-slate-600">{stock.notes}</p>}
                               </div>
-                              {stock.notes && <p className="text-sm text-slate-600">{stock.notes}</p>}
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {/* Add to Dispatch Button */}
-                              <Button 
-                                size="sm" 
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => {
-                                  addItemToDispatch(stock);
-                                  setActiveTab('dispatch');
-                                  setBulkDispatchDialogOpen(true);
-                                }}
-                                disabled={stock.available_quantity <= 0}
-                                data-testid={`add-to-dispatch-${stock.id}`}
-                              >
-                                <Truck className="h-4 w-4 mr-1" />
-                                Add to Dispatch
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                className="text-blue-600 hover:bg-blue-50"
-                                onClick={() => {
-                                  setSelectedStock(stock);
-                                  setStockCatalogForm({ catalog_name: "", catalog_code: "", description: "" });
-                                  setStockCatalogDialogOpen(true);
+                            {!bulkSelectMode && (
+                              <div className="flex flex-wrap gap-2">
+                                {/* Add to Dispatch Button */}
+                                <Button 
+                                  size="sm" 
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  onClick={() => {
+                                    addItemToDispatch(stock);
+                                    setActiveTab('dispatch');
+                                    setBulkDispatchDialogOpen(true);
+                                  }}
+                                  disabled={stock.available_quantity <= 0}
+                                  data-testid={`add-to-dispatch-${stock.id}`}
+                                >
+                                  <Truck className="h-4 w-4 mr-1" />
+                                  Add to Dispatch
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-blue-600 hover:bg-blue-50"
+                                  onClick={() => {
+                                    setSelectedStock(stock);
+                                    setStockCatalogForm({ catalog_name: "", catalog_code: "", description: "" });
+                                    setStockCatalogDialogOpen(true);
                                 }}
                                 data-testid={`catalog-stock-${stock.id}`}
                               >
