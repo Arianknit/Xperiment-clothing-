@@ -5817,15 +5817,6 @@ _Arian Knit Fab_`;
                                 className="bg-green-600 hover:bg-green-700 text-white"
                                 onClick={() => {
                                   setSelectedCatalog(catalog);
-                                  setDispatchForm({ customer_name: '', bora_number: '', notes: '', master_packs: 0, loose_pcs: {} });
-                                  setSelectedDispatchLot(null);
-                                  setDispatchDialogOpen(true);
-                                }}
-                                data-testid={`dispatch-catalog-${catalog.id}`}
-                              >
-                                <Send className="h-4 w-4 mr-1" />
-                                Dispatch
-                              </Button>
                               {isAdmin ? (
                                 <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteCatalog(catalog.id)} data-testid={`delete-catalog-${catalog.id}`}>
                                   <Trash2 className="h-4 w-4" />
