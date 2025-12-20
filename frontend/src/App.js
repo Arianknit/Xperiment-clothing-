@@ -421,6 +421,8 @@ function App() {
       fetchStockSummary();
       fetchOverdueOrders();
       fetchBulkDispatches();
+      fetchAnalytics();
+      fetchNotifications();
     }
   }, [isAuthenticated]);
 
