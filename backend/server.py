@@ -1290,6 +1290,14 @@ async def get_lot_by_number(lot_number: str):
         "is_active": True
     }, {"_id": 0})
     
+    # Check if stitching outsourcing is completed (required before ironing)
+    stitching_order = await db.outsourcing_orders.find_one({
+        "cutting_lot_number": lot_num,
+        "operation_type": "Stitching",
+        "status": "Received"
+    }, {"_id": 0})
+    stitching_completed = stitching_order is not None
+    
     # Determine current stage
     if stock:
         stage = "stock"
@@ -1311,7 +1319,8 @@ async def get_lot_by_number(lot_number: str):
         "stage": stage,
         "outsourcing": outsourcing,
         "ironing": ironing,
-        "stock": stock
+        "stock": stock,
+        "stitching_completed": stitching_completed
     }
 
 
@@ -1468,6 +1477,19 @@ async def scan_create_ironing(data: dict):
         raise HTTPException(status_code=404, detail="Lot not found")
     
     lot_num = order.get('cutting_lot_number') or order.get('lot_number', '')
+    
+    # BUSINESS RULE: Check if stitching outsourcing is completed before allowing ironing
+    stitching_order = await db.outsourcing_orders.find_one({
+        "cutting_lot_number": lot_num,
+        "operation_type": "Stitching",
+        "status": "Received"
+    }, {"_id": 0})
+    
+    if not stitching_order:
+        raise HTTPException(
+            status_code=400, 
+            detail="Ironing requires completed stitching. Please complete stitching outsourcing first and receive the goods back."
+        )
     
     # Check if already exists
     existing = await db.ironing_orders.find_one({"cutting_lot_number": lot_num})
