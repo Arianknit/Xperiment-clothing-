@@ -6951,22 +6951,56 @@ _Arian Knit Fab_`;
               <div className="bg-slate-50 p-3 rounded-lg border">
                 <p className="text-xs text-slate-500 mb-2">Current Stage</p>
                 <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${scannedLot.stage === 'cutting' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                  <span className="font-semibold capitalize">{scannedLot.stage}</span>
+                  <div className={`w-3 h-3 rounded-full ${scannedLot.stage === 'stock' ? 'bg-green-500 animate-pulse' : scannedLot.stage === 'cutting' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
+                  <span className="font-semibold capitalize">
+                    {scannedLot.stage === 'stock' ? '📦 In Stock' : scannedLot.stage === 'ironing-received' ? '🔥 Ironing Done' : scannedLot.stage}
+                  </span>
+                  {scannedLot.stock && (
+                    <Badge className="bg-green-100 text-green-700">{scannedLot.stock.stock_code}</Badge>
+                  )}
                 </div>
-                <div className="flex gap-1 mt-2 text-xs">
-                  <span className={`px-2 py-1 rounded ${scannedLot.stage === 'cutting' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>✅ Cut</span>
-                  <span className={`px-2 py-1 rounded ${['outsourcing', 'received', 'ironing'].includes(scannedLot.stage) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.outsourcing ? '✅ Sent' : '⏳ Send'}
+                <div className="flex flex-wrap gap-1 mt-2 text-xs">
+                  <span className="px-2 py-1 rounded bg-green-100 text-green-700">✅ Cut</span>
+                  <span className={`px-2 py-1 rounded ${scannedLot.outsourcing ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.outsourcing ? '✅ Out' : '⏳ Out'}
                   </span>
-                  <span className={`px-2 py-1 rounded ${['received', 'ironing'].includes(scannedLot.stage) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.outsourcing?.status === 'Received' ? '✅ Received' : '⏳ Receive'}
+                  <span className={`px-2 py-1 rounded ${scannedLot.outsourcing?.status === 'Received' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.outsourcing?.status === 'Received' ? '✅ Recv' : '⏳ Recv'}
                   </span>
-                  <span className={`px-2 py-1 rounded ${scannedLot.stage === 'ironing' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {scannedLot.ironing ? '✅ Ironing' : '⏳ Iron'}
+                  <span className={`px-2 py-1 rounded ${scannedLot.ironing ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.ironing ? '✅ Iron' : '⏳ Iron'}
+                  </span>
+                  <span className={`px-2 py-1 rounded ${scannedLot.stock ? 'bg-green-100 text-green-700 font-bold' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.stock ? '✅ Stock' : '⏳ Stock'}
                   </span>
                 </div>
               </div>
+
+              {/* Stock Info if exists */}
+              {scannedLot.stock && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-green-800">📦 {scannedLot.stock.stock_code}</p>
+                      <p className="text-sm text-green-700">
+                        {scannedLot.stock.complete_packs} Packs + {scannedLot.stock.loose_pieces} Loose
+                      </p>
+                      <p className="text-xs text-slate-600">Available: {scannedLot.stock.available_quantity} pcs</p>
+                    </div>
+                    <Button 
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        setSelectedStockForQR(scannedLot.stock);
+                        setStockQRDialogOpen(true);
+                      }}
+                    >
+                      <QrCode className="h-4 w-4 mr-1" />
+                      QR
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Quick Actions */}
               <div className="space-y-2">
