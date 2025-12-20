@@ -6632,6 +6632,211 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Stock QR Code Dialog */}
+      <Dialog open={stockQRDialogOpen} onOpenChange={setStockQRDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="stock-qr-dialog">
+          <DialogHeader>
+            <DialogTitle>📱 Stock QR Code</DialogTitle>
+            <DialogDescription>
+              {selectedStockForQR && `${selectedStockForQR.stock_code} - ${selectedStockForQR.lot_number}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStockForQR && (
+            <div className="space-y-4">
+              <div className="flex justify-center p-4 bg-white rounded-lg border">
+                <img 
+                  src={`${API}/stock/${selectedStockForQR.id}/qrcode`} 
+                  alt="Stock QR Code"
+                  className="w-48 h-48"
+                  data-testid="stock-qr-image"
+                />
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg text-sm">
+                <p><strong>Code:</strong> {selectedStockForQR.stock_code}</p>
+                <p><strong>Lot:</strong> {selectedStockForQR.lot_number}</p>
+                <p><strong>Category:</strong> {selectedStockForQR.category}</p>
+                <p><strong>Style:</strong> {selectedStockForQR.style_type}</p>
+                {selectedStockForQR.color && <p><strong>Color:</strong> {selectedStockForQR.color}</p>}
+              </div>
+              <div className="flex justify-center gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = `${API}/stock/${selectedStockForQR.id}/qrcode`;
+                    link.download = `${selectedStockForQR.stock_code}-qr.png`;
+                    link.click();
+                  }}
+                  data-testid="download-qr-btn"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                      <html>
+                        <head><title>QR Code - ${selectedStockForQR.stock_code}</title></head>
+                        <body style="text-align:center; padding:20px;">
+                          <h2>${selectedStockForQR.stock_code}</h2>
+                          <p>${selectedStockForQR.lot_number} | ${selectedStockForQR.category} | ${selectedStockForQR.style_type}</p>
+                          <img src="${API}/stock/${selectedStockForQR.id}/qrcode" style="width:200px;height:200px;" />
+                          <script>setTimeout(() => window.print(), 500)</script>
+                        </body>
+                      </html>
+                    `);
+                  }}
+                  data-testid="print-qr-btn"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Scan Dispatch Dialog */}
+      <Dialog open={scanDispatchDialogOpen} onOpenChange={(open) => {
+        setScanDispatchDialogOpen(open);
+        if (!open) setScannedStock(null);
+      }}>
+        <DialogContent className="sm:max-w-[500px]" data-testid="scan-dispatch-dialog">
+          <DialogHeader>
+            <DialogTitle>📷 Quick Dispatch (Scanned)</DialogTitle>
+            <DialogDescription>
+              {scannedStock && `${scannedStock.stock_code} - ${scannedStock.lot_number}`}
+            </DialogDescription>
+          </DialogHeader>
+          {scannedStock && (
+            <form onSubmit={handleScanDispatchSubmit} className="space-y-4">
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                <p className="text-sm font-semibold text-green-800">✅ Stock Found!</p>
+                <p className="text-sm">Available: {scannedStock.available_quantity} pcs</p>
+                <p className="text-xs text-slate-500">{scannedStock.category} | {scannedStock.style_type} | {scannedStock.color}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Customer Name *</Label>
+                  <Input 
+                    value={scanDispatchForm.customer_name}
+                    onChange={(e) => setScanDispatchForm({...scanDispatchForm, customer_name: e.target.value})}
+                    placeholder="Customer"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bora Number *</Label>
+                  <Input 
+                    value={scanDispatchForm.bora_number}
+                    onChange={(e) => setScanDispatchForm({...scanDispatchForm, bora_number: e.target.value})}
+                    placeholder="Bora #"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Master Packs</Label>
+                <Input 
+                  type="number"
+                  min="0"
+                  value={scanDispatchForm.master_packs}
+                  onChange={(e) => setScanDispatchForm({...scanDispatchForm, master_packs: parseInt(e.target.value) || 0})}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setScanDispatchDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading}>
+                  {loading ? "Dispatching..." : "📦 Dispatch"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Scan New Lot Dialog */}
+      <Dialog open={scanNewLotDialogOpen} onOpenChange={(open) => {
+        setScanNewLotDialogOpen(open);
+        if (!open) setScannedStock(null);
+      }}>
+        <DialogContent className="sm:max-w-[600px]" data-testid="scan-newlot-dialog">
+          <DialogHeader>
+            <DialogTitle>📷 Add New Lot (From Scan)</DialogTitle>
+            <DialogDescription>
+              Copying settings from: {scannedStock?.stock_code}
+            </DialogDescription>
+          </DialogHeader>
+          {scannedStock && (
+            <form onSubmit={handleScanNewLotSubmit} className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-sm font-semibold text-blue-800">📋 Copying from {scannedStock.stock_code}</p>
+                <p className="text-xs text-slate-600">
+                  Category: {scannedStock.category} | Style: {scannedStock.style_type} | Color: {scannedStock.color}
+                </p>
+                <p className="text-xs text-slate-600">
+                  Ratio: {Object.entries(scannedStock.master_pack_ratio || {}).map(([s, q]) => `${s}:${q}`).join('-')}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>New Lot Number *</Label>
+                <Input 
+                  value={scanNewLotForm.lot_number}
+                  onChange={(e) => setScanNewLotForm({...scanNewLotForm, lot_number: e.target.value})}
+                  placeholder="e.g., HIST-002"
+                  required
+                />
+              </div>
+
+              <div className="space-y-3 p-3 bg-slate-50 rounded-lg border">
+                <Label className="font-semibold">Size Distribution *</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['M', 'L', 'XL', 'XXL'].map((size) => (
+                    <div key={size} className="space-y-1">
+                      <Label className="text-xs">{size}</Label>
+                      <Input 
+                        type="number"
+                        min="0"
+                        value={scanNewLotForm.size_distribution[size] || ''}
+                        onChange={(e) => setScanNewLotForm({
+                          ...scanNewLotForm, 
+                          size_distribution: {...scanNewLotForm.size_distribution, [size]: parseInt(e.target.value) || 0}
+                        })}
+                        placeholder="0"
+                        className="h-9"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-slate-600">Total: {getTotalQty(scanNewLotForm.size_distribution)} pcs</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input 
+                  value={scanNewLotForm.notes}
+                  onChange={(e) => setScanNewLotForm({...scanNewLotForm, notes: e.target.value})}
+                  placeholder="Optional notes..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setScanNewLotDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                  {loading ? "Creating..." : "📦 Create Lot"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Barcode View Dialog */}
       <Dialog open={!!barcodeView} onOpenChange={(open) => !open && setBarcodeView(null)}>
         <DialogContent className="sm:max-w-[500px]" data-testid="barcode-dialog">
