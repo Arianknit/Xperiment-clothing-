@@ -4903,6 +4903,7 @@ _Arian Knit Fab_`;
                               {getCategoryBadge(order.category)}
                               <Badge className="bg-amber-100 text-amber-800 border">{order.status}</Badge>
                               {order.color && <Badge className="bg-purple-100 text-purple-700 border-purple-300">🎨 {order.color}</Badge>}
+                              {order.stock_color && order.stock_color !== order.color && <Badge className="bg-green-100 text-green-700 border-green-300">📦 Stock: {order.stock_color}</Badge>}
                               <Badge 
                                 className={
                                   order.payment_status === 'Paid' ? 'bg-green-100 text-green-800 border-green-200' :
@@ -4913,7 +4914,10 @@ _Arian Knit Fab_`;
                                 {order.payment_status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-slate-600">Lot: {order.cutting_lot_number} | Style: {order.style_type}</p>
+                            <p className="text-sm text-slate-600">
+                              Lot: {order.cutting_lot_number} | Style: {order.style_type}
+                              {order.stock_lot_name && <span className="text-green-600"> | Stock Name: {order.stock_lot_name}</span>}
+                            </p>
                           </div>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handlePrintIroningDC(order.id)} data-testid={`print-ironing-dc-${order.id}`}>
