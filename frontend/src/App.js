@@ -9123,6 +9123,163 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Lot Tracking Dialog */}
+      <Dialog open={lotTrackingDialogOpen} onOpenChange={setLotTrackingDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-blue-600" />
+              Lot Journey Tracking
+            </DialogTitle>
+            <DialogDescription>Track complete journey of a lot from cutting to dispatch</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Enter lot number..."
+                value={trackingLotNumber}
+                onChange={(e) => setTrackingLotNumber(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={handleTrackLot} className="bg-blue-600 hover:bg-blue-700">
+                <Search className="h-4 w-4 mr-2" />
+                Track
+              </Button>
+            </div>
+            
+            {/* Journey Display */}
+            {lotJourney && (
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="font-bold text-lg text-blue-800">📦 {lotJourney.lot_number}</h3>
+                  <p className="text-sm text-slate-600">Current Stage: <Badge className="bg-blue-100 text-blue-700">{lotJourney.current_stage}</Badge></p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                    <span>Total Produced: <strong>{lotJourney.total_quantity}</strong> pcs</span>
+                    <span>Dispatched: <strong>{lotJourney.dispatched_quantity}</strong> pcs</span>
+                  </div>
+                </div>
+                
+                {/* Timeline */}
+                <div className="relative">
+                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200"></div>
+                  {lotJourney.stages.map((stage, idx) => (
+                    <div key={idx} className="relative pl-10 pb-4">
+                      <div className={`absolute left-2 w-5 h-5 rounded-full ${
+                        stage.status === 'Completed' || stage.status === 'Received' ? 'bg-green-500' :
+                        stage.status === 'Sent' ? 'bg-amber-500' : 'bg-blue-500'
+                      } flex items-center justify-center`}>
+                        <CheckCircle className="h-3 w-3 text-white" />
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold text-slate-800">{stage.stage}</h4>
+                            <p className="text-xs text-slate-500">{stage.date?.split('T')[0]}</p>
+                          </div>
+                          <Badge className={
+                            stage.status === 'Completed' || stage.status === 'Received' ? 'bg-green-100 text-green-700' :
+                            stage.status === 'Sent' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                          }>{stage.status}</Badge>
+                        </div>
+                        {stage.details && (
+                          <div className="mt-2 text-xs text-slate-600 space-y-1">
+                            {Object.entries(stage.details).map(([key, val]) => (
+                              val && <p key={key}><span className="text-slate-400">{key}:</span> {val}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-slate-600" />
+              Application Settings
+            </DialogTitle>
+          </DialogHeader>
+          
+          {appSettings && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Company Name</Label>
+                <Input 
+                  value={appSettings.company_name || ''}
+                  onChange={(e) => setAppSettings({...appSettings, company_name: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Low Stock Threshold</Label>
+                <Input 
+                  type="number"
+                  value={appSettings.low_stock_threshold || 50}
+                  onChange={(e) => setAppSettings({...appSettings, low_stock_threshold: parseInt(e.target.value)})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Categories (comma separated)</Label>
+                <Input 
+                  value={(appSettings.categories || []).join(', ')}
+                  onChange={(e) => setAppSettings({...appSettings, categories: e.target.value.split(',').map(s => s.trim())})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Operations (comma separated)</Label>
+                <Input 
+                  value={(appSettings.operations || []).join(', ')}
+                  onChange={(e) => setAppSettings({...appSettings, operations: e.target.value.split(',').map(s => s.trim())})}
+                />
+              </div>
+              
+              {/* Data Export Section */}
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  Data Export & Backup
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" onClick={handleExportAllData} className="text-green-600 border-green-300">
+                    <Download className="h-4 w-4 mr-2" />
+                    Full Backup (JSON)
+                  </Button>
+                  <Button variant="outline" onClick={() => handleExportCollection('stock')} className="text-blue-600 border-blue-300">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Stock
+                  </Button>
+                  <Button variant="outline" onClick={() => handleExportCollection('cutting_orders')} className="text-purple-600 border-purple-300">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Cutting
+                  </Button>
+                  <Button variant="outline" onClick={() => handleExportCollection('bulk_dispatches')} className="text-amber-600 border-amber-300">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Dispatches
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setSettingsDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSaveSettings} className="bg-indigo-600 hover:bg-indigo-700">Save Settings</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-30 safe-area-pb">
         <div className="grid grid-cols-5 gap-1 px-2 py-2">
