@@ -2461,6 +2461,7 @@ _Arian Knit Fab_`;
                 <SelectItem value="receipts">📥 Receipts</SelectItem>
                 <SelectItem value="ironing">🔥 Ironing</SelectItem>
                 <SelectItem value="stock">📦 Stock</SelectItem>
+                <SelectItem value="dispatch">🚚 Dispatch</SelectItem>
                 <SelectItem value="catalog">📚 Catalog</SelectItem>
                 <SelectItem value="reports">📋 Reports</SelectItem>
               </SelectContent>
