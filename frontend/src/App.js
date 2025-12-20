@@ -4692,6 +4692,198 @@ _Arian Knit Fab_`;
             </div>
           </TabsContent>
 
+          {/* Stock Tab */}
+          <TabsContent value="stock" data-testid="stock-content">
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h2 className="text-3xl font-bold text-slate-800">📦 Stock Management</h2>
+                <Button 
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={() => setStockDialogOpen(true)}
+                  data-testid="add-stock-btn"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Historical Stock
+                </Button>
+              </div>
+
+              {/* Stock Summary Cards */}
+              {stockSummary && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                    <CardContent className="pt-6">
+                      <p className="text-xs text-slate-600">Total Stock</p>
+                      <p className="text-3xl font-bold text-blue-600">{stockSummary.total_stock} pcs</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
+                    <CardContent className="pt-6">
+                      <p className="text-xs text-slate-600">Master Packs</p>
+                      <p className="text-3xl font-bold text-purple-600">{stockSummary.total_packs}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+                    <CardContent className="pt-6">
+                      <p className="text-xs text-slate-600">Loose Pieces</p>
+                      <p className="text-3xl font-bold text-amber-600">{stockSummary.total_loose}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                    <CardContent className="pt-6">
+                      <p className="text-xs text-slate-600">Stock Entries</p>
+                      <p className="text-3xl font-bold text-green-600">{stockSummary.stock_count}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Search */}
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search by lot, code, category, style, color..."
+                  className="pl-10"
+                  value={stockSearch}
+                  onChange={(e) => setStockSearch(e.target.value)}
+                  data-testid="stock-search"
+                />
+              </div>
+
+              {/* Stock Cards */}
+              <div className="space-y-4">
+                {filteredStocks.map((stock) => {
+                  const { completePacks, loosePieces, looseDistribution } = stock.complete_packs !== undefined 
+                    ? { completePacks: stock.complete_packs, loosePieces: stock.loose_pieces, looseDistribution: stock.loose_distribution }
+                    : calculateMasterPacks(stock.size_distribution, stock.master_pack_ratio || {});
+                  
+                  return (
+                    <Card key={stock.id} className="shadow-lg hover:shadow-xl transition-shadow" data-testid={`stock-card-${stock.id}`}>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-xl font-bold text-slate-800">{stock.stock_code}</h3>
+                                <Badge className="bg-indigo-100 text-indigo-800 border">{stock.lot_number}</Badge>
+                                <Badge className="bg-slate-100 text-slate-700 border">{stock.category}</Badge>
+                                <Badge className="bg-blue-100 text-blue-700 border">{stock.style_type}</Badge>
+                                {stock.color && <Badge className="bg-purple-100 text-purple-700 border">🎨 {stock.color}</Badge>}
+                                {stock.source === 'historical' && <Badge className="bg-amber-100 text-amber-700 border">📜 Historical</Badge>}
+                                {stock.used_in_catalog && <Badge className="bg-green-100 text-green-700 border">📦 {stock.used_in_catalog}</Badge>}
+                              </div>
+                              {stock.notes && <p className="text-sm text-slate-600">{stock.notes}</p>}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => {
+                                  setSelectedStock(stock);
+                                  setStockDispatchForm({ master_packs: 0, loose_pcs: {}, customer_name: "", bora_number: "", notes: "" });
+                                  setStockDispatchDialogOpen(true);
+                                }}
+                                data-testid={`dispatch-stock-${stock.id}`}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Dispatch
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-blue-600 hover:bg-blue-50"
+                                onClick={() => {
+                                  setSelectedStock(stock);
+                                  setStockCatalogForm({ catalog_name: "", catalog_code: "", description: "" });
+                                  setStockCatalogDialogOpen(true);
+                                }}
+                                data-testid={`catalog-stock-${stock.id}`}
+                              >
+                                <BookOpen className="h-4 w-4 mr-1" />
+                                Create Catalog
+                              </Button>
+                              {currentUser?.role === 'admin' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-red-600 hover:bg-red-50"
+                                  onClick={() => handleDeleteStock(stock.id)}
+                                  data-testid={`delete-stock-${stock.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                              <p className="text-xs text-slate-600">Total Quantity</p>
+                              <p className="text-2xl font-bold text-blue-600">{stock.total_quantity}</p>
+                            </div>
+                            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                              <p className="text-xs text-slate-600">Available</p>
+                              <p className="text-2xl font-bold text-green-600">{stock.available_quantity}</p>
+                            </div>
+                            <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                              <p className="text-xs text-slate-600">Master Packs</p>
+                              <p className="text-2xl font-bold text-purple-600">{completePacks || 0}</p>
+                            </div>
+                            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                              <p className="text-xs text-slate-600">Loose Pieces</p>
+                              <p className="text-2xl font-bold text-amber-600">{loosePieces || 0}</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-lg border">
+                            <p className="text-xs text-slate-600 mb-2">Size Distribution:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(stock.size_distribution || {}).map(([size, qty]) => (
+                                qty > 0 && (
+                                  <div key={size} className="bg-white px-3 py-1 rounded border">
+                                    <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                    <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
+                                  </div>
+                                )
+                              ))}
+                            </div>
+                          </div>
+
+                          {stock.master_pack_ratio && Object.keys(stock.master_pack_ratio).length > 0 && (
+                            <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                              <p className="text-xs text-slate-600 mb-2">📦 Master Pack Ratio:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(stock.master_pack_ratio).map(([size, qty]) => (
+                                  qty > 0 && (
+                                    <div key={size} className="bg-white px-3 py-1 rounded border border-indigo-300">
+                                      <span className="text-xs font-semibold text-slate-700">{size}:</span>
+                                      <span className="text-sm font-bold text-indigo-600 ml-1">{qty}</span>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {filteredStocks.length === 0 && (
+                <Card className="shadow-lg">
+                  <CardContent className="flex flex-col items-center justify-center py-16">
+                    <Package className="h-16 w-16 text-slate-300 mb-4" />
+                    <p className="text-slate-500 text-lg">
+                      {stocks.length === 0 ? "No stock entries yet" : "No matching stock found"}
+                    </p>
+                    {stocks.length === 0 && <p className="text-slate-400 text-sm mt-2">Add historical stock to get started</p>}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Catalog Tab */}
           <TabsContent value="catalog" data-testid="catalog-content">
             <div className="space-y-6">
