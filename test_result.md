@@ -576,3 +576,32 @@ Date: 2025-12-19
 - **Ratio Inheritance:** Cutting and catalog inherit ratios from associated ironing orders ✅
 - **Conditional Display:** Master Pack sections only appear when master_pack_ratio is defined ✅
 - **Color Coding:** Proper indigo (Master Packs) and amber (Loose) styling ✅
+
+## Test Session: Stock Tab Feature
+Date: 2025-12-20
+
+### Feature Description:
+New dedicated Stock tab with stock management features:
+1. Stock report with summary cards (Total Stock, Master Packs, Loose Pieces, Stock Entries)
+2. Search functionality
+3. Add Historical Stock dialog
+4. Stock cards showing Master Pack format display
+5. Dispatch from Stock
+6. Create Catalog from Stock
+
+### Backend Endpoints Added:
+- GET /api/stock - Get all stock entries
+- POST /api/stock - Add historical stock
+- GET /api/stock/{stock_id} - Get single stock
+- PUT /api/stock/{stock_id} - Update stock
+- DELETE /api/stock/{stock_id} - Delete stock
+- POST /api/stock/{stock_id}/dispatch - Dispatch from stock
+- POST /api/stock/{stock_id}/create-catalog - Create catalog from stock
+- GET /api/stock/report/summary - Get stock summary
+
+### Test Scenarios:
+1. Navigate to Stock tab - verify summary cards
+2. Add historical stock with size distribution and master pack ratio
+3. Search stocks by lot, code, category, style, color
+4. Dispatch from stock using master packs and loose pieces
+5. Create catalog from stock
