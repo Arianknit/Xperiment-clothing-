@@ -2446,7 +2446,7 @@ function App() {
     setLoading(true);
     try {
       const lotNum = scannedLot.order.cutting_lot_number || scannedLot.order.lot_number;
-      await axios.post(`${API}/scan/create-ironing?lot_number=${encodeURIComponent(lotNum)}&unit_name=${encodeURIComponent(scanIroningForm.unit_name)}&rate_per_pcs=${scanIroningForm.rate_per_pcs}`, {
+      await axios.post(`${API}/scan/create-ironing`, {
         lot_number: lotNum,
         unit_name: scanIroningForm.unit_name,
         master_pack_ratio: scanIroningForm.master_pack_ratio,
