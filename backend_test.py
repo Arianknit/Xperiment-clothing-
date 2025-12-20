@@ -547,15 +547,15 @@ class ReturnsManagementTester:
 
 def main():
     """Main test execution"""
-    print("🏭 Garment Manufacturing App - Stock Lot Name and Color from Ironing Tests")
+    print("🏭 Garment Manufacturing App - Returns Management Feature Tests")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print()
     
-    tester = StockLotNameColorTester()
+    tester = ReturnsManagementTester()
     success = tester.run_comprehensive_tests()
     
     if success:
-        print("\n🎉 All tests passed! Stock lot name and color feature is working correctly.")
+        print("\n🎉 All tests passed! Returns Management feature is working correctly.")
         sys.exit(0)
     else:
         print("\n⚠️  Some tests failed. Please check the issues above.")
