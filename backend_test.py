@@ -243,45 +243,87 @@ class QuickActionTester:
             self.log_result("Create Ironing Order", False, f"Exception occurred: {str(e)}")
             return False, None
 
-    def test_create_second_return(self):
-        """Create a second return for reject testing"""
+    def test_receive_ironing(self):
+        """Test POST /api/scan/receive-ironing - Receive lot from ironing and auto-create stock"""
         try:
-            return_data = {
-                "source_type": "dispatch",
-                "source_id": "test-dispatch-456",
-                "return_date": "2025-12-20T00:00:00Z",
-                "quantity": 8,
-                "reason": "Wrong Size",
-                "notes": "Second test return for reject testing"
+            # First, find a pending ironing order
+            orders_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
+            if orders_response.status_code != 200:
+                self.log_result("Receive from Ironing", False, 
+                              "Failed to get ironing orders")
+                return False, None
+            
+            orders = orders_response.json()
+            pending_order = next((order for order in orders if order.get('status') != 'Received'), None)
+            
+            if not pending_order:
+                self.log_result("Receive from Ironing", False, 
+                              "No pending ironing orders found for testing")
+                return False, None
+            
+            lot_number = pending_order.get('cutting_lot_number')
+            
+            # Test data for receiving
+            receive_data = {
+                "lot_number": lot_number,
+                "received_distribution": {"S": 10, "M": 10, "L": 10},
+                "mistake_distribution": {}
             }
             
             response = requests.post(
-                f"{self.base_url}/returns",
-                json=return_data,
+                f"{self.base_url}/scan/receive-ironing",
+                json=receive_data,
                 headers=self.get_headers()
             )
             
             if response.status_code != 200:
-                self.log_result("Create Second Return", False, 
-                              f"Failed to create second return. Status: {response.status_code}", 
+                self.log_result("Receive from Ironing", False, 
+                              f"Failed to receive from ironing. Status: {response.status_code}", 
                               response.text)
                 return False, None
                 
             result = response.json()
             
-            if not result.get('id'):
-                self.log_result("Create Second Return", False, 
-                              "No return ID in response", result)
+            # Validate response
+            if "Stock created!" not in result.get('message', ''):
+                self.log_result("Receive from Ironing", False, 
+                              f"Unexpected message: {result.get('message')}", result)
                 return False, None
             
-            self.created_resources.append(('return', result['id']))
+            # Validate stock_code in response
+            if not result.get('stock_code'):
+                self.log_result("Receive from Ironing", False, 
+                              "No stock_code in response")
+                return False, None
             
-            self.log_result("Create Second Return", True, 
-                          f"Successfully created second return {result['id']} for reject testing")
-            return True, result['id']
+            # Verify receipt was created
+            receipts_response = requests.get(f"{self.base_url}/ironing-receipts", headers=self.get_headers())
+            if receipts_response.status_code == 200:
+                receipts = receipts_response.json()
+                matching_receipt = next((receipt for receipt in receipts if receipt.get('dc_number') == pending_order.get('dc_number')), None)
+                
+                if matching_receipt:
+                    self.created_resources.append(('ironing_receipt', matching_receipt.get('id')))
+            
+            # Verify stock entry was created
+            stock_response = requests.get(f"{self.base_url}/stock", headers=self.get_headers())
+            if stock_response.status_code == 200:
+                stock_entries = stock_response.json()
+                matching_stock = next((stock for stock in stock_entries if stock.get('stock_code') == result.get('stock_code')), None)
+                
+                if not matching_stock:
+                    self.log_result("Receive from Ironing", False, 
+                                  f"Stock entry {result.get('stock_code')} not found after creation")
+                    return False, None
+                
+                self.created_resources.append(('stock', matching_stock.get('id')))
+            
+            self.log_result("Receive from Ironing", True, 
+                          f"Successfully received lot '{lot_number}' from ironing. Stock code: {result.get('stock_code')}")
+            return True, result.get('stock_code')
             
         except Exception as e:
-            self.log_result("Create Second Return", False, f"Exception occurred: {str(e)}")
+            self.log_result("Receive from Ironing", False, f"Exception occurred: {str(e)}")
             return False, None
 
     def test_reject_return(self, return_id):
