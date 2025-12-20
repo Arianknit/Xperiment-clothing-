@@ -370,7 +370,7 @@ class ReportsTester:
             required_elements = [
                 "Catalogue Report",
                 "Total Catalogues",
-                "Catalog Name",
+                "Catalogue Name",
                 "Available"
             ]
             
