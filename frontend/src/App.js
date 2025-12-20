@@ -7698,6 +7698,195 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Bulk Dispatch Dialog */}
+      <Dialog open={bulkDispatchDialogOpen} onOpenChange={(open) => {
+        setBulkDispatchDialogOpen(open);
+        if (!open) {
+          setSelectedStocksForDispatch([]);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🚚 Create Bulk Dispatch</DialogTitle>
+            <DialogDescription>Dispatch multiple stock items to a customer at once</DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleBulkDispatchSubmit} className="space-y-4">
+            {/* Customer Details */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="space-y-2">
+                <Label>Dispatch Date</Label>
+                <Input 
+                  type="date" 
+                  value={bulkDispatchForm.dispatch_date}
+                  onChange={(e) => setBulkDispatchForm({...bulkDispatchForm, dispatch_date: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Customer Name *</Label>
+                <Input 
+                  value={bulkDispatchForm.customer_name}
+                  onChange={(e) => setBulkDispatchForm({...bulkDispatchForm, customer_name: e.target.value})}
+                  placeholder="Enter customer name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bora Number *</Label>
+                <Input 
+                  value={bulkDispatchForm.bora_number}
+                  onChange={(e) => setBulkDispatchForm({...bulkDispatchForm, bora_number: e.target.value})}
+                  placeholder="e.g., B-001"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Stock Selection */}
+            <div className="space-y-2">
+              <Label>Select Stock Items to Dispatch</Label>
+              <Select onValueChange={(stockId) => {
+                const stock = stocks.find(s => s.id === stockId);
+                if (stock && stock.available_quantity > 0) {
+                  addItemToDispatch(stock);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Click to add stock items..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {stocks.filter(s => s.available_quantity > 0 && !selectedStocksForDispatch.find(sel => sel.stock_id === s.id)).map((stock) => (
+                    <SelectItem key={stock.id} value={stock.id}>
+                      {stock.stock_code} - {stock.lot_number} | {stock.color} ({stock.available_quantity} available)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Selected Items */}
+            {selectedStocksForDispatch.length > 0 && (
+              <div className="space-y-3 border rounded-lg p-4 bg-slate-50">
+                <h4 className="font-semibold text-slate-700">📦 Items to Dispatch ({selectedStocksForDispatch.length})</h4>
+                
+                {selectedStocksForDispatch.map((item, index) => (
+                  <div key={item.stock_id} className="bg-white p-4 rounded-lg border shadow-sm">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-lg">{index + 1}. {item.stock_code}</span>
+                          <Badge variant="outline">{item.lot_number}</Badge>
+                          {item.color && <Badge className="bg-purple-100 text-purple-700">🎨 {item.color}</Badge>}
+                        </div>
+                        <p className="text-sm text-slate-500">{item.category} | {item.style_type} | Available: {item.available_quantity} pcs</p>
+                      </div>
+                      <Button 
+                        type="button"
+                        size="sm" 
+                        variant="outline" 
+                        className="text-red-500"
+                        onClick={() => removeItemFromDispatch(item.stock_id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Master Packs */}
+                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <Label className="text-green-800 font-semibold">📦 Master Packs</Label>
+                        {Object.keys(item.master_pack_ratio || {}).length > 0 ? (
+                          <>
+                            <p className="text-xs text-slate-500 mb-2">
+                              Ratio: {Object.entries(item.master_pack_ratio).map(([s, r]) => `${s}:${r}`).join(', ')}
+                            </p>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              value={item.master_packs}
+                              onChange={(e) => updateDispatchItem(item.stock_id, 'master_packs', parseInt(e.target.value) || 0)}
+                              className="bg-white"
+                            />
+                          </>
+                        ) : (
+                          <p className="text-xs text-slate-500">No master pack ratio defined</p>
+                        )}
+                      </div>
+                      
+                      {/* Loose Pieces */}
+                      <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        <Label className="text-amber-800 font-semibold">🧩 Loose Pieces</Label>
+                        <div className="grid grid-cols-4 gap-2 mt-2">
+                          {['M', 'L', 'XL', 'XXL'].map(size => (
+                            <div key={size}>
+                              <Label className="text-xs">{size}</Label>
+                              <Input 
+                                type="number" 
+                                min="0"
+                                className="h-8 bg-white"
+                                value={item.loose_pcs[size] || ''}
+                                onChange={(e) => updateDispatchItemLoosePcs(item.stock_id, size, e.target.value)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Item Total */}
+                    <div className="mt-3 text-right">
+                      <span className="text-sm text-slate-600">Item Total: </span>
+                      <span className="font-bold text-lg text-indigo-600">{calculateItemTotal(item)} pcs</span>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Grand Total */}
+                <div className="bg-indigo-100 p-4 rounded-lg border border-indigo-300 text-right">
+                  <span className="text-lg font-semibold text-indigo-800">📊 Grand Total: </span>
+                  <span className="text-2xl font-bold text-indigo-600">{calculateGrandTotal()} pcs</span>
+                </div>
+              </div>
+            )}
+
+            {/* Notes & Remarks */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>📝 Notes (Optional)</Label>
+                <Input 
+                  value={bulkDispatchForm.notes}
+                  onChange={(e) => setBulkDispatchForm({...bulkDispatchForm, notes: e.target.value})}
+                  placeholder="Any additional notes..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>⚠️ Remarks (Optional)</Label>
+                <Input 
+                  value={bulkDispatchForm.remarks}
+                  onChange={(e) => setBulkDispatchForm({...bulkDispatchForm, remarks: e.target.value})}
+                  placeholder="Special instructions or warnings..."
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={() => setBulkDispatchDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-green-600 hover:bg-green-700"
+                disabled={loading || selectedStocksForDispatch.length === 0}
+              >
+                {loading ? "Creating..." : `🚚 Create Dispatch (${calculateGrandTotal()} pcs)`}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Scan Dispatch Dialog */}
       <Dialog open={scanDispatchDialogOpen} onOpenChange={(open) => {
         setScanDispatchDialogOpen(open);
