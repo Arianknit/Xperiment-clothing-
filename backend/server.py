@@ -413,6 +413,41 @@ class Catalog(BaseModel):
     updated_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Stock Models
+class Stock(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    stock_code: str  # Unique stock identifier
+    lot_number: str  # Can be from cutting or historical
+    source: str  # "cutting", "ironing", "historical"
+    category: str  # Mens, Ladies, Kids
+    style_type: str  # Round Neck, Polo, etc.
+    color: Optional[str] = ""
+    size_distribution: Dict[str, int]  # {"M": 100, "L": 100, ...}
+    total_quantity: int
+    available_quantity: int
+    master_pack_ratio: Optional[Dict[str, int]] = {}  # {"M": 2, "L": 2, ...}
+    notes: Optional[str] = None
+    is_active: bool = True
+    created_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
+class StockCreate(BaseModel):
+    lot_number: str
+    category: str
+    style_type: str
+    color: Optional[str] = ""
+    size_distribution: Dict[str, int]
+    master_pack_ratio: Optional[Dict[str, int]] = {}
+    notes: Optional[str] = None
+
+class StockDispatch(BaseModel):
+    master_packs: int
+    loose_pcs: Dict[str, int]
+    customer_name: str
+    bora_number: str
+    notes: Optional[str] = None
+
 class CatalogCreate(BaseModel):
     catalog_name: str
     catalog_code: str
