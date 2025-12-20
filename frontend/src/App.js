@@ -6942,20 +6942,20 @@ _Arian Knit Fab_`;
               {/* Quick Actions */}
               <div className="space-y-2">
                 <p className="font-semibold text-slate-700">Quick Actions</p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button 
-                    className="bg-purple-600 hover:bg-purple-700 text-white h-20 flex-col"
+                    className="bg-purple-600 hover:bg-purple-700 text-white h-16 flex-col"
                     disabled={scannedLot.outsourcing}
                     onClick={() => {
                       setScanSendOutsourcingForm({ unit_name: "", operation_type: "Printing", rate_per_pcs: 0 });
                       setScanActionDialog('send');
                     }}
                   >
-                    <Send className="h-6 w-6 mb-1" />
+                    <Send className="h-5 w-5 mb-1" />
                     <span className="text-xs">Send Out</span>
                   </Button>
                   <Button 
-                    className="bg-green-600 hover:bg-green-700 text-white h-20 flex-col"
+                    className="bg-green-600 hover:bg-green-700 text-white h-16 flex-col"
                     disabled={!scannedLot.outsourcing || scannedLot.outsourcing?.status === 'Received'}
                     onClick={() => {
                       setScanReceiveForm({
@@ -6965,19 +6965,33 @@ _Arian Knit Fab_`;
                       setScanActionDialog('receive');
                     }}
                   >
-                    <Package className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Receive</span>
+                    <Package className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Receive Out</span>
                   </Button>
                   <Button 
-                    className="bg-orange-600 hover:bg-orange-700 text-white h-20 flex-col"
+                    className="bg-orange-600 hover:bg-orange-700 text-white h-16 flex-col"
                     disabled={scannedLot.ironing}
                     onClick={() => {
                       setScanIroningForm({ unit_name: "", rate_per_pcs: 0, master_pack_ratio: { M: 2, L: 2, XL: 2, XXL: 2 } });
                       setScanActionDialog('ironing');
                     }}
                   >
-                    <Factory className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Iron</span>
+                    <Factory className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Send Iron</span>
+                  </Button>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700 text-white h-16 flex-col"
+                    disabled={!scannedLot.ironing || scannedLot.ironing?.status === 'Received'}
+                    onClick={() => {
+                      setScanReceiveIroningForm({
+                        received_distribution: scannedLot.ironing?.size_distribution || {},
+                        mistake_distribution: {}
+                      });
+                      setScanActionDialog('receive-ironing');
+                    }}
+                  >
+                    <PackageCheck className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Receive Iron → Stock</span>
                   </Button>
                 </div>
               </div>
