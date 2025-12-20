@@ -1551,6 +1551,7 @@ async def scan_receive_ironing(data: dict):
     receipt_dict = {
         "id": receipt_id,
         "ironing_order_id": ironing_order['id'],
+        "cutting_lot_number": ironing_order.get('cutting_lot_number', lot_number),
         "dc_number": ironing_order['dc_number'],
         "unit_name": ironing_order['unit_name'],
         "receipt_date": datetime.now(timezone.utc).isoformat(),
