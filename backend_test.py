@@ -78,9 +78,9 @@ class QuickActionTester:
     def test_send_outsourcing(self):
         """Test POST /api/scan/send-outsourcing - Send lot to outsourcing"""
         try:
-            # Test data as specified in the review
+            # Test data - using cut 006 which should be available
             outsourcing_data = {
-                "lot_number": "cut 002",
+                "lot_number": "cut 006",
                 "unit_name": "Satish Printing House",
                 "operation_type": "Embroidery",
                 "rate_per_pcs": 5.0
@@ -110,7 +110,7 @@ class QuickActionTester:
             orders_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
             if orders_response.status_code == 200:
                 orders = orders_response.json()
-                matching_order = next((order for order in orders if order.get('cutting_lot_number') == 'cut 002'), None)
+                matching_order = next((order for order in orders if order.get('cutting_lot_number') == 'cut 006'), None)
                 
                 if not matching_order:
                     self.log_result("Send to Outsourcing", False, 
@@ -120,7 +120,7 @@ class QuickActionTester:
                 self.created_resources.append(('outsourcing_order', matching_order.get('id')))
             
             self.log_result("Send to Outsourcing", True, 
-                          f"Successfully sent lot 'cut 002' to outsourcing. DC: {result.get('dc_number', 'N/A')}")
+                          f"Successfully sent lot 'cut 006' to outsourcing. DC: {result.get('dc_number', 'N/A')}")
             return True, result.get('dc_number')
             
         except Exception as e:
