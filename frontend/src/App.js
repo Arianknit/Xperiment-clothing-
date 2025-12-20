@@ -3265,7 +3265,7 @@ _Arian Knit Fab_`;
                               <Barcode className="h-4 w-4 mr-1" />
                               Barcode
                             </Button>
-                            {currentUser?.role === 'admin' && (
+                            {isAdmin ? (
                               <>
                                 <Button 
                                   size="sm" 
@@ -3288,6 +3288,8 @@ _Arian Knit Fab_`;
                                   Delete
                                 </Button>
                               </>
+                            ) : (
+                              <span className="text-xs text-slate-400 italic">Contact admin to edit/delete</span>
                             )}
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
