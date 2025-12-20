@@ -1157,6 +1157,275 @@ async def delete_cutting_order(order_id: str):
     return {"message": "Cutting order deleted successfully"}
 
 
+# ==================== LOT QR CODE ROUTES ====================
+
+@api_router.get("/cutting-orders/{order_id}/qrcode")
+async def get_cutting_lot_qrcode(order_id: str):
+    """Generate QR code for cutting lot"""
+    order = await db.cutting_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Cutting order not found")
+    
+    lot_number = order.get('cutting_lot_number') or order.get('lot_number', '')
+    
+    # QR data contains essential info for scanning
+    qr_data = json.dumps({
+        "type": "lot",
+        "id": order_id,
+        "lot": lot_number,
+        "category": order.get('category'),
+        "style": order.get('style_type'),
+        "color": order.get('color', ''),
+        "total": order.get('total_quantity', 0)
+    })
+    
+    # Generate QR code
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to bytes
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    
+    return Response(content=buffer.getvalue(), media_type="image/png")
+
+
+@api_router.get("/lot/by-number/{lot_number}")
+async def get_lot_by_number(lot_number: str):
+    """Get cutting lot by lot number (for QR scan lookup)"""
+    order = await db.cutting_orders.find_one({
+        "$or": [
+            {"cutting_lot_number": lot_number},
+            {"lot_number": lot_number}
+        ]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    # Get current status
+    lot_num = order.get('cutting_lot_number') or order.get('lot_number', '')
+    
+    # Check outsourcing status
+    outsourcing = await db.outsourcing_orders.find_one(
+        {"cutting_lot_number": lot_num}, {"_id": 0}
+    )
+    
+    # Check ironing status
+    ironing = await db.ironing_orders.find_one(
+        {"cutting_lot_number": lot_num}, {"_id": 0}
+    )
+    
+    # Determine current stage
+    if ironing:
+        stage = "ironing"
+    elif outsourcing:
+        if outsourcing.get('status') == 'Received':
+            stage = "received"
+        else:
+            stage = "outsourcing"
+    else:
+        stage = "cutting"
+    
+    return {
+        "order": order,
+        "stage": stage,
+        "outsourcing": outsourcing,
+        "ironing": ironing
+    }
+
+
+@api_router.post("/scan/send-outsourcing")
+async def scan_send_outsourcing(
+    lot_number: str,
+    unit_name: str,
+    operation_type: str,
+    rate_per_pcs: float = 0,
+    expected_return_date: str = None
+):
+    """Quick send to outsourcing by scanning lot QR"""
+    # Find cutting order
+    order = await db.cutting_orders.find_one({
+        "$or": [
+            {"cutting_lot_number": lot_number},
+            {"lot_number": lot_number}
+        ]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    lot_num = order.get('cutting_lot_number') or order.get('lot_number', '')
+    
+    # Check if already sent
+    existing = await db.outsourcing_orders.find_one({"cutting_lot_number": lot_num})
+    if existing:
+        raise HTTPException(status_code=400, detail="Lot already sent to outsourcing")
+    
+    # Generate DC number
+    count = await db.outsourcing_orders.count_documents({})
+    dc_number = f"DC-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    # Parse expected return date
+    exp_date = None
+    if expected_return_date:
+        exp_date = datetime.fromisoformat(expected_return_date)
+    else:
+        exp_date = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    outsourcing_dict = {
+        "id": str(uuid.uuid4()),
+        "dc_number": dc_number,
+        "cutting_lot_number": lot_num,
+        "unit_name": unit_name,
+        "operation_type": operation_type,
+        "size_distribution": order.get('bundle_distribution', {}),
+        "total_quantity": sum(order.get('bundle_distribution', {}).values()),
+        "rate_per_pcs": rate_per_pcs,
+        "total_amount": sum(order.get('bundle_distribution', {}).values()) * rate_per_pcs,
+        "amount_paid": 0,
+        "status": "Sent",
+        "sent_date": datetime.now(timezone.utc).isoformat(),
+        "expected_return_date": exp_date.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.outsourcing_orders.insert_one(outsourcing_dict)
+    
+    return {"message": "Sent to outsourcing successfully", "dc_number": dc_number}
+
+
+@api_router.post("/scan/receive-outsourcing")
+async def scan_receive_outsourcing(
+    lot_number: str,
+    received_distribution: Dict[str, int],
+    mistake_distribution: Dict[str, int] = None
+):
+    """Quick receive from outsourcing by scanning lot QR"""
+    # Find outsourcing order
+    order = await db.outsourcing_orders.find_one({
+        "cutting_lot_number": lot_number,
+        "status": {"$ne": "Received"}
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="No pending outsourcing order found for this lot")
+    
+    # Calculate shortage
+    shortage_distribution = {}
+    for size, sent_qty in order['size_distribution'].items():
+        received_qty = received_distribution.get(size, 0)
+        shortage = sent_qty - received_qty
+        if shortage > 0:
+            shortage_distribution[size] = shortage
+    
+    total_received = sum(received_distribution.values())
+    total_shortage = sum(shortage_distribution.values())
+    total_mistakes = sum((mistake_distribution or {}).values())
+    
+    # Calculate debit
+    rate = order.get('rate_per_pcs', 0)
+    shortage_debit = round(total_shortage * rate, 2)
+    mistake_debit = round(total_mistakes * rate, 2)
+    
+    # Create receipt
+    receipt_dict = {
+        "id": str(uuid.uuid4()),
+        "outsourcing_order_id": order['id'],
+        "dc_number": order['dc_number'],
+        "unit_name": order['unit_name'],
+        "receipt_date": datetime.now(timezone.utc).isoformat(),
+        "received_distribution": received_distribution,
+        "mistake_distribution": mistake_distribution or {},
+        "shortage_distribution": shortage_distribution,
+        "total_sent": order['total_quantity'],
+        "total_received": total_received,
+        "total_shortage": total_shortage,
+        "total_mistakes": total_mistakes,
+        "rate_per_pcs": rate,
+        "shortage_debit_amount": shortage_debit,
+        "mistake_debit_amount": mistake_debit,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.outsourcing_receipts.insert_one(receipt_dict)
+    
+    # Update order status
+    new_status = 'Received' if total_shortage == 0 else 'Partial'
+    await db.outsourcing_orders.update_one(
+        {"id": order['id']},
+        {"$set": {"status": new_status}}
+    )
+    
+    return {"message": "Receipt recorded successfully", "received": total_received, "shortage": total_shortage}
+
+
+@api_router.post("/scan/create-ironing")
+async def scan_create_ironing(
+    lot_number: str,
+    unit_name: str,
+    master_pack_ratio: Dict[str, int],
+    rate_per_pcs: float = 0
+):
+    """Quick create ironing order by scanning lot QR"""
+    # Find cutting order
+    order = await db.cutting_orders.find_one({
+        "$or": [
+            {"cutting_lot_number": lot_number},
+            {"lot_number": lot_number}
+        ]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    lot_num = order.get('cutting_lot_number') or order.get('lot_number', '')
+    
+    # Check if already exists
+    existing = await db.ironing_orders.find_one({"cutting_lot_number": lot_num})
+    if existing:
+        raise HTTPException(status_code=400, detail="Ironing order already exists for this lot")
+    
+    # Get size distribution from outsourcing receipt or cutting
+    outsourcing_receipt = await db.outsourcing_receipts.find_one({
+        "dc_number": {"$regex": lot_num, "$options": "i"}
+    }, {"_id": 0})
+    
+    if outsourcing_receipt:
+        size_dist = outsourcing_receipt.get('received_distribution', {})
+    else:
+        size_dist = order.get('bundle_distribution', {})
+    
+    total_qty = sum(size_dist.values())
+    
+    # Generate DC number
+    dc_number = f"IR-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    ironing_dict = {
+        "id": str(uuid.uuid4()),
+        "dc_number": dc_number,
+        "cutting_lot_number": lot_num,
+        "unit_name": unit_name,
+        "size_distribution": size_dist,
+        "total_quantity": total_qty,
+        "master_pack_ratio": master_pack_ratio,
+        "rate_per_pcs": rate_per_pcs,
+        "total_amount": total_qty * rate_per_pcs,
+        "amount_paid": 0,
+        "status": "Sent",
+        "sent_date": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.ironing_orders.insert_one(ironing_dict)
+    
+    return {"message": "Ironing order created successfully", "dc_number": dc_number}
+
+
 # ==================== OUTSOURCING UNIT ROUTES ====================
 
 @api_router.get("/outsourcing-units", response_model=List[OutsourcingUnit])
