@@ -341,6 +341,8 @@ function App() {
       fetchIroningOrders();
       fetchIroningReceipts();
       fetchCatalogs();
+      fetchStocks();
+      fetchStockSummary();
       fetchOverdueOrders();
     }
   }, [isAuthenticated]);
