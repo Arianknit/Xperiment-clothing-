@@ -5264,14 +5264,6 @@ _Arian Knit Fab_`;
                 <h2 className="text-3xl font-bold text-slate-800">📦 Stock Management</h2>
                 <div className="flex flex-wrap gap-2">
                   <Button 
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => setScanMode('dispatch')}
-                    data-testid="scan-dispatch-btn"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Scan to Dispatch
-                  </Button>
-                  <Button 
                     variant="outline"
                     className="border-blue-300 text-blue-600 hover:bg-blue-50"
                     onClick={() => setScanMode('newlot')}
@@ -5297,7 +5289,7 @@ _Arian Knit Fab_`;
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold">
-                        📷 {scanMode === 'dispatch' ? 'Scan to Dispatch' : 'Scan to Add New Lot'}
+                        📷 Scan to Add New Lot
                       </h3>
                       <Button 
                         variant="outline" 
