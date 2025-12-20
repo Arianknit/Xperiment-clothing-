@@ -6971,6 +6971,52 @@ _Arian Knit Fab_`;
                 </Card>
               </div>
 
+              {/* Activity Log Section */}
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <Activity className="h-6 w-6 text-slate-600" />
+                    Recent Activity Log
+                  </h3>
+                  <Button variant="outline" onClick={fetchActivityLogs}>
+                    <Search className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </div>
+                
+                <Card className="shadow-lg">
+                  <CardContent className="pt-6">
+                    {activityLogs.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">
+                        <Activity className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                        <p>No recent activity. Click Refresh to load logs.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y max-h-96 overflow-y-auto">
+                        {activityLogs.map((log, idx) => (
+                          <div key={idx} className="py-3 flex items-start gap-3">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              log.action === 'create' ? 'bg-green-500' :
+                              log.action === 'update' ? 'bg-blue-500' :
+                              log.action === 'delete' ? 'bg-red-500' : 'bg-slate-400'
+                            }`}></div>
+                            <div className="flex-1">
+                              <p className="text-sm text-slate-800">
+                                <span className="font-medium">{log.action?.toUpperCase()}</span>
+                                {' '}{log.entity_type} - {log.details || log.entity_id}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {log.user} • {new Date(log.timestamp).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Info Card */}
               <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 mt-6">
                 <CardContent className="pt-6">
