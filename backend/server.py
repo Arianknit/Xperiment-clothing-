@@ -1220,9 +1220,20 @@ async def get_lot_by_number(lot_number: str):
         {"cutting_lot_number": lot_num}, {"_id": 0}
     )
     
+    # Check stock status
+    stock = await db.stock.find_one({
+        "lot_number": lot_num,
+        "is_active": True
+    }, {"_id": 0})
+    
     # Determine current stage
-    if ironing:
-        stage = "ironing"
+    if stock:
+        stage = "stock"
+    elif ironing:
+        if ironing.get('status') == 'Received':
+            stage = "ironing-received"
+        else:
+            stage = "ironing"
     elif outsourcing:
         if outsourcing.get('status') == 'Received':
             stage = "received"
@@ -1235,7 +1246,8 @@ async def get_lot_by_number(lot_number: str):
         "order": order,
         "stage": stage,
         "outsourcing": outsourcing,
-        "ironing": ironing
+        "ironing": ironing,
+        "stock": stock
     }
 
 
