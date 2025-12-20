@@ -582,7 +582,12 @@ function App() {
         clearTimeout(timeoutId);
       }
       if (scanner) {
-        scanner.clear().catch(() => {});
+        // Handle both Html5Qrcode and Html5QrcodeScanner cleanup
+        if (scanner.stop) {
+          scanner.stop().catch(() => {});
+        } else if (scanner.clear) {
+          scanner.clear().catch(() => {});
+        }
       }
     };
   }, [scanMode, stocks]);
