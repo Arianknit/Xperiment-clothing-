@@ -356,6 +356,8 @@ class IroningOrder(BaseModel):
     payment_status: Optional[str] = "Unpaid"
     status: str  # Sent, Received
     whatsapp_sent: bool = False
+    stock_lot_name: Optional[str] = ""  # Custom lot name for stock entry
+    stock_color: Optional[str] = ""  # Custom color for stock entry
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -366,6 +368,8 @@ class IroningOrderCreate(BaseModel):
     unit_name: str
     rate_per_pcs: float
     master_pack_ratio: Optional[Dict[str, int]] = {}
+    stock_lot_name: Optional[str] = ""  # Custom lot name for stock entry
+    stock_color: Optional[str] = ""  # Custom color for stock entry
 
 class IroningReceipt(BaseModel):
     model_config = ConfigDict(extra="ignore")
