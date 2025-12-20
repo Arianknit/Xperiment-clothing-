@@ -90,7 +90,7 @@ Date: 2025-12-18
 - **UI Consistency:** All search and filter components follow consistent design patterns
 
 #### Test Environment
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login:** admin/admin
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -133,7 +133,7 @@ Date: 2025-12-18
 - **UI Integration:** All buttons properly positioned and styled
 
 #### Test Environment
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login:** admin/admin
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -184,7 +184,7 @@ Date: 2025-12-18
 - **Hover Effects:** Proper hover states with `hover:bg-red-50`
 
 #### Test Environment
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login:** admin/admin
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -209,7 +209,7 @@ The lot-wise catalog dispatch feature allows users to:
 6. Verify catalog stock is updated after dispatch
 
 ### Test Environment:
-- URL: https://producpro.preview.emergentagent.com
+- URL: https://arian-production.preview.emergentagent.com
 - Login: admin/admin
 - Browser: Playwright automation testing
 
@@ -278,7 +278,7 @@ The lot-wise catalog dispatch feature allows users to:
 - **Error Handling:** No errors encountered during testing process
 
 #### Test Environment Details
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -388,7 +388,7 @@ Updated the catalog dispatch feature to use:
 - **Real-time Calculations:** All calculations update in real-time as user inputs data
 
 #### Test Environment Details
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-19
@@ -486,7 +486,7 @@ Date: 2025-12-19
 - **Dialog Management:** Both dialogs open/close correctly without UI issues ✅
 
 #### Test Environment Details
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-19
@@ -558,7 +558,7 @@ Date: 2025-12-19
 - **Responsive Display:** All components render properly across different screen sizes ✅
 
 #### Test Environment Details
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-19
@@ -656,7 +656,7 @@ Complete QR Code flow testing from Cutting to Ironing on "Arian Knit Fab Product
 - **Performance:** QR dialogs load quickly and respond smoothly ✅
 
 #### Test Environment Details
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -782,7 +782,7 @@ New dedicated Stock tab with stock management features:
 - **Color Coding:** Proper color schemes for different sections (green for master packs, amber for loose pieces) ✅
 
 #### Test Environment Details
-- **URL:** https://producpro.preview.emergentagent.com
+- **URL:** https://arian-production.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
