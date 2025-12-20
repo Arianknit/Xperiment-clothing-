@@ -492,47 +492,86 @@ function App() {
         if (scanMode === 'dispatch') {
           const element = document.getElementById('qr-reader-dispatch');
           if (element) {
-            scanner = new Html5QrcodeScanner('qr-reader-dispatch', {
-              fps: 10,
-              qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0,
-              supportedScanTypes: [
-                Html5QrcodeScanType.SCAN_TYPE_CAMERA,
-                Html5QrcodeScanType.SCAN_TYPE_FILE
-              ],
-              rememberLastUsedCamera: true
-            });
+            // Use Html5Qrcode for continuous scanning
+            const html5QrCode = new Html5Qrcode('qr-reader-dispatch');
+            scanner = html5QrCode;
             
-            scanner.render(
-              async (decodedText) => {
-                // Try to parse as JSON (stock QR codes contain JSON)
-                let stockCode = decodedText;
-                try {
-                  const data = JSON.parse(decodedText);
-                  if (data.type === 'stock' && data.code) {
-                    stockCode = data.code;
-                  }
-                } catch (e) {
-                  // Not JSON, use as plain text stock code
-                }
-                
-                // Find stock by QR code (stock_code)
-                const stock = stocks.find(s => s.stock_code === stockCode);
-                if (stock) {
-                  if (stock.available_quantity > 0) {
-                    addItemToDispatch(stock);
-                    toast.success(`Added ${stock.stock_code}! Keep scanning or click Done.`);
-                  } else {
-                    toast.error(`${stock.stock_code} has no available quantity`);
-                  }
-                } else {
-                  toast.error(`Stock not found: ${stockCode}`);
-                }
-              },
-              (error) => {
-                // Ignore scan errors
+            // Track processed codes to avoid duplicates within same session
+            const processedCodes = new Set();
+            
+            const onScanSuccess = (decodedText) => {
+              // Prevent duplicate processing of same code
+              if (processedCodes.has(decodedText)) {
+                return;
               }
-            );
+              processedCodes.add(decodedText);
+              
+              // Clear after 2 seconds to allow re-scanning same item if needed
+              setTimeout(() => processedCodes.delete(decodedText), 2000);
+              
+              // Try to parse as JSON (stock QR codes contain JSON)
+              let stockCode = decodedText;
+              try {
+                const data = JSON.parse(decodedText);
+                if (data.type === 'stock' && data.code) {
+                  stockCode = data.code;
+                }
+              } catch (e) {
+                // Not JSON, use as plain text stock code
+              }
+              
+              // Find stock by QR code (stock_code)
+              const stock = stocks.find(s => s.stock_code === stockCode);
+              if (stock) {
+                if (stock.available_quantity > 0) {
+                  addItemToDispatch(stock);
+                  toast.success(`Added ${stock.stock_code}! Keep scanning or click Done.`);
+                } else {
+                  toast.error(`${stock.stock_code} has no available quantity`);
+                }
+              } else {
+                toast.error(`Stock not found: ${stockCode}`);
+              }
+            };
+            
+            // Start camera scanning
+            html5QrCode.start(
+              { facingMode: "environment" },
+              { fps: 10, qrbox: { width: 250, height: 250 } },
+              onScanSuccess,
+              () => {} // Ignore errors
+            ).catch(err => {
+              console.log("Camera not available, showing file upload option");
+              // If camera fails, show file upload UI
+              element.innerHTML = `
+                <div style="padding: 20px; text-align: center; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                  <p style="margin-bottom: 15px; color: #fef3c7;">📷 Camera not available. Use file upload:</p>
+                  <input type="file" id="qr-file-input" accept="image/*" style="display: none;" />
+                  <button id="qr-file-btn" style="background: #f59e0b; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                    📁 Select QR Code Image
+                  </button>
+                </div>
+              `;
+              
+              const fileBtn = document.getElementById('qr-file-btn');
+              const fileInput = document.getElementById('qr-file-input');
+              
+              if (fileBtn && fileInput) {
+                fileBtn.onclick = () => fileInput.click();
+                fileInput.onchange = async (e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    try {
+                      const result = await html5QrCode.scanFile(file, true);
+                      onScanSuccess(result);
+                      fileInput.value = ''; // Reset for next scan
+                    } catch (err) {
+                      toast.error("Could not read QR code from image");
+                    }
+                  }
+                };
+              }
+            });
           }
         }
       }, 100);
