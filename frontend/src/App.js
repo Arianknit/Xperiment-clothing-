@@ -8531,7 +8531,38 @@ _Arian Knit Fab_`;
           {!scannedLot ? (
             <div className="space-y-4">
               <div id="unified-qr-reader" className="rounded-lg overflow-hidden"></div>
-              <p className="text-center text-slate-500 text-sm">Point camera at lot QR code</p>
+              
+              {/* File upload backup option */}
+              <div className="text-center border-t pt-4">
+                <input 
+                  type="file" 
+                  id="unified-lot-file-upload" 
+                  accept="image/*" 
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      try {
+                        const html5QrCode = new Html5Qrcode("temp-qr-reader");
+                        const result = await html5QrCode.scanFile(file, true);
+                        setUnifiedScannerOpen(false);
+                        handleLotQRScan(result);
+                      } catch (err) {
+                        toast.error("Could not read QR code from image");
+                      }
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => document.getElementById('unified-lot-file-upload')?.click()}
+                >
+                  📁 Or Upload QR Code Image
+                </Button>
+                <p className="text-slate-500 text-sm mt-2">Point camera at lot QR code or upload image</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
