@@ -2404,7 +2404,7 @@ _Arian Knit Fab_`;
       <main className="container mx-auto px-3 md:px-6 py-4 md:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-8 max-w-7xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
+          <TabsList className="hidden md:grid w-full grid-cols-10 max-w-7xl mx-auto mb-8 bg-white shadow-md" data-testid="main-tabs">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-dashboard">
               <TrendingUp className="h-4 w-4 mr-2" />
               Dashboard
@@ -2432,6 +2432,10 @@ _Arian Knit Fab_`;
             <TabsTrigger value="stock" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-stock">
               <Package className="h-4 w-4 mr-2" />
               Stock
+            </TabsTrigger>
+            <TabsTrigger value="dispatch" className="data-[state=active]:bg-green-500 data-[state=active]:text-white" data-testid="tab-dispatch">
+              <Truck className="h-4 w-4 mr-2" />
+              Dispatch
             </TabsTrigger>
             <TabsTrigger value="catalog" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-catalog">
               <BookOpen className="h-4 w-4 mr-2" />
