@@ -420,15 +420,15 @@ class QuickActionTester:
 
 def main():
     """Main test execution"""
-    print("🏭 Garment Manufacturing App - Returns Management Feature Tests")
+    print("🏭 Garment Manufacturing App - Quick Action Endpoints Tests")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print()
     
-    tester = ReturnsManagementTester()
+    tester = QuickActionTester()
     success = tester.run_comprehensive_tests()
     
     if success:
-        print("\n🎉 All tests passed! Returns Management feature is working correctly.")
+        print("\n🎉 All tests passed! Quick Action endpoints are working correctly.")
         sys.exit(0)
     else:
         print("\n⚠️  Some tests failed. Please check the issues above.")
