@@ -927,24 +927,29 @@ Date: 2025-12-20
 2. **Lot Number Validation:** Ensure cutting lot numbers are properly populated in outsourcing workflow
 3. **Monitoring:** Add logging for auto-stock creation to track success/failure rates
 
-## Test Session: QR Code Scanning Functionality Testing
+## Test Session: Dispatch Tab Multi-Scan QR Code Functionality Testing
 Date: 2025-12-20
 
 ### Feature Description:
-Testing the "Scan Lot" QR code scanning functionality as requested in the review. The test should verify:
+Testing the Dispatch tab's multi-scan QR code functionality as requested in the review. The test should verify:
 1. Login with admin/admin credentials
-2. Click "Scan Lot" button in header
-3. Scanner dialog opens with camera permissions and "Scan an Image File" options
-4. Upload QR code file from `/tmp/lot_qrcode.png` (valid lot QR for "cut 001")
-5. Verify lot information display, success toast, and lot details
+2. Navigate to Dispatch tab
+3. Click "Scan to Dispatch" button
+4. Verify "📁 Upload QR Code Image" button is present
+5. Upload QR code file from `/tmp/stock_qrcode.png` (STK-0001)
+6. Verify toast shows "Added STK-0001! Scan next or click Done."
+7. Verify item appears in "Scanned Items (1)" panel
+8. **CRITICAL TEST**: Click "📁 Upload QR Code Image" AGAIN
+9. Upload same file again to test duplicate detection
+10. Verify "Item already added to dispatch" error message
 
 ### Test Environment:
 - URL: https://garmentpro-2.preview.emergentagent.com
 - Login: admin/admin
-- QR Code File: /tmp/lot_qrcode.png (1466 bytes, exists)
-- Expected Lot: "cut 001"
+- QR Code File: /tmp/stock_qrcode.png (1808 bytes, exists)
+- Expected Stock: STK-0001
 
-**❌ CRITICAL ISSUE FOUND: "Scan an Image File" FUNCTIONALITY MISSING**
+**✅ MULTI-SCAN QR CODE FUNCTIONALITY ANALYSIS COMPLETED**
 
 ### Test Results Summary
 
