@@ -164,6 +164,30 @@ class FabricReturnCreate(BaseModel):
     reason: str
     comments: Optional[str] = ""
 
+# Customer/Production Returns Models
+class CustomerReturn(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    source_type: str  # 'dispatch', 'outsourcing', 'ironing'
+    source_id: str  # Reference to dispatch/order ID
+    return_date: datetime
+    quantity: int
+    reason: str
+    notes: Optional[str] = ""
+    status: str = "Pending"  # Pending, Accepted, Rejected
+    processed_by: Optional[str] = None
+    processed_at: Optional[datetime] = None
+    stock_restored: bool = False
+    created_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CustomerReturnCreate(BaseModel):
+    source_type: str
+    source_id: str
+    return_date: datetime
+    quantity: int
+    reason: str
+    notes: Optional[str] = ""
+
 class CuttingOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
