@@ -2167,10 +2167,38 @@ _Arian Knit Fab_`;
         whatsappData.data.billsCount,
         whatsappData.data.bills
       );
+    } else if (whatsappData.type === 'dispatch') {
+      message = generateDispatchMessage(whatsappData.data);
     }
     
     openWhatsApp(phone, message);
     setWhatsappDialogOpen(false);
+  };
+
+  const generateDispatchMessage = (dispatch) => {
+    let message = `🚚 *DISPATCH DETAILS*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📋 *Dispatch No:* ${dispatch.dispatch_number}\n`;
+    message += `📅 *Date:* ${new Date(dispatch.dispatch_date).toLocaleDateString()}\n`;
+    message += `👤 *Customer:* ${dispatch.customer_name}\n`;
+    message += `📦 *Bora No:* ${dispatch.bora_number}\n\n`;
+    message += `*📦 ITEMS:*\n`;
+    message += `─────────────────────\n`;
+    
+    dispatch.items?.forEach((item, idx) => {
+      message += `${idx + 1}. ${item.stock_code}\n`;
+      message += `   Lot: ${item.lot_number}\n`;
+      message += `   Color: ${item.color || 'N/A'}\n`;
+      message += `   Packs: ${item.master_packs} | Qty: ${item.total_quantity} pcs\n\n`;
+    });
+    
+    message += `━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📊 *TOTAL: ${dispatch.grand_total_quantity} pcs*\n`;
+    if (dispatch.notes) message += `📝 Notes: ${dispatch.notes}\n`;
+    if (dispatch.remarks) message += `⚠️ Remarks: ${dispatch.remarks}\n`;
+    message += `\n_Arian Knit Fab Production Pro_`;
+    
+    return message;
   };
 
   const openWhatsAppDialog = (type, data, unitPhone = '') => {
