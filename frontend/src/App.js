@@ -9841,8 +9841,48 @@ _Arian Knit Fab_`;
             <DialogDescription>Scan a fabric lot barcode to view details</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* iOS PWA Warning */}
+            {window.navigator.standalone && (
+              <div className="bg-amber-50 border border-amber-200 p-2 rounded text-amber-800 text-xs">
+                📱 iOS App Mode: Use "Take Photo" button below if camera doesn't work.
+              </div>
+            )}
+            
             <div id="barcode-scanner" className="w-full min-h-[250px] bg-slate-100 rounded-lg overflow-hidden" />
-            <p className="text-xs text-slate-500 text-center">Point camera at barcode to scan</p>
+            
+            {/* iOS-friendly file upload */}
+            <div className="text-center border-t pt-3">
+              <input 
+                type="file" 
+                id="barcode-file-upload" 
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    try {
+                      const tempQr = new Html5Qrcode("temp-qr-reader");
+                      const result = await tempQr.scanFile(file, true);
+                      setScannerDialogOpen(false);
+                      handleLotQRScan(result);
+                    } catch (err) {
+                      toast.error("Could not read barcode from image");
+                    }
+                    e.target.value = '';
+                  }
+                }}
+              />
+              <Button 
+                variant="outline"
+                className="w-full mb-2"
+                onClick={() => document.getElementById('barcode-file-upload')?.click()}
+              >
+                📸 Take Photo or Choose Image
+              </Button>
+              <p className="text-xs text-slate-500">Point camera at barcode or tap button above</p>
+            </div>
+            
             <Button 
               variant="outline" 
               className="w-full" 
