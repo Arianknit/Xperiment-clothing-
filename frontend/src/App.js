@@ -6818,6 +6818,336 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Lot QR Code Dialog */}
+      <Dialog open={lotQRDialogOpen} onOpenChange={setLotQRDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="lot-qr-dialog">
+          <DialogHeader>
+            <DialogTitle>📱 Lot QR Code</DialogTitle>
+            <DialogDescription>
+              {selectedLotForQR && (selectedLotForQR.cutting_lot_number || selectedLotForQR.lot_number)}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedLotForQR && (
+            <div className="space-y-4">
+              <div className="flex justify-center p-4 bg-white rounded-lg border">
+                <img 
+                  src={`${API}/cutting-orders/${selectedLotForQR.id}/qrcode`} 
+                  alt="Lot QR Code"
+                  className="w-48 h-48"
+                />
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg text-sm">
+                <p><strong>Lot:</strong> {selectedLotForQR.cutting_lot_number || selectedLotForQR.lot_number}</p>
+                <p><strong>Category:</strong> {selectedLotForQR.category}</p>
+                <p><strong>Style:</strong> {selectedLotForQR.style_type}</p>
+                <p><strong>Color:</strong> {selectedLotForQR.color}</p>
+                <p><strong>Quantity:</strong> {selectedLotForQR.total_quantity} pcs</p>
+              </div>
+              <div className="flex justify-center gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = `${API}/cutting-orders/${selectedLotForQR.id}/qrcode`;
+                    link.download = `${selectedLotForQR.cutting_lot_number || selectedLotForQR.lot_number}-qr.png`;
+                    link.click();
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const lotNum = selectedLotForQR.cutting_lot_number || selectedLotForQR.lot_number;
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                      <html>
+                        <head><title>QR - ${lotNum}</title></head>
+                        <body style="text-align:center; padding:20px;">
+                          <h2>${lotNum}</h2>
+                          <p>${selectedLotForQR.category} | ${selectedLotForQR.style_type} | ${selectedLotForQR.color}</p>
+                          <p>${selectedLotForQR.total_quantity} pcs</p>
+                          <img src="${API}/cutting-orders/${selectedLotForQR.id}/qrcode" style="width:200px;height:200px;" />
+                          <script>setTimeout(() => window.print(), 500)</script>
+                        </body>
+                      </html>
+                    `);
+                  }}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print Label
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Unified Lot Scanner Dialog */}
+      <Dialog open={unifiedScannerOpen} onOpenChange={(open) => {
+        setUnifiedScannerOpen(open);
+        if (!open) setScannedLot(null);
+      }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="unified-scanner-dialog">
+          <DialogHeader>
+            <DialogTitle>📷 Scan Lot QR Code</DialogTitle>
+            <DialogDescription>Scan any lot QR to view status and take action</DialogDescription>
+          </DialogHeader>
+          
+          {!scannedLot ? (
+            <div className="space-y-4">
+              <div id="unified-qr-reader" className="rounded-lg overflow-hidden"></div>
+              <p className="text-center text-slate-500 text-sm">Point camera at lot QR code</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Scanned Lot Info */}
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-semibold text-green-800">Lot Found!</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-800">
+                  {scannedLot.order.cutting_lot_number || scannedLot.order.lot_number}
+                </h3>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge className="bg-slate-100">{scannedLot.order.category}</Badge>
+                  <Badge className="bg-blue-100 text-blue-700">{scannedLot.order.style_type}</Badge>
+                  {scannedLot.order.color && <Badge className="bg-purple-100 text-purple-700">🎨 {scannedLot.order.color}</Badge>}
+                </div>
+                <p className="text-sm text-slate-600 mt-2">Total: {scannedLot.order.total_quantity} pcs</p>
+              </div>
+
+              {/* Current Stage */}
+              <div className="bg-slate-50 p-3 rounded-lg border">
+                <p className="text-xs text-slate-500 mb-2">Current Stage</p>
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${scannedLot.stage === 'cutting' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                  <span className="font-semibold capitalize">{scannedLot.stage}</span>
+                </div>
+                <div className="flex gap-1 mt-2 text-xs">
+                  <span className={`px-2 py-1 rounded ${scannedLot.stage === 'cutting' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>✅ Cut</span>
+                  <span className={`px-2 py-1 rounded ${['outsourcing', 'received', 'ironing'].includes(scannedLot.stage) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.outsourcing ? '✅ Sent' : '⏳ Send'}
+                  </span>
+                  <span className={`px-2 py-1 rounded ${['received', 'ironing'].includes(scannedLot.stage) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.outsourcing?.status === 'Received' ? '✅ Received' : '⏳ Receive'}
+                  </span>
+                  <span className={`px-2 py-1 rounded ${scannedLot.stage === 'ironing' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {scannedLot.ironing ? '✅ Ironing' : '⏳ Iron'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="space-y-2">
+                <p className="font-semibold text-slate-700">Quick Actions</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700 text-white h-20 flex-col"
+                    disabled={scannedLot.outsourcing}
+                    onClick={() => {
+                      setScanSendOutsourcingForm({ unit_name: "", operation_type: "Printing", rate_per_pcs: 0 });
+                      setScanActionDialog('send');
+                    }}
+                  >
+                    <Send className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Send Out</span>
+                  </Button>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700 text-white h-20 flex-col"
+                    disabled={!scannedLot.outsourcing || scannedLot.outsourcing?.status === 'Received'}
+                    onClick={() => {
+                      setScanReceiveForm({
+                        received_distribution: scannedLot.outsourcing?.size_distribution || {},
+                        mistake_distribution: {}
+                      });
+                      setScanActionDialog('receive');
+                    }}
+                  >
+                    <Package className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Receive</span>
+                  </Button>
+                  <Button 
+                    className="bg-orange-600 hover:bg-orange-700 text-white h-20 flex-col"
+                    disabled={scannedLot.ironing}
+                    onClick={() => {
+                      setScanIroningForm({ unit_name: "", rate_per_pcs: 0, master_pack_ratio: { M: 2, L: 2, XL: 2, XXL: 2 } });
+                      setScanActionDialog('ironing');
+                    }}
+                  >
+                    <Factory className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Iron</span>
+                  </Button>
+                </div>
+              </div>
+
+              <Button variant="outline" className="w-full" onClick={() => setScannedLot(null)}>
+                <Camera className="h-4 w-4 mr-2" />
+                Scan Another
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Scan Send Outsourcing Dialog */}
+      <Dialog open={scanActionDialog === 'send'} onOpenChange={(open) => !open && setScanActionDialog(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>📤 Send to Outsourcing</DialogTitle>
+            <DialogDescription>
+              {scannedLot && (scannedLot.order.cutting_lot_number || scannedLot.order.lot_number)}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleScanSendOutsourcing} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Unit Name *</Label>
+              <Select value={scanSendOutsourcingForm.unit_name} onValueChange={(v) => setScanSendOutsourcingForm({...scanSendOutsourcingForm, unit_name: v})}>
+                <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
+                <SelectContent>
+                  {outsourcingUnits.map((unit) => (
+                    <SelectItem key={unit.name} value={unit.name}>{unit.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Operation</Label>
+              <Select value={scanSendOutsourcingForm.operation_type} onValueChange={(v) => setScanSendOutsourcingForm({...scanSendOutsourcingForm, operation_type: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Printing">Printing</SelectItem>
+                  <SelectItem value="Embroidery">Embroidery</SelectItem>
+                  <SelectItem value="Stitching">Stitching</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Rate per Piece (₹)</Label>
+              <Input 
+                type="number" 
+                value={scanSendOutsourcingForm.rate_per_pcs}
+                onChange={(e) => setScanSendOutsourcingForm({...scanSendOutsourcingForm, rate_per_pcs: parseFloat(e.target.value) || 0})}
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setScanActionDialog(null)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700" disabled={loading || !scanSendOutsourcingForm.unit_name}>
+                {loading ? "Sending..." : "📤 Send"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Scan Receive Dialog */}
+      <Dialog open={scanActionDialog === 'receive'} onOpenChange={(open) => !open && setScanActionDialog(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>📥 Receive from Outsourcing</DialogTitle>
+            <DialogDescription>
+              {scannedLot && (scannedLot.order.cutting_lot_number || scannedLot.order.lot_number)}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleScanReceive} className="space-y-4">
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 text-sm">
+              <p><strong>Sent:</strong> {scannedLot?.outsourcing?.total_quantity} pcs</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="font-semibold">Received Quantities</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {Object.entries(scannedLot?.outsourcing?.size_distribution || {}).map(([size, sentQty]) => (
+                  <div key={size} className="space-y-1">
+                    <Label className="text-xs">{size} ({sentQty})</Label>
+                    <Input 
+                      type="number"
+                      min="0"
+                      max={sentQty}
+                      value={scanReceiveForm.received_distribution[size] || ''}
+                      onChange={(e) => setScanReceiveForm({
+                        ...scanReceiveForm,
+                        received_distribution: {...scanReceiveForm.received_distribution, [size]: parseInt(e.target.value) || 0}
+                      })}
+                      className="h-9"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setScanActionDialog(null)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700" disabled={loading}>
+                {loading ? "Receiving..." : "📥 Receive"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Scan Create Ironing Dialog */}
+      <Dialog open={scanActionDialog === 'ironing'} onOpenChange={(open) => !open && setScanActionDialog(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>🔥 Create Ironing Order</DialogTitle>
+            <DialogDescription>
+              {scannedLot && (scannedLot.order.cutting_lot_number || scannedLot.order.lot_number)}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleScanCreateIroning} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Ironing Unit *</Label>
+              <Select value={scanIroningForm.unit_name} onValueChange={(v) => setScanIroningForm({...scanIroningForm, unit_name: v})}>
+                <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
+                <SelectContent>
+                  {outsourcingUnits.filter(u => u.operations?.includes('Ironing')).map((unit) => (
+                    <SelectItem key={unit.name} value={unit.name}>{unit.name}</SelectItem>
+                  ))}
+                  {outsourcingUnits.map((unit) => (
+                    <SelectItem key={unit.name} value={unit.name}>{unit.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Rate per Piece (₹)</Label>
+              <Input 
+                type="number" 
+                value={scanIroningForm.rate_per_pcs}
+                onChange={(e) => setScanIroningForm({...scanIroningForm, rate_per_pcs: parseFloat(e.target.value) || 0})}
+              />
+            </div>
+            <div className="space-y-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+              <Label className="font-semibold text-purple-800">Master Pack Ratio</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {['M', 'L', 'XL', 'XXL'].map((size) => (
+                  <div key={size} className="space-y-1">
+                    <Label className="text-xs">{size}</Label>
+                    <Input 
+                      type="number"
+                      min="0"
+                      value={scanIroningForm.master_pack_ratio[size] || ''}
+                      onChange={(e) => setScanIroningForm({
+                        ...scanIroningForm,
+                        master_pack_ratio: {...scanIroningForm.master_pack_ratio, [size]: parseInt(e.target.value) || 0}
+                      })}
+                      className="h-9"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setScanActionDialog(null)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-orange-600 hover:bg-orange-700" disabled={loading || !scanIroningForm.unit_name}>
+                {loading ? "Creating..." : "🔥 Create Ironing"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Stock QR Code Dialog */}
       <Dialog open={stockQRDialogOpen} onOpenChange={setStockQRDialogOpen}>
         <DialogContent className="sm:max-w-[400px]" data-testid="stock-qr-dialog">
