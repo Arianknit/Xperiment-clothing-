@@ -5493,6 +5493,119 @@ _Arian Knit Fab_`;
             </div>
           </TabsContent>
 
+          {/* Dispatch Tab */}
+          <TabsContent value="dispatch" data-testid="dispatch-content">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold text-slate-800">🚚 Bulk Dispatch</h2>
+                <Button 
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => setBulkDispatchDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Dispatch
+                </Button>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-slate-600">Total Dispatches</p>
+                    <p className="text-3xl font-bold text-green-600">{bulkDispatches.length}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-slate-600">Total Items Dispatched</p>
+                    <p className="text-3xl font-bold text-blue-600">
+                      {bulkDispatches.reduce((sum, d) => sum + (d.total_items || 0), 0)}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-slate-600">Total Quantity</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {bulkDispatches.reduce((sum, d) => sum + (d.grand_total_quantity || 0), 0)} pcs
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Dispatch History */}
+              <h3 className="text-xl font-semibold text-slate-700">📋 Dispatch History</h3>
+              
+              {bulkDispatches.length === 0 ? (
+                <Card className="bg-slate-50">
+                  <CardContent className="pt-6 text-center">
+                    <Truck className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500">No dispatches yet. Create your first bulk dispatch!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {bulkDispatches.map((dispatch) => (
+                    <Card key={dispatch.id} className="shadow-lg border-l-4 border-l-green-500">
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-xl font-bold text-slate-800">{dispatch.dispatch_number}</h3>
+                              <Badge className="bg-green-100 text-green-700">{dispatch.total_items} Items</Badge>
+                              <Badge className="bg-blue-100 text-blue-700">{dispatch.grand_total_quantity} pcs</Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-2 text-sm text-slate-600">
+                              <span>📅 {new Date(dispatch.dispatch_date).toLocaleDateString()}</span>
+                              <span>|</span>
+                              <span>👤 {dispatch.customer_name}</span>
+                              <span>|</span>
+                              <span>📦 Bora: {dispatch.bora_number}</span>
+                            </div>
+                            {dispatch.notes && <p className="text-sm text-slate-500">📝 {dispatch.notes}</p>}
+                            {dispatch.remarks && <p className="text-sm text-amber-600">⚠️ {dispatch.remarks}</p>}
+                            
+                            {/* Items Preview */}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {dispatch.items?.slice(0, 5).map((item, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {item.stock_code} - {item.lot_number} ({item.total_quantity} pcs)
+                                </Badge>
+                              ))}
+                              {dispatch.items?.length > 5 && (
+                                <Badge variant="outline" className="text-xs bg-slate-100">
+                                  +{dispatch.items.length - 5} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handlePrintDispatch(dispatch.id)}
+                            >
+                              <Printer className="h-4 w-4 mr-1" />
+                              Print
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteBulkDispatch(dispatch.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Catalog Tab */}
           <TabsContent value="catalog" data-testid="catalog-content">
             <div className="space-y-6">
