@@ -212,6 +212,24 @@ function App() {
   });
   const [scanActionDialog, setScanActionDialog] = useState(null); // 'send', 'receive', 'ironing', 'receive-ironing'
   
+  // Bulk Dispatch State
+  const [bulkDispatches, setBulkDispatches] = useState([]);
+  const [bulkDispatchForm, setBulkDispatchForm] = useState({
+    dispatch_date: new Date().toISOString().split('T')[0],
+    customer_name: "",
+    bora_number: "",
+    notes: "",
+    remarks: "",
+    items: []
+  });
+  const [bulkDispatchDialogOpen, setBulkDispatchDialogOpen] = useState(false);
+  const [selectedStocksForDispatch, setSelectedStocksForDispatch] = useState([]);
+  const [dispatchItemForm, setDispatchItemForm] = useState({
+    stock_id: "",
+    master_packs: 0,
+    loose_pcs: {}
+  });
+
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
     cutting_master_name: "",
