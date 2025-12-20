@@ -1625,6 +1625,89 @@ function App() {
     }
   };
 
+  // Unified Lot QR Scan Handler
+  const handleLotQRScan = async (decodedText) => {
+    try {
+      const data = JSON.parse(decodedText);
+      if (data.type === 'lot' && data.lot) {
+        // Fetch lot details with current status
+        const response = await axios.get(`${API}/lot/by-number/${encodeURIComponent(data.lot)}`);
+        setScannedLot(response.data);
+        setUnifiedScannerOpen(false);
+        toast.success(`Scanned: ${data.lot}`);
+      } else {
+        toast.error("Invalid QR code - not a lot code");
+      }
+    } catch (error) {
+      console.error("Error processing lot QR:", error);
+      toast.error(error.response?.data?.detail || "Failed to process QR code");
+    }
+  };
+
+  const handleScanSendOutsourcing = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const lotNum = scannedLot.order.cutting_lot_number || scannedLot.order.lot_number;
+      await axios.post(`${API}/scan/send-outsourcing?lot_number=${encodeURIComponent(lotNum)}&unit_name=${encodeURIComponent(scanSendOutsourcingForm.unit_name)}&operation_type=${encodeURIComponent(scanSendOutsourcingForm.operation_type)}&rate_per_pcs=${scanSendOutsourcingForm.rate_per_pcs}`);
+      toast.success("Sent to outsourcing successfully!");
+      setScanActionDialog(null);
+      setScannedLot(null);
+      fetchOutsourcingOrders();
+    } catch (error) {
+      console.error("Error sending to outsourcing:", error);
+      toast.error(error.response?.data?.detail || "Failed to send");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScanReceive = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const lotNum = scannedLot.order.cutting_lot_number || scannedLot.order.lot_number;
+      await axios.post(`${API}/scan/receive-outsourcing`, {
+        lot_number: lotNum,
+        received_distribution: scanReceiveForm.received_distribution,
+        mistake_distribution: scanReceiveForm.mistake_distribution
+      });
+      toast.success("Receipt recorded successfully!");
+      setScanActionDialog(null);
+      setScannedLot(null);
+      fetchOutsourcingReceipts();
+      fetchOutsourcingOrders();
+    } catch (error) {
+      console.error("Error receiving:", error);
+      toast.error(error.response?.data?.detail || "Failed to receive");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScanCreateIroning = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const lotNum = scannedLot.order.cutting_lot_number || scannedLot.order.lot_number;
+      await axios.post(`${API}/scan/create-ironing?lot_number=${encodeURIComponent(lotNum)}&unit_name=${encodeURIComponent(scanIroningForm.unit_name)}&rate_per_pcs=${scanIroningForm.rate_per_pcs}`, {
+        lot_number: lotNum,
+        unit_name: scanIroningForm.unit_name,
+        master_pack_ratio: scanIroningForm.master_pack_ratio,
+        rate_per_pcs: scanIroningForm.rate_per_pcs
+      });
+      toast.success("Ironing order created successfully!");
+      setScanActionDialog(null);
+      setScannedLot(null);
+      fetchIroningOrders();
+    } catch (error) {
+      console.error("Error creating ironing:", error);
+      toast.error(error.response?.data?.detail || "Failed to create ironing");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDispatchSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
