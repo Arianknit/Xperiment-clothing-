@@ -418,6 +418,35 @@ function App() {
     };
   }, [scanMode]);
 
+  // Unified Lot QR Scanner
+  useEffect(() => {
+    let scanner = null;
+    
+    if (unifiedScannerOpen && document.getElementById('unified-qr-reader')) {
+      scanner = new Html5QrcodeScanner('unified-qr-reader', {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      });
+      
+      scanner.render(
+        (decodedText) => {
+          scanner.clear();
+          handleLotQRScan(decodedText);
+        },
+        (error) => {
+          // Ignore scan errors
+        }
+      );
+    }
+    
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(() => {});
+      }
+    };
+  }, [unifiedScannerOpen]);
+
   // Mobile detection and PWA install prompt
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
