@@ -93,6 +93,10 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [analyticsData, setAnalyticsData] = useState(null);
   
+  // Bulk Operations State
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [selectedStockIds, setSelectedStockIds] = useState([]);
+  
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
   const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
   const [scaleReadings, setScaleReadings] = useState([]);
