@@ -124,7 +124,7 @@ function App() {
   const [restartPoints, setRestartPoints] = useState([]);  // Indices where scale was restarted
   const [returnFabricDialogOpen, setReturnFabricDialogOpen] = useState(false);
   const [selectedLotForReturn, setSelectedLotForReturn] = useState(null);
-  const [returnForm, setReturnForm] = useState({
+  const [fabricReturnForm, setFabricReturnForm] = useState({
     returned_rolls: [],
     quantity_returned: '',
     reason: 'Wrong Color',
