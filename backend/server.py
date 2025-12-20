@@ -5764,6 +5764,430 @@ async def get_ironing_report(
     return HTMLResponse(content=html)
 
 
+# ==================== NEW COMPREHENSIVE REPORTS ====================
+
+# Stock Report - Summary, Movement, Low Stock
+@api_router.get("/reports/stock")
+async def get_stock_report(
+    format: str = "html",  # html or csv
+    category: Optional[str] = None,
+    low_stock_threshold: int = 50
+):
+    """Generate comprehensive stock report"""
+    query = {}
+    if category:
+        query["category"] = category
+    
+    stocks = await db.stock.find(query, {"_id": 0}).to_list(1000)
+    
+    # Calculate totals
+    total_quantity = sum(s.get('total_quantity', 0) for s in stocks)
+    total_available = sum(s.get('available_quantity', 0) for s in stocks)
+    total_dispatched = total_quantity - total_available
+    low_stock_items = [s for s in stocks if s.get('available_quantity', 0) < low_stock_threshold and s.get('available_quantity', 0) > 0]
+    out_of_stock = [s for s in stocks if s.get('available_quantity', 0) == 0]
+    
+    # Category-wise summary
+    category_summary = {}
+    for s in stocks:
+        cat = s.get('category', 'Unknown')
+        if cat not in category_summary:
+            category_summary[cat] = {'total': 0, 'available': 0, 'items': 0}
+        category_summary[cat]['total'] += s.get('total_quantity', 0)
+        category_summary[cat]['available'] += s.get('available_quantity', 0)
+        category_summary[cat]['items'] += 1
+    
+    if format == "csv":
+        # Generate CSV
+        csv_content = "Stock Code,Lot Number,Category,Style,Color,Total Qty,Available,Dispatched,Master Packs,Loose Pcs,Status\n"
+        for s in stocks:
+            status = "Out of Stock" if s.get('available_quantity', 0) == 0 else ("Low Stock" if s.get('available_quantity', 0) < low_stock_threshold else "In Stock")
+            csv_content += f"{s.get('stock_code','')},{s.get('lot_number','')},{s.get('category','')},{s.get('style_type','')},{s.get('color','')},{s.get('total_quantity',0)},{s.get('available_quantity',0)},{s.get('total_quantity',0)-s.get('available_quantity',0)},{s.get('complete_packs',0)},{s.get('loose_pieces',0)},{status}\n"
+        
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=stock_report.csv"}
+        )
+    
+    # Generate HTML
+    stock_rows = ""
+    for s in stocks:
+        status = "Out of Stock" if s.get('available_quantity', 0) == 0 else ("Low Stock" if s.get('available_quantity', 0) < low_stock_threshold else "In Stock")
+        status_class = "out-of-stock" if status == "Out of Stock" else ("low-stock" if status == "Low Stock" else "in-stock")
+        sizes = ", ".join([f"{k}:{v}" for k, v in s.get('size_distribution', {}).items() if v > 0])
+        stock_rows += f"""
+        <tr class="{status_class}">
+            <td><strong>{s.get('stock_code', '')}</strong></td>
+            <td>{s.get('lot_number', '')}</td>
+            <td>{s.get('category', '')}</td>
+            <td>{s.get('style_type', '')}</td>
+            <td>{s.get('color', '')}</td>
+            <td class="text-right">{s.get('total_quantity', 0)}</td>
+            <td class="text-right"><strong>{s.get('available_quantity', 0)}</strong></td>
+            <td class="text-right">{s.get('total_quantity', 0) - s.get('available_quantity', 0)}</td>
+            <td>{sizes}</td>
+            <td><span class="status-badge {status_class}">{status}</span></td>
+        </tr>
+        """
+    
+    category_rows = ""
+    for cat, data in category_summary.items():
+        category_rows += f"""
+        <tr>
+            <td><strong>{cat}</strong></td>
+            <td class="text-right">{data['items']}</td>
+            <td class="text-right">{data['total']}</td>
+            <td class="text-right">{data['available']}</td>
+            <td class="text-right">{data['total'] - data['available']}</td>
+        </tr>
+        """
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Stock Report - Arian Knit Fab</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }}
+            .header {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }}
+            .header h1 {{ margin: 0; color: #4F46E5; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }}
+            .summary-card {{ padding: 15px; border-radius: 8px; text-align: center; }}
+            .summary-card.total {{ background: #e0e7ff; border: 1px solid #818cf8; }}
+            .summary-card.available {{ background: #d1fae5; border: 1px solid #34d399; }}
+            .summary-card.dispatched {{ background: #fef3c7; border: 1px solid #fbbf24; }}
+            .summary-card.low {{ background: #fee2e2; border: 1px solid #f87171; }}
+            .summary-card h3 {{ margin: 0; font-size: 24px; }}
+            .summary-card p {{ margin: 5px 0 0 0; color: #666; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #4F46E5; color: white; }}
+            .text-right {{ text-align: right; }}
+            .status-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 10px; }}
+            .in-stock {{ background: #d1fae5; color: #065f46; }}
+            .low-stock {{ background: #fef3c7; color: #92400e; }}
+            .out-of-stock {{ background: #fee2e2; color: #991b1b; }}
+            tr.low-stock {{ background: #fffbeb; }}
+            tr.out-of-stock {{ background: #fef2f2; }}
+            .section-title {{ margin: 20px 0 10px 0; padding: 10px; background: #f3f4f6; border-left: 4px solid #4F46E5; }}
+            @media print {{ .no-print {{ display: none; }} }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>📦 Stock Report</h1>
+            <p>Generated on {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}</p>
+        </div>
+        
+        <div class="summary-grid">
+            <div class="summary-card total">
+                <h3>{total_quantity}</h3>
+                <p>Total Stock (pcs)</p>
+            </div>
+            <div class="summary-card available">
+                <h3>{total_available}</h3>
+                <p>Available (pcs)</p>
+            </div>
+            <div class="summary-card dispatched">
+                <h3>{total_dispatched}</h3>
+                <p>Dispatched (pcs)</p>
+            </div>
+            <div class="summary-card low">
+                <h3>{len(low_stock_items)} / {len(out_of_stock)}</h3>
+                <p>Low Stock / Out of Stock</p>
+            </div>
+        </div>
+        
+        <h3 class="section-title">📊 Category-wise Summary</h3>
+        <table>
+            <thead>
+                <tr><th>Category</th><th>Items</th><th>Total Qty</th><th>Available</th><th>Dispatched</th></tr>
+            </thead>
+            <tbody>{category_rows}</tbody>
+        </table>
+        
+        <h3 class="section-title">📋 Stock Details ({len(stocks)} items)</h3>
+        <table>
+            <thead>
+                <tr><th>Stock Code</th><th>Lot Name</th><th>Category</th><th>Style</th><th>Color</th><th>Total</th><th>Available</th><th>Dispatched</th><th>Sizes</th><th>Status</th></tr>
+            </thead>
+            <tbody>{stock_rows}</tbody>
+        </table>
+        
+        <div style="text-align:center;margin-top:20px;color:#666;">
+            Arian Knit Fab Production Pro | Stock Report
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
+# Dispatch Report - Customer-wise, Date-wise
+@api_router.get("/reports/dispatch")
+async def get_dispatch_report(
+    format: str = "html",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    customer_name: Optional[str] = None
+):
+    """Generate dispatch report with filters"""
+    query = {}
+    
+    if start_date or end_date:
+        date_query = {}
+        if start_date:
+            date_query["$gte"] = start_date
+        if end_date:
+            date_query["$lte"] = end_date + "T23:59:59"
+        if date_query:
+            query["dispatch_date"] = date_query
+    
+    if customer_name:
+        query["customer_name"] = {"$regex": customer_name, "$options": "i"}
+    
+    dispatches = await db.bulk_dispatches.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Calculate totals
+    total_dispatches = len(dispatches)
+    total_items = sum(d.get('total_items', 0) for d in dispatches)
+    total_quantity = sum(d.get('grand_total_quantity', 0) for d in dispatches)
+    
+    # Customer-wise summary
+    customer_summary = {}
+    for d in dispatches:
+        cust = d.get('customer_name', 'Unknown')
+        if cust not in customer_summary:
+            customer_summary[cust] = {'dispatches': 0, 'items': 0, 'quantity': 0}
+        customer_summary[cust]['dispatches'] += 1
+        customer_summary[cust]['items'] += d.get('total_items', 0)
+        customer_summary[cust]['quantity'] += d.get('grand_total_quantity', 0)
+    
+    if format == "csv":
+        csv_content = "Dispatch No,Date,Customer,Bora No,Items,Total Qty,Notes,Remarks\n"
+        for d in dispatches:
+            date_str = d.get('dispatch_date', '')[:10] if d.get('dispatch_date') else ''
+            csv_content += f"{d.get('dispatch_number','')},{date_str},{d.get('customer_name','')},{d.get('bora_number','')},{d.get('total_items',0)},{d.get('grand_total_quantity',0)},{d.get('notes','')},{d.get('remarks','')}\n"
+        
+        # Add item details
+        csv_content += "\n\nDISPATCH ITEM DETAILS\n"
+        csv_content += "Dispatch No,Stock Code,Lot Name,Category,Color,Master Packs,Total Qty\n"
+        for d in dispatches:
+            for item in d.get('items', []):
+                csv_content += f"{d.get('dispatch_number','')},{item.get('stock_code','')},{item.get('lot_number','')},{item.get('category','')},{item.get('color','')},{item.get('master_packs',0)},{item.get('total_quantity',0)}\n"
+        
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=dispatch_report.csv"}
+        )
+    
+    # Generate HTML
+    dispatch_rows = ""
+    for d in dispatches:
+        date_str = d.get('dispatch_date', '')[:10] if d.get('dispatch_date') else ''
+        items_preview = ", ".join([f"{i.get('stock_code','')}({i.get('total_quantity',0)})" for i in d.get('items', [])[:3]])
+        if len(d.get('items', [])) > 3:
+            items_preview += f" +{len(d.get('items', [])) - 3} more"
+        dispatch_rows += f"""
+        <tr>
+            <td><strong>{d.get('dispatch_number', '')}</strong></td>
+            <td>{date_str}</td>
+            <td>{d.get('customer_name', '')}</td>
+            <td>{d.get('bora_number', '')}</td>
+            <td class="text-right">{d.get('total_items', 0)}</td>
+            <td class="text-right"><strong>{d.get('grand_total_quantity', 0)}</strong></td>
+            <td style="font-size:10px;">{items_preview}</td>
+        </tr>
+        """
+    
+    customer_rows = ""
+    for cust, data in sorted(customer_summary.items(), key=lambda x: x[1]['quantity'], reverse=True):
+        customer_rows += f"""
+        <tr>
+            <td><strong>{cust}</strong></td>
+            <td class="text-right">{data['dispatches']}</td>
+            <td class="text-right">{data['items']}</td>
+            <td class="text-right"><strong>{data['quantity']}</strong></td>
+        </tr>
+        """
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Dispatch Report - Arian Knit Fab</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }}
+            .header {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }}
+            .header h1 {{ margin: 0; color: #059669; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }}
+            .summary-card {{ padding: 15px; border-radius: 8px; text-align: center; background: #d1fae5; border: 1px solid #34d399; }}
+            .summary-card h3 {{ margin: 0; font-size: 24px; color: #065f46; }}
+            .summary-card p {{ margin: 5px 0 0 0; color: #666; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #059669; color: white; }}
+            .text-right {{ text-align: right; }}
+            .section-title {{ margin: 20px 0 10px 0; padding: 10px; background: #f3f4f6; border-left: 4px solid #059669; }}
+            .filter-info {{ background: #f0fdf4; padding: 10px; border-radius: 4px; margin-bottom: 15px; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🚚 Dispatch Report</h1>
+            <p>Generated on {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}</p>
+        </div>
+        
+        <div class="filter-info">
+            <strong>Filters:</strong> 
+            {f"From: {start_date}" if start_date else ""} 
+            {f"To: {end_date}" if end_date else ""} 
+            {f"Customer: {customer_name}" if customer_name else ""}
+            {" (No filters applied)" if not start_date and not end_date and not customer_name else ""}
+        </div>
+        
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>{total_dispatches}</h3>
+                <p>Total Dispatches</p>
+            </div>
+            <div class="summary-card">
+                <h3>{total_items}</h3>
+                <p>Total Items</p>
+            </div>
+            <div class="summary-card">
+                <h3>{total_quantity}</h3>
+                <p>Total Quantity (pcs)</p>
+            </div>
+        </div>
+        
+        <h3 class="section-title">👤 Customer-wise Summary</h3>
+        <table>
+            <thead>
+                <tr><th>Customer</th><th>Dispatches</th><th>Items</th><th>Total Qty</th></tr>
+            </thead>
+            <tbody>{customer_rows}</tbody>
+        </table>
+        
+        <h3 class="section-title">📋 Dispatch Details ({total_dispatches} dispatches)</h3>
+        <table>
+            <thead>
+                <tr><th>Dispatch No</th><th>Date</th><th>Customer</th><th>Bora No</th><th>Items</th><th>Total Qty</th><th>Items Preview</th></tr>
+            </thead>
+            <tbody>{dispatch_rows}</tbody>
+        </table>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
+# Catalogue Report
+@api_router.get("/reports/catalogue")
+async def get_catalogue_report(format: str = "html"):
+    """Generate catalogue performance report"""
+    catalogs = await db.catalogs.find({}, {"_id": 0}).to_list(1000)
+    
+    total_catalogs = len(catalogs)
+    total_quantity = sum(c.get('total_quantity', 0) for c in catalogs)
+    total_available = sum(c.get('available_stock', 0) for c in catalogs)
+    total_dispatched = total_quantity - total_available
+    
+    if format == "csv":
+        csv_content = "Catalog Name,Catalog Code,Category,Color,Total Qty,Available,Dispatched,Lots Count,Description\n"
+        for c in catalogs:
+            csv_content += f"{c.get('catalog_name','')},{c.get('catalog_code','')},{c.get('category','')},{c.get('color','')},{c.get('total_quantity',0)},{c.get('available_stock',0)},{c.get('total_quantity',0)-c.get('available_stock',0)},{len(c.get('lot_numbers',[]))},{c.get('description','')}\n"
+        
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=catalogue_report.csv"}
+        )
+    
+    # Generate HTML
+    catalog_rows = ""
+    for c in catalogs:
+        dispatched = c.get('total_quantity', 0) - c.get('available_stock', 0)
+        dispatch_pct = (dispatched / c.get('total_quantity', 1)) * 100 if c.get('total_quantity', 0) > 0 else 0
+        status = "Fully Dispatched" if c.get('available_stock', 0) == 0 else ("High Demand" if dispatch_pct > 50 else "Available")
+        status_class = "dispatched" if status == "Fully Dispatched" else ("high-demand" if status == "High Demand" else "available")
+        catalog_rows += f"""
+        <tr>
+            <td><strong>{c.get('catalog_name', '')}</strong></td>
+            <td>{c.get('catalog_code', '')}</td>
+            <td>{c.get('category', '')}</td>
+            <td>{c.get('color', '')}</td>
+            <td class="text-right">{c.get('total_quantity', 0)}</td>
+            <td class="text-right">{c.get('available_stock', 0)}</td>
+            <td class="text-right">{dispatched}</td>
+            <td class="text-right">{dispatch_pct:.0f}%</td>
+            <td>{len(c.get('lot_numbers', []))}</td>
+            <td><span class="status-badge {status_class}">{status}</span></td>
+        </tr>
+        """
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Catalogue Report - Arian Knit Fab</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }}
+            .header {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }}
+            .header h1 {{ margin: 0; color: #7c3aed; }}
+            .summary-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }}
+            .summary-card {{ padding: 15px; border-radius: 8px; text-align: center; background: #ede9fe; border: 1px solid #a78bfa; }}
+            .summary-card h3 {{ margin: 0; font-size: 24px; color: #5b21b6; }}
+            .summary-card p {{ margin: 5px 0 0 0; color: #666; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #7c3aed; color: white; }}
+            .text-right {{ text-align: right; }}
+            .status-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 10px; }}
+            .available {{ background: #d1fae5; color: #065f46; }}
+            .high-demand {{ background: #fef3c7; color: #92400e; }}
+            .dispatched {{ background: #fee2e2; color: #991b1b; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>📚 Catalogue Report</h1>
+            <p>Generated on {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}</p>
+        </div>
+        
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>{total_catalogs}</h3>
+                <p>Total Catalogues</p>
+            </div>
+            <div class="summary-card">
+                <h3>{total_quantity}</h3>
+                <p>Total Quantity</p>
+            </div>
+            <div class="summary-card">
+                <h3>{total_available}</h3>
+                <p>Available</p>
+            </div>
+            <div class="summary-card">
+                <h3>{total_dispatched}</h3>
+                <p>Dispatched</p>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr><th>Catalogue Name</th><th>Code</th><th>Category</th><th>Color</th><th>Total</th><th>Available</th><th>Dispatched</th><th>Dispatch %</th><th>Lots</th><th>Status</th></tr>
+            </thead>
+            <tbody>{catalog_rows}</tbody>
+        </table>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
 # Dashboard Stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
