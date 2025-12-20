@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Garment Manufacturing App - Returns Management Feature
-Tests the complete Returns Management system with accept/reject functionality
+Backend Testing Suite for Garment Manufacturing App - Quick Action Endpoints
+Tests the Scan Lot feature Quick Action endpoints for outsourcing and ironing workflow
 """
 
 import requests
@@ -13,7 +13,7 @@ import os
 # Get backend URL from environment
 BACKEND_URL = "https://garmentpro-2.preview.emergentagent.com/api"
 
-class ReturnsManagementTester:
+class QuickActionTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.test_results = []
