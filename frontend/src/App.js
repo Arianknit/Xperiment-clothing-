@@ -778,6 +778,15 @@ function App() {
     }
   };
 
+  const fetchBulkDispatches = async () => {
+    try {
+      const response = await axios.get(`${API}/bulk-dispatches`);
+      setBulkDispatches(response.data);
+    } catch (error) {
+      console.error("Error fetching bulk dispatches:", error);
+    }
+  };
+
   const handleLotSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
