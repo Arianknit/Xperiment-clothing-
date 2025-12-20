@@ -1379,6 +1379,84 @@ function App() {
     }
   };
 
+  // Stock Handlers
+  const handleStockSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/stock`, stockForm);
+      toast.success("Stock added successfully");
+      setStockDialogOpen(false);
+      setStockForm({
+        lot_number: "",
+        category: "Mens",
+        style_type: "",
+        color: "",
+        size_distribution: { M: 0, L: 0, XL: 0, XXL: 0 },
+        master_pack_ratio: { M: 1, L: 1, XL: 1, XXL: 1 },
+        notes: ""
+      });
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error adding stock:", error);
+      toast.error(error.response?.data?.detail || "Failed to add stock");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStockDispatch = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/stock/${selectedStock.id}/dispatch`, stockDispatchForm);
+      toast.success("Stock dispatched successfully");
+      setStockDispatchDialogOpen(false);
+      setSelectedStock(null);
+      setStockDispatchForm({ master_packs: 0, loose_pcs: {}, customer_name: "", bora_number: "", notes: "" });
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error dispatching stock:", error);
+      toast.error(error.response?.data?.detail || "Failed to dispatch stock");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateCatalogFromStock = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/stock/${selectedStock.id}/create-catalog?catalog_name=${encodeURIComponent(stockCatalogForm.catalog_name)}&catalog_code=${encodeURIComponent(stockCatalogForm.catalog_code)}&description=${encodeURIComponent(stockCatalogForm.description || '')}`);
+      toast.success("Catalog created from stock successfully");
+      setStockCatalogDialogOpen(false);
+      setSelectedStock(null);
+      setStockCatalogForm({ catalog_name: "", catalog_code: "", description: "" });
+      fetchStocks();
+      fetchCatalogs();
+    } catch (error) {
+      console.error("Error creating catalog:", error);
+      toast.error(error.response?.data?.detail || "Failed to create catalog");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteStock = async (stockId) => {
+    if (!window.confirm("Are you sure you want to delete this stock?")) return;
+    try {
+      await axios.delete(`${API}/stock/${stockId}`);
+      toast.success("Stock deleted successfully");
+      fetchStocks();
+      fetchStockSummary();
+    } catch (error) {
+      console.error("Error deleting stock:", error);
+      toast.error("Failed to delete stock");
+    }
+  };
+
   const handleDispatchSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
