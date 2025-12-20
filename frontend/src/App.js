@@ -54,6 +54,9 @@ function App() {
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [authError, setAuthError] = useState("");
   
+  // Helper for admin check
+  const isAdmin = currentUser?.role === 'admin';
+  
   // Mobile state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
