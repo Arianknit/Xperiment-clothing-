@@ -5857,6 +5857,7 @@ _Arian Knit Fab_`;
                                 <span className="text-xs text-slate-400 italic">Contact admin to delete</span>
                               )}
                             </div>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
