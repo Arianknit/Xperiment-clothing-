@@ -420,15 +420,15 @@ class AutoStockCreationTester:
 
 def main():
     """Main test execution"""
-    print("🏭 Garment Manufacturing App - Ironing Unit Backend Tests")
+    print("🏭 Garment Manufacturing App - Auto-Stock Creation from Ironing Receipt Tests")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print()
     
-    tester = IroningUnitTester()
+    tester = AutoStockCreationTester()
     success = tester.run_comprehensive_tests()
     
     if success:
-        print("\n🎉 All tests passed! Ironing unit feature is working correctly.")
+        print("\n🎉 All tests passed! Auto-stock creation feature is working correctly.")
         sys.exit(0)
     else:
         print("\n⚠️  Some tests failed. Please check the issues above.")
