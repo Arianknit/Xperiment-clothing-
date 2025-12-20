@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Garment Manufacturing App - Ironing Unit Feature
-Tests all ironing-related endpoints and dashboard integration
+Backend Testing Suite for Garment Manufacturing App - Auto-Stock Creation from Ironing Receipt
+Tests the auto-stock creation feature when ironing receipts are created
 """
 
 import requests
