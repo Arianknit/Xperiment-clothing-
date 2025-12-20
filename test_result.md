@@ -100,7 +100,7 @@ Testing the 4 Quick Action endpoints for the Scan Lot feature:
 - **Data Integrity:** Proper relationships maintained between cutting orders, outsourcing orders, ironing orders, and stock entries
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com/api
+- **URL:** https://arian-textiles.preview.emergentagent.com/api
 - **Login Credentials:** admin/admin (successfully authenticated)
 - **Date:** 2025-12-20
 - **Test Coverage:** Complete end-to-end testing of all 4 Quick Action endpoints
@@ -193,7 +193,7 @@ Date: 2025-12-18
 - **UI Consistency:** All search and filter components follow consistent design patterns
 
 #### Test Environment
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login:** admin/admin
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -236,7 +236,7 @@ Date: 2025-12-18
 - **UI Integration:** All buttons properly positioned and styled
 
 #### Test Environment
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login:** admin/admin
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -287,7 +287,7 @@ Date: 2025-12-18
 - **Hover Effects:** Proper hover states with `hover:bg-red-50`
 
 #### Test Environment
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login:** admin/admin
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -312,7 +312,7 @@ The lot-wise catalog dispatch feature allows users to:
 6. Verify catalog stock is updated after dispatch
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - Browser: Playwright automation testing
 
@@ -381,7 +381,7 @@ The lot-wise catalog dispatch feature allows users to:
 - **Error Handling:** No errors encountered during testing process
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-18
@@ -491,7 +491,7 @@ Updated the catalog dispatch feature to use:
 - **Real-time Calculations:** All calculations update in real-time as user inputs data
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-19
@@ -589,7 +589,7 @@ Date: 2025-12-19
 - **Dialog Management:** Both dialogs open/close correctly without UI issues ✅
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-19
@@ -661,7 +661,7 @@ Date: 2025-12-19
 - **Responsive Display:** All components render properly across different screen sizes ✅
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-19
@@ -759,7 +759,7 @@ Complete QR Code flow testing from Cutting to Ironing on "Arian Knit Fab Product
 - **Performance:** QR dialogs load quickly and respond smoothly ✅
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -885,7 +885,7 @@ New dedicated Stock tab with stock management features:
 - **Color Coding:** Proper color schemes for different sections (green for master packs, amber for loose pieces) ✅
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -929,7 +929,7 @@ Date: 2025-12-20
 **✅ AUTO-STOCK CREATION FROM IRONING RECEIPT FEATURE WORKING CORRECTLY**
 
 #### Test Environment
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login:** admin/admin
 - **Date:** 2025-12-20
 - **Test Type:** Backend API Testing
@@ -1045,7 +1045,7 @@ Testing the Quick Actions flow in the Scan Lot feature as requested in review. T
 8. Verify behavior for fully processed lot "cut 001"
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - QR Code File: /tmp/lot_qrcode.png (1466 bytes, contains lot "cut 001")
 - Browser: Playwright automation testing
@@ -1196,7 +1196,7 @@ Testing the Dispatch tab's multi-scan QR code functionality as requested in the 
 10. Verify "Item already added to dispatch" error message
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - QR Code File: /tmp/stock_qrcode.png (1808 bytes, exists)
 - Expected Stock: STK-0001
@@ -1308,7 +1308,7 @@ Date: 2025-12-20
 ### Test Results Summary
 
 #### Backend API Testing
-- **Test Environment:** https://garmentpro-2.preview.emergentagent.com/api
+- **Test Environment:** https://arian-textiles.preview.emergentagent.com/api
 - **Authentication:** Successfully logged in with admin/admin credentials
 - **Date:** 2025-12-20
 - **Test Coverage:** Complete end-to-end backend API testing
@@ -1435,7 +1435,7 @@ Date: 2025-12-20
 ### Test Results Summary
 
 #### Backend API Testing
-- **Test Environment:** https://garmentpro-2.preview.emergentagent.com/api
+- **Test Environment:** https://arian-textiles.preview.emergentagent.com/api
 - **Authentication:** Successfully logged in with admin/admin credentials
 - **Date:** 2025-12-20
 - **Test Coverage:** Complete end-to-end backend API testing
@@ -1549,7 +1549,7 @@ Date: 2025-12-20
 - Password: admin
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com/api
+- URL: https://arian-textiles.preview.emergentagent.com/api
 - Authentication: JWT Bearer token
 - Date: 2025-12-20
 
@@ -1674,7 +1674,7 @@ Complete QR scanning flow testing for the "Scan Lot" feature including:
 8. Test button click functionality and dialog opening
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - QR Code File: /tmp/lot_qrcode.png (1466 bytes, contains lot "cut 001" data)
 - Browser: Playwright automation testing
@@ -1818,7 +1818,7 @@ The QR scanning flow demonstrates excellent business logic implementation:
 - **Dialog Responsiveness:** All interactions smooth and responsive
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -1853,7 +1853,7 @@ Testing the new multi-scan dispatch feature in the Dispatch tab that allows user
 9. Verify STK-0001 appears in bulk dispatch dialog
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - QR Code File: /tmp/stock_qrcode.png (1808 bytes, contains STK-0001)
 - Browser: Playwright automation testing
@@ -1959,7 +1959,7 @@ Testing the new multi-scan dispatch feature in the Dispatch tab that allows user
 4. **Duplicate Testing:** Add more robust duplicate prevention testing
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -2062,7 +2062,7 @@ Testing the QR code scanning functionality in the Dispatch tab to add stock item
 5. Verify success toast and bulk dispatch dialog opening
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - QR Code File: /tmp/stock_qrcode.png (1808 bytes, valid stock QR for STK-0001)
 - Browser: Playwright automation testing
@@ -2168,7 +2168,7 @@ Testing the QR code scanning functionality in the Dispatch tab to add stock item
 4. **Check State Updates:** Ensure React state updates are properly triggering UI changes after successful scan
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -2188,7 +2188,7 @@ Testing the complete QR code file scanning functionality as requested in the rev
 6. Test file upload functionality with QR code file
 
 ### Test Environment:
-- URL: https://garmentpro-2.preview.emergentagent.com
+- URL: https://arian-textiles.preview.emergentagent.com
 - Login: admin/admin
 - QR Code File: /tmp/lot_qrcode.png (1466 bytes, valid lot QR for "cut 001")
 - Expected QR Format: JSON like `{"type":"lot","id":"...","lot":"cut 001","category":"Mens",...}`
@@ -2296,7 +2296,7 @@ The Html5QrcodeScanner is now properly configured with both:
 - `Html5QrcodeScanType.SCAN_TYPE_FILE` (for file upload scanning)
 
 #### Test Environment Details
-- **URL:** https://garmentpro-2.preview.emergentagent.com
+- **URL:** https://arian-textiles.preview.emergentagent.com
 - **Login Credentials:** admin/admin (using specified selectors #username, #password, "Sign In" button)
 - **Browser:** Playwright automation testing
 - **Date:** 2025-12-20
@@ -2363,8 +2363,8 @@ Complete customer/production returns management system with accept/reject functi
 - Authentication and authorization properly implemented ✅
 
 #### Test Environment
-- **Frontend URL:** https://garmentpro-2.preview.emergentagent.com
-- **Backend API:** https://garmentpro-2.preview.emergentagent.com/api
+- **Frontend URL:** https://arian-textiles.preview.emergentagent.com
+- **Backend API:** https://arian-textiles.preview.emergentagent.com/api
 - **Test Date:** 2025-12-20
 - **Test Coverage:** Complete end-to-end testing (Frontend UI + Backend API)
 
@@ -2378,7 +2378,7 @@ Date: 2025-12-20
 ### Test Results Summary
 
 #### Backend API Testing
-- **Test Environment:** https://garmentpro-2.preview.emergentagent.com/api
+- **Test Environment:** https://arian-textiles.preview.emergentagent.com/api
 - **Authentication:** Successfully logged in with admin/admin credentials
 - **Date:** 2025-12-20
 - **Test Coverage:** Complete end-to-end backend API testing
