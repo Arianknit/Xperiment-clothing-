@@ -2469,6 +2469,48 @@ async def create_ironing_receipt(receipt: IroningReceiptCreate):
         {"$set": {"status": new_status}}
     )
     
+    # AUTO-CREATE STOCK ENTRY after ironing receipt
+    # Get cutting order details for stock entry
+    cutting_lot_number = ironing_order.get('cutting_lot_number', '')
+    cutting_order = await db.cutting_orders.find_one({
+        "$or": [
+            {"cutting_lot_number": cutting_lot_number},
+            {"lot_number": cutting_lot_number}
+        ]
+    }, {"_id": 0})
+    
+    # Generate stock code
+    stock_count = await db.stock.count_documents({})
+    stock_code = f"STK-{str(stock_count + 1).zfill(4)}"
+    
+    # Create stock entry from ironing receipt
+    stock_entry = {
+        "id": str(uuid.uuid4()),
+        "stock_code": stock_code,
+        "lot_number": cutting_lot_number,
+        "source": "ironing",
+        "source_ironing_receipt_id": receipt_dict['id'],
+        "category": cutting_order.get('category', 'Mens') if cutting_order else 'Mens',
+        "style_type": cutting_order.get('style_type', '') if cutting_order else '',
+        "color": cutting_order.get('color', '') if cutting_order else '',
+        "size_distribution": receipt_dict['received_distribution'],
+        "total_quantity": total_received,
+        "available_quantity": total_received,
+        "master_pack_ratio": master_pack_ratio,
+        "complete_packs": receipt_dict.get('complete_packs', 0),
+        "loose_pieces": receipt_dict.get('loose_pieces', 0),
+        "notes": f"Auto-created from ironing receipt - DC: {ironing_order['dc_number']}",
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stock.insert_one(stock_entry)
+    
+    # Add stock_id to the receipt response
+    receipt_obj_dict = receipt_obj.model_dump()
+    receipt_obj_dict['stock_id'] = stock_entry['id']
+    receipt_obj_dict['stock_code'] = stock_code
+    
     return receipt_obj
 
 @api_router.get("/ironing-receipts", response_model=List[IroningReceipt])
