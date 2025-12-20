@@ -594,7 +594,7 @@ function App() {
 
   // Unified Lot QR Scanner
   useEffect(() => {
-    let scanner = null;
+    let html5QrCode = null;
     let timeoutId = null;
     
     if (unifiedScannerOpen) {
@@ -602,26 +602,53 @@ function App() {
       timeoutId = setTimeout(() => {
         const element = document.getElementById('unified-qr-reader');
         if (element) {
-          scanner = new Html5QrcodeScanner('unified-qr-reader', {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
-            supportedScanTypes: [
-              Html5QrcodeScanType.SCAN_TYPE_CAMERA,
-              Html5QrcodeScanType.SCAN_TYPE_FILE
-            ],
-            rememberLastUsedCamera: true
-          });
+          html5QrCode = new Html5Qrcode('unified-qr-reader');
           
-          scanner.render(
-            (decodedText) => {
-              scanner.clear();
+          const onScanSuccess = (decodedText) => {
+            html5QrCode.stop().then(() => {
+              setUnifiedScannerOpen(false);
               handleLotQRScan(decodedText);
-            },
-            (error) => {
-              // Ignore scan errors
+            }).catch(err => console.log("Stop error:", err));
+          };
+          
+          // Try to start camera
+          html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            () => {} // Ignore errors
+          ).catch(err => {
+            console.log("Camera not available, showing file upload option");
+            // If camera fails, show file upload UI
+            element.innerHTML = `
+              <div style="padding: 20px; text-align: center; background: #f1f5f9; border-radius: 8px; border: 2px dashed #94a3b8;">
+                <p style="margin-bottom: 15px; color: #475569;">📷 Camera not available. Use file upload:</p>
+                <input type="file" id="unified-qr-file-input" accept="image/*" style="display: none;" />
+                <button id="unified-qr-file-btn" style="background: #6366f1; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                  📁 Select QR Code Image
+                </button>
+              </div>
+            `;
+            
+            const fileBtn = document.getElementById('unified-qr-file-btn');
+            const fileInput = document.getElementById('unified-qr-file-input');
+            
+            if (fileBtn && fileInput) {
+              fileBtn.onclick = () => fileInput.click();
+              fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  try {
+                    const result = await html5QrCode.scanFile(file, true);
+                    setUnifiedScannerOpen(false);
+                    handleLotQRScan(result);
+                  } catch (err) {
+                    toast.error("Could not read QR code from image");
+                  }
+                }
+              };
             }
-          );
+          });
         }
       }, 100);
     }
@@ -630,8 +657,8 @@ function App() {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      if (scanner) {
-        scanner.clear().catch(() => {});
+      if (html5QrCode) {
+        html5QrCode.stop().catch(() => {});
       }
     };
   }, [unifiedScannerOpen]);
