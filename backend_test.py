@@ -808,15 +808,15 @@ class StockLotNameColorTester:
 
 def main():
     """Main test execution"""
-    print("🏭 Garment Manufacturing App - Auto-Stock Creation from Ironing Receipt Tests")
+    print("🏭 Garment Manufacturing App - Stock Lot Name and Color from Ironing Tests")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print()
     
-    tester = AutoStockCreationTester()
+    tester = StockLotNameColorTester()
     success = tester.run_comprehensive_tests()
     
     if success:
-        print("\n🎉 All tests passed! Auto-stock creation feature is working correctly.")
+        print("\n🎉 All tests passed! Stock lot name and color feature is working correctly.")
         sys.exit(0)
     else:
         print("\n⚠️  Some tests failed. Please check the issues above.")
