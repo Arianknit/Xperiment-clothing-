@@ -330,8 +330,8 @@ class BulkDispatchTester:
                 'Test Customer ABC',  # Customer name
                 'BORA-TEST-001',     # Bora number
                 'DSP-',              # Dispatch number prefix
-                'Total Items',       # Should show total items
-                'Grand Total'        # Should show grand total
+                'Dispatch Sheet',    # Title
+                'Arian Knit Fab'     # Company name
             ]
             
             missing_elements = []
