@@ -311,8 +311,8 @@ class StitchingBusinessRuleTester:
             return False
 
     def run_comprehensive_tests(self):
-        """Run all Quick Action endpoint tests"""
-        print("🧪 Starting Quick Action Endpoints Tests")
+        """Run all Stitching Before Ironing business rule tests"""
+        print("🧪 Starting Stitching Before Ironing Business Rule Tests")
         print("=" * 60)
         
         # Test 1: Login
@@ -323,28 +323,28 @@ class StitchingBusinessRuleTester:
         # Test 2: Authentication required
         self.test_authentication_required()
         
-        # Test 3: Send to outsourcing
-        success, dc_number = self.test_send_outsourcing()
+        # Test 3: GET /api/lot/by-number/{lot_number} returns stitching_completed field
+        success = self.test_lot_by_number_stitching_completed_field()
         if not success:
-            print("❌ Send to outsourcing test failed")
+            print("❌ Lot by number stitching_completed field test failed")
             return False
         
-        # Test 4: Receive from outsourcing
-        success, lot_number = self.test_receive_outsourcing()
+        # Test 4: POST /api/scan/create-ironing validation - should reject if stitching not complete
+        success = self.test_create_ironing_validation_without_stitching()
         if not success:
-            print("❌ Receive from outsourcing test failed")
+            print("❌ Create ironing validation test failed")
             return False
         
-        # Test 5: Create ironing order
-        success, ironing_dc = self.test_create_ironing(lot_number)
+        # Test 5: Verify existing ironing functionality still works for lots WITH stitching
+        success = self.test_create_ironing_with_stitching_complete()
         if not success:
-            print("❌ Create ironing order test failed")
+            print("❌ Create ironing with stitching test failed")
             return False
         
-        # Test 6: Receive from ironing (auto-creates stock)
-        success, stock_code = self.test_receive_ironing()
+        # Test 6: Verify existing ironing functionality
+        success = self.test_verify_existing_ironing_functionality()
         if not success:
-            print("❌ Receive from ironing test failed")
+            print("❌ Verify existing ironing functionality test failed")
             return False
         
         # Summary
