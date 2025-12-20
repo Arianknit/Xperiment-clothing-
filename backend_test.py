@@ -161,7 +161,7 @@ class StitchingBusinessRuleTester:
                 
             # Check error message contains "stitching required" or similar
             error_text = response.text.lower()
-            if "stitching" not in error_text or "required" not in error_text:
+            if "stitching" not in error_text or ("required" not in error_text and "requires" not in error_text):
                 self.log_result("Create Ironing - No Stitching", False, 
                               f"Error message should mention stitching requirement. Got: {response.text}")
                 return False
