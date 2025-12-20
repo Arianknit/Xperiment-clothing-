@@ -7044,6 +7044,149 @@ _Arian Knit Fab_`;
                 </Card>
               </div>
 
+              {/* Returns Management Section */}
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <PackageCheck className="h-6 w-6 text-orange-600" />
+                    Returns & Rejections
+                  </h3>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={fetchReturns}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                    <Button className="bg-orange-600 hover:bg-orange-700" onClick={() => setReturnDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Record Return
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Returns Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <Card className="bg-amber-50 border-amber-200">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-slate-600">Pending</p>
+                      <p className="text-2xl font-bold text-amber-600">
+                        {returns.filter(r => r.status === 'Pending').length}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-slate-600">Accepted</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {returns.filter(r => r.status === 'Accepted').length}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-red-50 border-red-200">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-slate-600">Rejected</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {returns.filter(r => r.status === 'Rejected').length}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-blue-50 border-blue-200">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-slate-600">Total Qty Returned</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {returns.filter(r => r.status === 'Accepted').reduce((sum, r) => sum + (r.quantity || 0), 0)} pcs
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Returns List */}
+                <Card className="shadow-lg">
+                  <CardContent className="pt-6">
+                    {returns.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">
+                        <PackageCheck className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                        <p>No returns recorded. Click "Record Return" to add one.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {returns.map((ret) => (
+                          <div 
+                            key={ret.id} 
+                            className={`p-4 rounded-lg border ${
+                              ret.status === 'Pending' ? 'bg-amber-50 border-amber-200' :
+                              ret.status === 'Accepted' ? 'bg-green-50 border-green-200' :
+                              'bg-red-50 border-red-200'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge className={
+                                    ret.source_type === 'dispatch' ? 'bg-green-100 text-green-700' :
+                                    ret.source_type === 'outsourcing' ? 'bg-purple-100 text-purple-700' :
+                                    'bg-orange-100 text-orange-700'
+                                  }>
+                                    {ret.source_type?.charAt(0).toUpperCase() + ret.source_type?.slice(1)}
+                                  </Badge>
+                                  <Badge className={
+                                    ret.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                    ret.status === 'Accepted' ? 'bg-green-100 text-green-700' :
+                                    'bg-red-100 text-red-700'
+                                  }>
+                                    {ret.status}
+                                  </Badge>
+                                  <span className="text-sm text-slate-600">
+                                    {new Date(ret.return_date).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="font-semibold text-slate-800">
+                                  {ret.quantity} pcs - {ret.reason}
+                                </p>
+                                <p className="text-sm text-slate-500">Source ID: {ret.source_id}</p>
+                                {ret.notes && <p className="text-sm text-slate-600 mt-1">📝 {ret.notes}</p>}
+                              </div>
+                              <div className="flex gap-2">
+                                {ret.status === 'Pending' && isAdmin && (
+                                  <>
+                                    <Button 
+                                      size="sm" 
+                                      className="bg-green-600 hover:bg-green-700 text-white"
+                                      onClick={() => handleProcessReturn(ret.id, 'accept')}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Accept
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="text-red-600 border-red-300 hover:bg-red-50"
+                                      onClick={() => handleProcessReturn(ret.id, 'reject')}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                                {isAdmin && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    className="text-slate-500"
+                                    onClick={() => handleDeleteReturn(ret.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Activity Log Section */}
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-4">
