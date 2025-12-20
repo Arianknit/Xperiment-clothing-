@@ -3874,6 +3874,168 @@ async def get_stock_summary():
     }
 
 
+@api_router.get("/stock/{stock_id}/qrcode")
+async def get_stock_qrcode(stock_id: str):
+    """Generate QR code for stock entry"""
+    stock = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # QR data contains essential info for scanning
+    qr_data = json.dumps({
+        "type": "stock",
+        "id": stock_id,
+        "code": stock.get('stock_code'),
+        "lot": stock.get('lot_number'),
+        "category": stock.get('category'),
+        "style": stock.get('style_type'),
+        "color": stock.get('color', ''),
+        "ratio": stock.get('master_pack_ratio', {})
+    })
+    
+    # Generate QR code
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to bytes
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    
+    return Response(content=buffer.getvalue(), media_type="image/png")
+
+
+@api_router.post("/stock/{stock_id}/quick-dispatch")
+async def quick_dispatch_one_pack(stock_id: str, customer_name: str = "Walk-in", bora_number: str = None):
+    """Quick dispatch exactly 1 master pack from stock"""
+    stock = await db.stock.find_one({"id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    master_pack_ratio = stock.get('master_pack_ratio', {})
+    size_distribution = stock.get('size_distribution', {})
+    
+    if not master_pack_ratio:
+        master_pack_ratio = {size: 1 for size in size_distribution.keys()}
+    
+    # Calculate 1 pack dispatch
+    dispatch_quantity = {}
+    total_dispatch = 0
+    for size, ratio_qty in master_pack_ratio.items():
+        if ratio_qty > 0:
+            available = size_distribution.get(size, 0)
+            if available < ratio_qty:
+                raise HTTPException(status_code=400, detail=f"Insufficient stock for size {size}")
+            dispatch_quantity[size] = ratio_qty
+            total_dispatch += ratio_qty
+    
+    if total_dispatch == 0:
+        raise HTTPException(status_code=400, detail="Cannot dispatch - no valid pack ratio")
+    
+    # Update stock
+    new_size_dist = size_distribution.copy()
+    for size, qty in dispatch_quantity.items():
+        new_size_dist[size] = max(0, new_size_dist[size] - qty)
+    
+    new_available = stock.get('available_quantity', 0) - total_dispatch
+    
+    # Generate bora number if not provided
+    if not bora_number:
+        bora_number = f"QD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    await db.stock.update_one(
+        {"id": stock_id},
+        {"$set": {
+            "size_distribution": new_size_dist,
+            "available_quantity": new_available,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Record dispatch
+    dispatch_record = {
+        "id": str(uuid.uuid4()),
+        "stock_id": stock_id,
+        "stock_code": stock.get('stock_code'),
+        "lot_number": stock.get('lot_number'),
+        "master_packs": 1,
+        "loose_pcs": {},
+        "dispatch_quantity": dispatch_quantity,
+        "total_dispatched": total_dispatch,
+        "customer_name": customer_name,
+        "bora_number": bora_number,
+        "dispatch_date": datetime.now(timezone.utc).isoformat(),
+        "quick_dispatch": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.stock_dispatches.insert_one(dispatch_record)
+    
+    return {
+        "message": "Quick dispatch successful",
+        "dispatched": total_dispatch,
+        "remaining": new_available,
+        "bora_number": bora_number
+    }
+
+
+@api_router.get("/stock/by-code/{stock_code}")
+async def get_stock_by_code(stock_code: str):
+    """Get stock by stock code (for QR scan lookup)"""
+    stock = await db.stock.find_one({"stock_code": stock_code, "is_active": True}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Calculate master packs
+    if stock.get('master_pack_ratio') and stock.get('size_distribution'):
+        packs, loose, loose_dist = calculate_master_packs(
+            stock['size_distribution'], 
+            stock['master_pack_ratio']
+        )
+        stock['complete_packs'] = packs
+        stock['loose_pieces'] = loose
+        stock['loose_distribution'] = loose_dist
+    
+    return stock
+
+
+@api_router.post("/stock/copy-from/{source_stock_id}")
+async def create_stock_from_existing(source_stock_id: str, stock: StockCreate):
+    """Create new stock by copying settings from existing stock"""
+    source = await db.stock.find_one({"id": source_stock_id}, {"_id": 0})
+    if not source:
+        raise HTTPException(status_code=404, detail="Source stock not found")
+    
+    # Generate unique stock code
+    count = await db.stock.count_documents({})
+    stock_code = f"STK-{str(count + 1).zfill(4)}"
+    
+    total_qty = sum(stock.size_distribution.values())
+    
+    stock_dict = {
+        "id": str(uuid.uuid4()),
+        "stock_code": stock_code,
+        "lot_number": stock.lot_number,
+        "source": "historical",
+        "category": stock.category or source.get('category'),
+        "style_type": stock.style_type or source.get('style_type'),
+        "color": stock.color or source.get('color', ''),
+        "size_distribution": stock.size_distribution,
+        "total_quantity": total_qty,
+        "available_quantity": total_qty,
+        "master_pack_ratio": stock.master_pack_ratio or source.get('master_pack_ratio', {}),
+        "notes": stock.notes,
+        "copied_from": source_stock_id,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stock.insert_one(stock_dict)
+    return stock_dict
+
+
 # Catalog Routes
 @api_router.post("/catalogs", response_model=Catalog)
 async def create_catalog(catalog: CatalogCreate):
