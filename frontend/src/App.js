@@ -9903,6 +9903,9 @@ _Arian Knit Fab_`;
           </button>
         </div>
       </nav>
+      
+      {/* Hidden temp QR reader for file scanning */}
+      <div id="temp-qr-reader" style={{ display: 'none' }}></div>
     </div>
   );
 }
