@@ -1816,9 +1816,9 @@ async def get_outsourcing_orders():
     orders = await db.outsourcing_orders.find({}, {"_id": 0}).to_list(1000)
     
     for order in orders:
-        if isinstance(order['dc_date'], str):
+        if order.get('dc_date') and isinstance(order['dc_date'], str):
             order['dc_date'] = datetime.fromisoformat(order['dc_date'])
-        if isinstance(order['created_at'], str):
+        if order.get('created_at') and isinstance(order['created_at'], str):
             order['created_at'] = datetime.fromisoformat(order['created_at'])
     
     return orders
@@ -1829,9 +1829,9 @@ async def get_outsourcing_order(order_id: str):
     if not order:
         raise HTTPException(status_code=404, detail="Outsourcing order not found")
     
-    if isinstance(order['dc_date'], str):
+    if order.get('dc_date') and isinstance(order['dc_date'], str):
         order['dc_date'] = datetime.fromisoformat(order['dc_date'])
-    if isinstance(order['created_at'], str):
+    if order.get('created_at') and isinstance(order['created_at'], str):
         order['created_at'] = datetime.fromisoformat(order['created_at'])
     
     return order
