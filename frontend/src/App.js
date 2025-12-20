@@ -5375,28 +5375,20 @@ _Arian Knit Fab_`;
                               {stock.notes && <p className="text-sm text-slate-600">{stock.notes}</p>}
                             </div>
                             <div className="flex flex-wrap gap-2">
-                              {/* Quick +1 Pack Button */}
-                              <Button 
-                                size="sm" 
-                                className="bg-amber-500 hover:bg-amber-600 text-white"
-                                onClick={() => handleQuickDispatch(stock.id)}
-                                disabled={completePacks < 1}
-                                data-testid={`quick-dispatch-${stock.id}`}
-                              >
-                                📦 +1 Pack
-                              </Button>
+                              {/* Add to Dispatch Button */}
                               <Button 
                                 size="sm" 
                                 className="bg-green-600 hover:bg-green-700 text-white"
                                 onClick={() => {
-                                  setSelectedStock(stock);
-                                  setStockDispatchForm({ master_packs: 0, loose_pcs: {}, customer_name: "", bora_number: "", notes: "" });
-                                  setStockDispatchDialogOpen(true);
+                                  addItemToDispatch(stock);
+                                  setActiveTab('dispatch');
+                                  setBulkDispatchDialogOpen(true);
                                 }}
-                                data-testid={`dispatch-stock-${stock.id}`}
+                                disabled={stock.available_quantity <= 0}
+                                data-testid={`add-to-dispatch-${stock.id}`}
                               >
-                                <Send className="h-4 w-4 mr-1" />
-                                Dispatch
+                                <Truck className="h-4 w-4 mr-1" />
+                                Add to Dispatch
                               </Button>
                               <Button 
                                 size="sm" 
