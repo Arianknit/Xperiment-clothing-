@@ -926,3 +926,27 @@ Date: 2025-12-20
 1. **Historical Data:** Consider running a migration script to create stock entries for older ironing receipts
 2. **Lot Number Validation:** Ensure cutting lot numbers are properly populated in outsourcing workflow
 3. **Monitoring:** Add logging for auto-stock creation to track success/failure rates
+
+## Test Session: Stock Lot Name and Color from Ironing
+Date: 2025-12-20
+
+### Features to Test:
+1. **New Fields in Ironing Form** - "Lot Name for Stock" and "Color for Stock" fields
+2. **Auto-Stock Creation with Custom Lot Name** - Stock entry uses custom lot name if provided
+3. **Auto-Stock Creation with Custom Color** - Stock entry uses custom color if provided
+4. **Display in Stock Tab** - Verify lot name and color display correctly in stock cards
+
+### Test Flow:
+1. Navigate to Ironing tab
+2. Open "Send to Ironing" dialog
+3. Fill in stock lot name and color
+4. Create ironing order
+5. Create ironing receipt (receive)
+6. Navigate to Stock tab
+7. Verify new stock entry has custom lot name and color
+
+### Expected Behavior:
+- Ironing form shows "Stock Details" section with Lot Name and Color fields
+- When stock is auto-created from ironing receipt, it uses the custom lot name
+- Color displays correctly in Stock tab with purple badge
+- If no custom values provided, falls back to existing cutting order values
