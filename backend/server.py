@@ -2517,7 +2517,22 @@ async def create_ironing_order(order: IroningOrderCreate):
     # Get the original outsourcing order to get cutting_lot_number and color
     outsourcing_order = await db.outsourcing_orders.find_one({"id": receipt['outsourcing_order_id']}, {"_id": 0})
     
-    order_dict['cutting_lot_number'] = outsourcing_order.get('cutting_lot_number', '')
+    lot_num = outsourcing_order.get('cutting_lot_number', '')
+    
+    # BUSINESS RULE: Check if stitching outsourcing is completed before allowing ironing
+    stitching_order = await db.outsourcing_orders.find_one({
+        "cutting_lot_number": lot_num,
+        "operation_type": "Stitching",
+        "status": "Received"
+    }, {"_id": 0})
+    
+    if not stitching_order:
+        raise HTTPException(
+            status_code=400, 
+            detail="Ironing requires completed stitching. Please complete stitching outsourcing first and receive the goods back."
+        )
+    
+    order_dict['cutting_lot_number'] = lot_num
     order_dict['color'] = outsourcing_order.get('color', '')
     order_dict['category'] = outsourcing_order.get('category', '')
     order_dict['style_type'] = outsourcing_order.get('style_type', '')
