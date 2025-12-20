@@ -1376,12 +1376,12 @@ async def scan_send_outsourcing(
 
 
 @api_router.post("/scan/receive-outsourcing")
-async def scan_receive_outsourcing(
-    lot_number: str,
-    received_distribution: Dict[str, int],
-    mistake_distribution: Dict[str, int] = None
-):
+async def scan_receive_outsourcing(data: dict):
     """Quick receive from outsourcing by scanning lot QR"""
+    lot_number = data.get('lot_number')
+    received_distribution = data.get('received_distribution', {})
+    mistake_distribution = data.get('mistake_distribution', {})
+    
     # Find outsourcing order
     order = await db.outsourcing_orders.find_one({
         "cutting_lot_number": lot_number,
