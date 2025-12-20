@@ -4404,14 +4404,16 @@ _Arian Knit Fab_`;
                               >
                                 <Pencil className="h-3 w-3" />
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600"
-                                onClick={() => handleDeleteUnit(unit.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              {isAdmin && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600"
+                                  onClick={() => handleDeleteUnit(unit.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
                             </div>
                           </div>
                         ))}
