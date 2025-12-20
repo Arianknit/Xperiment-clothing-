@@ -371,15 +371,15 @@ class StitchingBusinessRuleTester:
 
 def main():
     """Main test execution"""
-    print("🏭 Garment Manufacturing App - Quick Action Endpoints Tests")
+    print("🏭 Garment Manufacturing App - Stitching Before Ironing Business Rule Tests")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print()
     
-    tester = QuickActionTester()
+    tester = StitchingBusinessRuleTester()
     success = tester.run_comprehensive_tests()
     
     if success:
-        print("\n🎉 All tests passed! Quick Action endpoints are working correctly.")
+        print("\n🎉 All tests passed! Stitching Before Ironing business rule is working correctly.")
         sys.exit(0)
     else:
         print("\n⚠️  Some tests failed. Please check the issues above.")
