@@ -504,9 +504,6 @@ function App() {
             
             scanner.render(
               async (decodedText) => {
-                scanner.clear();
-                setScanMode(null);
-                
                 // Try to parse as JSON (stock QR codes contain JSON)
                 let stockCode = decodedText;
                 try {
@@ -523,8 +520,7 @@ function App() {
                 if (stock) {
                   if (stock.available_quantity > 0) {
                     addItemToDispatch(stock);
-                    setBulkDispatchDialogOpen(true);
-                    toast.success(`Added ${stock.stock_code} to dispatch!`);
+                    toast.success(`Added ${stock.stock_code}! Keep scanning or click Done.`);
                   } else {
                     toast.error(`${stock.stock_code} has no available quantity`);
                   }
