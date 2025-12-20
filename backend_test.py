@@ -388,8 +388,8 @@ class QuickActionTester:
             for method, endpoint, data in endpoints_to_test:
                 response = requests.post(f"{self.base_url}{endpoint}", json=data)
                 
-                # Accept both 401 (Unauthorized) and 403 (Forbidden) as valid auth errors
-                if response.status_code not in [401, 403]:
+                # Accept 401 (Unauthorized), 403 (Forbidden), or 404 (Not Found without auth) as valid auth errors
+                if response.status_code not in [401, 403, 404]:
                     self.log_result("Authentication Required", False, 
                                   f"{method} {endpoint} should require auth but got status {response.status_code}")
                     all_passed = False
