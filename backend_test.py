@@ -191,57 +191,57 @@ class QuickActionTester:
             self.log_result("Receive from Outsourcing", False, f"Exception occurred: {str(e)}")
             return False, None
 
-    def test_accept_return(self, return_id):
-        """Test PUT /api/returns/{id}/process?action=accept - Accept a return"""
+    def test_create_ironing(self, lot_from_outsourcing):
+        """Test POST /api/scan/create-ironing - Create ironing order"""
         try:
-            response = requests.put(
-                f"{self.base_url}/returns/{return_id}/process?action=accept",
+            # Test data for creating ironing order
+            ironing_data = {
+                "lot_number": lot_from_outsourcing,
+                "unit_name": "Satish Printing House",
+                "master_pack_ratio": {"S": 2, "M": 3, "L": 2},
+                "rate_per_pcs": 3.0
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/scan/create-ironing",
+                json=ironing_data,
                 headers=self.get_headers()
             )
             
             if response.status_code != 200:
-                self.log_result("Accept Return", False, 
-                              f"Failed to accept return. Status: {response.status_code}", 
+                self.log_result("Create Ironing Order", False, 
+                              f"Failed to create ironing order. Status: {response.status_code}", 
                               response.text)
-                return False
+                return False, None
                 
             result = response.json()
             
             # Validate response
-            if result.get('message') != "Return accepted":
-                self.log_result("Accept Return", False, 
+            if "Ironing order created successfully" not in result.get('message', ''):
+                self.log_result("Create Ironing Order", False, 
                               f"Unexpected message: {result.get('message')}", result)
-                return False
+                return False, None
             
-            # Verify the return was updated
-            get_response = requests.get(f"{self.base_url}/returns", headers=self.get_headers())
-            if get_response.status_code == 200:
-                returns = get_response.json()
-                updated_return = next((r for r in returns if r.get('id') == return_id), None)
+            # Verify ironing order was created
+            orders_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
+            if orders_response.status_code == 200:
+                orders = orders_response.json()
+                matching_order = next((order for order in orders if order.get('cutting_lot_number') == lot_from_outsourcing), None)
                 
-                if updated_return:
-                    if updated_return.get('status') != 'Accepted':
-                        self.log_result("Accept Return", False, 
-                                      f"Return status not updated. Expected 'Accepted', got '{updated_return.get('status')}'")
-                        return False
-                    
-                    if not updated_return.get('processed_by'):
-                        self.log_result("Accept Return", False, 
-                                      "processed_by field not populated")
-                        return False
-                    
-                    if not updated_return.get('processed_at'):
-                        self.log_result("Accept Return", False, 
-                                      "processed_at field not populated")
-                        return False
+                if not matching_order:
+                    self.log_result("Create Ironing Order", False, 
+                                  "Ironing order not found after creation")
+                    return False, None
+                
+                self.created_resources.append(('ironing_order', matching_order.get('id')))
             
-            self.log_result("Accept Return", True, 
-                          f"Successfully accepted return {return_id}. Status changed to 'Accepted'")
-            return True
+            self.log_result("Create Ironing Order", True, 
+                          f"Successfully created ironing order for lot '{lot_from_outsourcing}'. DC: {result.get('dc_number', 'N/A')}")
+            return True, result.get('dc_number')
             
         except Exception as e:
-            self.log_result("Accept Return", False, f"Exception occurred: {str(e)}")
-            return False
+            self.log_result("Create Ironing Order", False, f"Exception occurred: {str(e)}")
+            return False, None
 
     def test_create_second_return(self):
         """Create a second return for reject testing"""
