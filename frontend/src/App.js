@@ -7191,6 +7191,89 @@ _Arian Knit Fab_`;
         </DialogContent>
       </Dialog>
 
+      {/* Scan Receive Ironing Dialog (Creates Stock) */}
+      <Dialog open={scanActionDialog === 'receive-ironing'} onOpenChange={(open) => !open && setScanActionDialog(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>📦 Receive from Ironing → Stock</DialogTitle>
+            <DialogDescription>
+              {scannedLot && (scannedLot.order.cutting_lot_number || scannedLot.order.lot_number)}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleScanReceiveIroning} className="space-y-4">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-sm font-semibold text-blue-800 flex items-center gap-2">
+                <PackageCheck className="h-5 w-5" />
+                This will create a new Stock entry with QR code!
+              </p>
+              <p className="text-xs text-slate-600 mt-1">
+                Sent for ironing: {scannedLot?.ironing?.total_quantity} pcs
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="font-semibold">Received Quantities</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {Object.entries(scannedLot?.ironing?.size_distribution || {}).map(([size, sentQty]) => (
+                  <div key={size} className="space-y-1">
+                    <Label className="text-xs">{size} ({sentQty})</Label>
+                    <Input 
+                      type="number"
+                      min="0"
+                      max={sentQty}
+                      value={scanReceiveIroningForm.received_distribution[size] || ''}
+                      onChange={(e) => setScanReceiveIroningForm({
+                        ...scanReceiveIroningForm,
+                        received_distribution: {...scanReceiveIroningForm.received_distribution, [size]: parseInt(e.target.value) || 0}
+                      })}
+                      className="h-9"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-slate-600">
+                Total: {getTotalQty(scanReceiveIroningForm.received_distribution)} pcs
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-semibold text-red-700">Mistakes (Optional)</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {Object.keys(scannedLot?.ironing?.size_distribution || {}).map((size) => (
+                  <div key={size} className="space-y-1">
+                    <Label className="text-xs text-red-600">{size}</Label>
+                    <Input 
+                      type="number"
+                      min="0"
+                      value={scanReceiveIroningForm.mistake_distribution[size] || ''}
+                      onChange={(e) => setScanReceiveIroningForm({
+                        ...scanReceiveIroningForm,
+                        mistake_distribution: {...scanReceiveIroningForm.mistake_distribution, [size]: parseInt(e.target.value) || 0}
+                      })}
+                      className="h-9 border-red-200"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200 text-sm">
+              <p className="font-semibold text-green-800">📦 New Stock will be created:</p>
+              <p className="text-green-700">
+                {getTotalQty(scanReceiveIroningForm.received_distribution)} pcs with Master Pack ratio from ironing order
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setScanActionDialog(null)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                {loading ? "Processing..." : "📦 Receive & Create Stock"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Stock QR Code Dialog */}
       <Dialog open={stockQRDialogOpen} onOpenChange={setStockQRDialogOpen}>
         <DialogContent className="sm:max-w-[400px]" data-testid="stock-qr-dialog">
