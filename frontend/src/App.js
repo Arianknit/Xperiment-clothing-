@@ -5840,9 +5840,13 @@ _Arian Knit Fab_`;
                                 <Send className="h-4 w-4 mr-1" />
                                 Dispatch
                               </Button>
-                              <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteCatalog(catalog.id)} data-testid={`delete-catalog-${catalog.id}`}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {isAdmin ? (
+                                <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteCatalog(catalog.id)} data-testid={`delete-catalog-${catalog.id}`}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">Contact admin to delete</span>
+                              )}
                             </div>
                           </div>
                         </div>
