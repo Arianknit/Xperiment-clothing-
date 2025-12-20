@@ -1412,8 +1412,10 @@ async def scan_receive_outsourcing(data: dict):
     receipt_dict = {
         "id": str(uuid.uuid4()),
         "outsourcing_order_id": order['id'],
+        "cutting_lot_number": order.get('cutting_lot_number', lot_number),
         "dc_number": order['dc_number'],
         "unit_name": order['unit_name'],
+        "operation_type": order.get('operation_type', ''),
         "receipt_date": datetime.now(timezone.utc).isoformat(),
         "received_distribution": received_distribution,
         "mistake_distribution": mistake_distribution or {},
