@@ -2327,16 +2327,43 @@ function App() {
 
   // Unified Lot QR Scan Handler
   const handleLotQRScan = async (decodedText) => {
+    console.log("Scanned text:", decodedText);
     try {
-      const data = JSON.parse(decodedText);
+      // First try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(decodedText);
+      } catch (parseError) {
+        // Not JSON - treat as plain lot number
+        console.log("Not JSON, treating as lot number:", decodedText);
+        // Try to find lot by the scanned text directly
+        try {
+          const response = await axios.get(`${API}/lot/by-number/${encodeURIComponent(decodedText)}`);
+          setScannedLot(response.data);
+          setUnifiedScannerOpen(false);
+          setScannerDialogOpen(false);
+          toast.success(`Scanned: ${decodedText}`);
+          return;
+        } catch (e) {
+          toast.error(`Lot not found: ${decodedText}`);
+          return;
+        }
+      }
+      
       if (data.type === 'lot' && data.lot) {
         // Fetch lot details with current status
         const response = await axios.get(`${API}/lot/by-number/${encodeURIComponent(data.lot)}`);
         setScannedLot(response.data);
         setUnifiedScannerOpen(false);
+        setScannerDialogOpen(false);
         toast.success(`Scanned: ${data.lot}`);
+      } else if (data.type === 'stock' && data.code) {
+        // Stock QR code scanned
+        toast.info(`Stock QR scanned: ${data.code}. Use Dispatch tab to scan stock.`);
+        setUnifiedScannerOpen(false);
+        setScannerDialogOpen(false);
       } else {
-        toast.error("Invalid QR code - not a lot code");
+        toast.error("Invalid QR code format");
       }
     } catch (error) {
       console.error("Error processing lot QR:", error);
