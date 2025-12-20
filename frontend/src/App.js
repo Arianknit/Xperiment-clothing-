@@ -6305,10 +6305,17 @@ _Arian Knit Fab_`;
                         
                         {/* Always show file upload option */}
                         <div className="mt-4 text-center">
+                          {/* iOS PWA Warning */}
+                          {window.navigator.standalone && (
+                            <div className="bg-amber-950/50 border border-amber-400/30 p-2 rounded mb-3 text-amber-200 text-xs">
+                              📱 iOS App Mode: Camera may not work. Use button below to take photo.
+                            </div>
+                          )}
                           <input 
                             type="file" 
                             id="dispatch-qr-file-upload" 
-                            accept="image/*" 
+                            accept="image/*"
+                            capture="environment"
                             className="hidden"
                             onChange={async (e) => {
                               const file = e.target.files?.[0];
@@ -6350,10 +6357,10 @@ _Arian Knit Fab_`;
                             className="bg-amber-600 hover:bg-amber-700 text-white border-amber-500"
                             onClick={() => document.getElementById('dispatch-qr-file-upload')?.click()}
                           >
-                            📁 Upload QR Code Image
+                            📸 Take Photo / Upload QR Image
                           </Button>
                           <p className="text-sm text-amber-200 mt-2">
-                            Use camera above or upload image files
+                            Tap to take photo of QR code or select from gallery
                           </p>
                         </div>
                       </div>
