@@ -6200,6 +6200,174 @@ _Arian Knit Fab_`;
                 </Card>
               </div>
 
+              {/* New Reports Section - Stock, Dispatch, Catalogue */}
+              <div className="mt-8">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">📊 Stock, Dispatch & Catalogue Reports</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Stock Report Card */}
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-indigo-500">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-indigo-700">
+                        <Package className="h-5 w-5" />
+                        Stock Report
+                      </CardTitle>
+                      <CardDescription>Summary, movement & low stock alerts</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Category Filter (Optional)</Label>
+                        <Select onValueChange={(v) => document.getElementById('stock-category-filter').setAttribute('data-value', v === 'all' ? '' : v)}>
+                          <SelectTrigger id="stock-category-filter" data-value="">
+                            <SelectValue placeholder="All Categories" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="Mens">Mens</SelectItem>
+                            <SelectItem value="Womens">Womens</SelectItem>
+                            <SelectItem value="Kids">Kids</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Low Stock Threshold</Label>
+                        <Input id="stock-threshold" type="number" defaultValue="50" className="h-9" />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                          onClick={() => {
+                            const category = document.getElementById('stock-category-filter').getAttribute('data-value');
+                            const threshold = document.getElementById('stock-threshold').value || 50;
+                            let url = `${API}/reports/stock?format=html&low_stock_threshold=${threshold}`;
+                            if (category) url += `&category=${category}`;
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          <Printer className="h-4 w-4 mr-1" />
+                          Print
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="flex-1 border-indigo-300 text-indigo-600"
+                          onClick={() => {
+                            const category = document.getElementById('stock-category-filter').getAttribute('data-value');
+                            const threshold = document.getElementById('stock-threshold').value || 50;
+                            let url = `${API}/reports/stock?format=csv&low_stock_threshold=${threshold}`;
+                            if (category) url += `&category=${category}`;
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          CSV
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Dispatch Report Card */}
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-green-500">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-green-700">
+                        <Truck className="h-5 w-5" />
+                        Dispatch Report
+                      </CardTitle>
+                      <CardDescription>Customer-wise & date-wise dispatch details</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Start Date</Label>
+                          <Input id="dispatch-report-start" type="date" className="h-9" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">End Date</Label>
+                          <Input id="dispatch-report-end" type="date" className="h-9" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Customer Name (Optional)</Label>
+                        <Input id="dispatch-customer-filter" placeholder="Filter by customer" className="h-9" />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          onClick={() => {
+                            const start = document.getElementById('dispatch-report-start').value;
+                            const end = document.getElementById('dispatch-report-end').value;
+                            const customer = document.getElementById('dispatch-customer-filter').value;
+                            let url = `${API}/reports/dispatch?format=html`;
+                            if (start) url += `&start_date=${start}`;
+                            if (end) url += `&end_date=${end}`;
+                            if (customer) url += `&customer_name=${encodeURIComponent(customer)}`;
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          <Printer className="h-4 w-4 mr-1" />
+                          Print
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="flex-1 border-green-300 text-green-600"
+                          onClick={() => {
+                            const start = document.getElementById('dispatch-report-start').value;
+                            const end = document.getElementById('dispatch-report-end').value;
+                            const customer = document.getElementById('dispatch-customer-filter').value;
+                            let url = `${API}/reports/dispatch?format=csv`;
+                            if (start) url += `&start_date=${start}`;
+                            if (end) url += `&end_date=${end}`;
+                            if (customer) url += `&customer_name=${encodeURIComponent(customer)}`;
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          CSV
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Catalogue Report Card */}
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-purple-500">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-purple-700">
+                        <BookOpen className="h-5 w-5" />
+                        Catalogue Report
+                      </CardTitle>
+                      <CardDescription>Catalogue performance & availability</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                        <p className="text-xs text-slate-600">This report includes:</p>
+                        <ul className="text-xs text-slate-600 mt-1 ml-3">
+                          <li>• All catalogues with quantities</li>
+                          <li>• Available vs dispatched</li>
+                          <li>• Dispatch percentage</li>
+                          <li>• Performance status</li>
+                        </ul>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-purple-600 hover:bg-purple-700"
+                          onClick={() => window.open(`${API}/reports/catalogue?format=html`, '_blank')}
+                        >
+                          <Printer className="h-4 w-4 mr-1" />
+                          Print
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="flex-1 border-purple-300 text-purple-600"
+                          onClick={() => window.open(`${API}/reports/catalogue?format=csv`, '_blank')}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          CSV
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
               {/* Unit-wise Bill Section */}
               <div className="mt-8">
                 <h3 className="text-2xl font-bold text-slate-800 mb-4">Unit-wise Bill Generation</h3>
