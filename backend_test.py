@@ -301,7 +301,7 @@ class QuickActionTester:
     def test_receive_ironing(self):
         """Test POST /api/scan/receive-ironing - Receive lot from ironing and auto-create stock"""
         try:
-            # First, find a pending ironing order
+            # First, find a pending ironing order with status "Sent"
             orders_response = requests.get(f"{self.base_url}/ironing-orders", headers=self.get_headers())
             if orders_response.status_code != 200:
                 self.log_result("Receive from Ironing", False, 
@@ -309,21 +309,34 @@ class QuickActionTester:
                 return False, None
             
             orders = orders_response.json()
-            pending_order = next((order for order in orders if order.get('status') != 'Received'), None)
+            pending_order = None
+            
+            # Look for an order with status "Sent" (not "Received")
+            for order in orders:
+                if order.get('status') == 'Sent' and order.get('cutting_lot_number'):
+                    pending_order = order
+                    break
             
             if not pending_order:
                 self.log_result("Receive from Ironing", False, 
-                              "No pending ironing orders found for testing")
+                              "No pending ironing orders with status 'Sent' found for testing")
                 return False, None
             
             lot_number = pending_order.get('cutting_lot_number')
+            size_dist = pending_order.get('size_distribution', {})
             
-            # Test data for receiving
+            # Create receive data based on the sent sizes
             receive_data = {
                 "lot_number": lot_number,
-                "received_distribution": {"S": 10, "M": 10, "L": 10},
+                "received_distribution": {},
                 "mistake_distribution": {}
             }
+            
+            # Use the first few sizes from the order
+            sizes_to_receive = list(size_dist.keys())[:3] if size_dist else ["S", "M", "L"]
+            for size in sizes_to_receive:
+                receive_data["received_distribution"][size] = 10
+                receive_data["mistake_distribution"][size] = 0
             
             response = requests.post(
                 f"{self.base_url}/scan/receive-ironing",
@@ -355,7 +368,8 @@ class QuickActionTester:
             receipts_response = requests.get(f"{self.base_url}/ironing-receipts", headers=self.get_headers())
             if receipts_response.status_code == 200:
                 receipts = receipts_response.json()
-                matching_receipt = next((receipt for receipt in receipts if receipt.get('dc_number') == pending_order.get('dc_number')), None)
+                matching_receipt = next((receipt for receipt in receipts 
+                                       if receipt.get('dc_number') == pending_order.get('dc_number')), None)
                 
                 if matching_receipt:
                     self.created_resources.append(('ironing_receipt', matching_receipt.get('id')))
@@ -364,7 +378,8 @@ class QuickActionTester:
             stock_response = requests.get(f"{self.base_url}/stock", headers=self.get_headers())
             if stock_response.status_code == 200:
                 stock_entries = stock_response.json()
-                matching_stock = next((stock for stock in stock_entries if stock.get('stock_code') == result.get('stock_code')), None)
+                matching_stock = next((stock for stock in stock_entries 
+                                     if stock.get('stock_code') == result.get('stock_code')), None)
                 
                 if not matching_stock:
                     self.log_result("Receive from Ironing", False, 
