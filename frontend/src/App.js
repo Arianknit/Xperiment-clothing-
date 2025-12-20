@@ -2884,6 +2884,138 @@ _Arian Knit Fab_`;
                   </Card>
                 </div>
               )}
+
+              {/* Analytics Charts Section */}
+              {analyticsData && (
+                <div className="mt-8">
+                  <h3 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <Activity className="h-6 w-6 text-indigo-600" />
+                    Analytics & Insights
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Production by Category */}
+                    <Card className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg">📊 Production by Category</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={analyticsData.production_by_category}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="quantity" fill="#6366F1" name="Quantity" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Stock Status Pie Chart */}
+                    <Card className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg">📦 Stock Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                              data={analyticsData.stock_status}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={90}
+                              paddingAngle={5}
+                              dataKey="value"
+                              label={({name, value}) => `${name}: ${value}`}
+                            >
+                              {analyticsData.stock_status.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Cost Breakdown */}
+                    <Card className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg">💰 Cost Breakdown</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                              data={analyticsData.cost_breakdown}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={90}
+                              dataKey="value"
+                              label={({name, value}) => `${name}: ₹${value.toLocaleString()}`}
+                            >
+                              {analyticsData.cost_breakdown.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    {/* Dispatch Trend */}
+                    <Card className="shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="text-lg">🚚 Dispatch Trend</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {analyticsData.dispatch_trend.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={250}>
+                            <AreaChart data={analyticsData.dispatch_trend}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="date" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Area type="monotone" dataKey="quantity" stroke="#10B981" fill="#D1FAE5" name="Quantity" />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="h-[250px] flex items-center justify-center text-slate-500">
+                            No dispatch data available
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Outsourcing by Operation */}
+                  {analyticsData.outsourcing_by_operation.length > 0 && (
+                    <Card className="shadow-lg mt-6">
+                      <CardHeader>
+                        <CardTitle className="text-lg">🔧 Outsourcing by Operation</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={analyticsData.outsourcing_by_operation} layout="vertical">
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis type="number" />
+                            <YAxis dataKey="name" type="category" width={100} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="quantity" fill="#8B5CF6" name="Quantity" />
+                            <Bar dataKey="cost" fill="#F59E0B" name="Cost (₹)" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
             </div>
           </TabsContent>
 
