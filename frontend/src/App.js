@@ -6188,23 +6188,78 @@ _Arian Knit Fab_`;
                 </div>
               </div>
 
-              {/* QR Scanner for Dispatch */}
+              {/* QR Scanner for Dispatch - Multi-Scan Mode */}
               {scanMode === 'dispatch' && (
                 <Card className="bg-gradient-to-br from-amber-900 to-amber-800 text-white">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-bold">📷 Scan Stock QR to Add to Dispatch</h3>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-white border-white hover:bg-white/20"
-                        onClick={() => setScanMode(null)}
-                      >
-                        ✕ Cancel
-                      </Button>
+                      <h3 className="text-lg font-bold">📷 Scan Multiple Stock QR Codes</h3>
+                      <div className="flex gap-2">
+                        {selectedStocksForDispatch.length > 0 && (
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => {
+                              setScanMode(null);
+                              setBulkDispatchDialogOpen(true);
+                            }}
+                          >
+                            ✓ Done ({selectedStocksForDispatch.length} items)
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-white border-white hover:bg-white/20"
+                          onClick={() => setScanMode(null)}
+                        >
+                          ✕ Cancel
+                        </Button>
+                      </div>
                     </div>
-                    <div id="qr-reader-dispatch" className="w-full max-w-md mx-auto rounded-lg overflow-hidden"></div>
-                    <p className="text-sm text-amber-200 mt-3 text-center">Scan a stock QR code to add it to your dispatch</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Scanner */}
+                      <div>
+                        <div id="qr-reader-dispatch" className="w-full max-w-md mx-auto rounded-lg overflow-hidden"></div>
+                        <p className="text-sm text-amber-200 mt-3 text-center">
+                          Scan stock QR codes continuously. Click "Done" when finished.
+                        </p>
+                      </div>
+                      
+                      {/* Scanned Items List */}
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <h4 className="font-semibold text-amber-100 mb-3">
+                          📦 Scanned Items ({selectedStocksForDispatch.length})
+                        </h4>
+                        {selectedStocksForDispatch.length === 0 ? (
+                          <p className="text-amber-200/70 text-sm text-center py-4">
+                            No items scanned yet. Start scanning!
+                          </p>
+                        ) : (
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {selectedStocksForDispatch.map((item, idx) => (
+                              <div key={item.stock_id} className="bg-white/10 rounded p-2 flex justify-between items-center">
+                                <div>
+                                  <span className="font-mono text-amber-100">{item.stock_code}</span>
+                                  <span className="text-amber-200/70 text-xs ml-2">
+                                    {item.lot_number} • {item.available_quantity} pcs
+                                  </span>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="text-red-300 hover:text-red-100 hover:bg-red-500/20 h-6 w-6 p-0"
+                                  onClick={() => removeItemFromDispatch(item.stock_id)}
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
