@@ -1426,6 +1426,125 @@ async def scan_create_ironing(
     return {"message": "Ironing order created successfully", "dc_number": dc_number}
 
 
+@api_router.post("/scan/receive-ironing")
+async def scan_receive_ironing(
+    lot_number: str,
+    received_distribution: Dict[str, int],
+    mistake_distribution: Dict[str, int] = None
+):
+    """Quick receive from ironing by scanning lot QR - AUTO-CREATES STOCK ENTRY"""
+    # Find ironing order
+    ironing_order = await db.ironing_orders.find_one({
+        "cutting_lot_number": lot_number,
+        "status": {"$ne": "Received"}
+    }, {"_id": 0})
+    
+    if not ironing_order:
+        raise HTTPException(status_code=404, detail="No pending ironing order found for this lot")
+    
+    # Calculate shortage
+    shortage_distribution = {}
+    for size, sent_qty in ironing_order['size_distribution'].items():
+        received_qty = received_distribution.get(size, 0)
+        shortage = sent_qty - received_qty
+        if shortage > 0:
+            shortage_distribution[size] = shortage
+    
+    total_received = sum(received_distribution.values())
+    total_shortage = sum(shortage_distribution.values())
+    total_mistakes = sum((mistake_distribution or {}).values())
+    
+    # Calculate debit
+    rate = ironing_order.get('rate_per_pcs', 0)
+    shortage_debit = round(total_shortage * rate, 2)
+    mistake_debit = round(total_mistakes * rate, 2)
+    
+    # Calculate master packs
+    master_pack_ratio = ironing_order.get('master_pack_ratio', {})
+    if master_pack_ratio:
+        complete_packs, loose_pieces, loose_dist = calculate_master_packs(received_distribution, master_pack_ratio)
+    else:
+        complete_packs = 0
+        loose_pieces = total_received
+        loose_dist = received_distribution.copy()
+    
+    # Create receipt
+    receipt_id = str(uuid.uuid4())
+    receipt_dict = {
+        "id": receipt_id,
+        "ironing_order_id": ironing_order['id'],
+        "dc_number": ironing_order['dc_number'],
+        "unit_name": ironing_order['unit_name'],
+        "receipt_date": datetime.now(timezone.utc).isoformat(),
+        "received_distribution": received_distribution,
+        "mistake_distribution": mistake_distribution or {},
+        "shortage_distribution": shortage_distribution,
+        "sent_distribution": ironing_order['size_distribution'],
+        "total_sent": ironing_order['total_quantity'],
+        "total_received": total_received,
+        "total_shortage": total_shortage,
+        "total_mistakes": total_mistakes,
+        "rate_per_pcs": rate,
+        "shortage_debit_amount": shortage_debit,
+        "mistake_debit_amount": mistake_debit,
+        "master_pack_ratio": master_pack_ratio,
+        "complete_packs": complete_packs,
+        "loose_pieces": loose_pieces,
+        "loose_pieces_distribution": loose_dist,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.ironing_receipts.insert_one(receipt_dict)
+    
+    # Update ironing order status
+    await db.ironing_orders.update_one(
+        {"id": ironing_order['id']},
+        {"$set": {"status": "Received"}}
+    )
+    
+    # AUTO-CREATE STOCK ENTRY
+    cutting_order = await db.cutting_orders.find_one({
+        "$or": [
+            {"cutting_lot_number": lot_number},
+            {"lot_number": lot_number}
+        ]
+    }, {"_id": 0})
+    
+    stock_count = await db.stock.count_documents({})
+    stock_code = f"STK-{str(stock_count + 1).zfill(4)}"
+    
+    stock_entry = {
+        "id": str(uuid.uuid4()),
+        "stock_code": stock_code,
+        "lot_number": lot_number,
+        "source": "ironing",
+        "source_ironing_receipt_id": receipt_id,
+        "category": cutting_order.get('category', 'Mens') if cutting_order else 'Mens',
+        "style_type": cutting_order.get('style_type', '') if cutting_order else '',
+        "color": cutting_order.get('color', '') if cutting_order else '',
+        "size_distribution": received_distribution,
+        "total_quantity": total_received,
+        "available_quantity": total_received,
+        "master_pack_ratio": master_pack_ratio,
+        "complete_packs": complete_packs,
+        "loose_pieces": loose_pieces,
+        "notes": f"Auto-created from ironing - DC: {ironing_order['dc_number']}",
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stock.insert_one(stock_entry)
+    
+    return {
+        "message": "Ironing receipt recorded & Stock created!",
+        "received": total_received,
+        "shortage": total_shortage,
+        "stock_code": stock_code,
+        "complete_packs": complete_packs,
+        "loose_pieces": loose_pieces
+    }
+
+
 # ==================== OUTSOURCING UNIT ROUTES ====================
 
 @api_router.get("/outsourcing-units", response_model=List[OutsourcingUnit])
