@@ -5875,11 +5875,6 @@ _Arian Knit Fab_`;
                               {catalog.description && <p className="text-sm text-slate-600">{catalog.description}</p>}
                             </div>
                             <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => {
-                                  setSelectedCatalog(catalog);
                               {isAdmin ? (
                                 <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteCatalog(catalog.id)} data-testid={`delete-catalog-${catalog.id}`}>
                                   <Trash2 className="h-4 w-4" />
