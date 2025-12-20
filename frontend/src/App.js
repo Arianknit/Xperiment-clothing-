@@ -79,6 +79,8 @@ function App() {
   const [ironingOrders, setIroningOrders] = useState([]);
   const [ironingReceipts, setIroningReceipts] = useState([]);
   const [catalogs, setCatalogs] = useState([]);
+  const [stocks, setStocks] = useState([]);
+  const [stockSummary, setStockSummary] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
