@@ -107,6 +107,17 @@ function App() {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [appSettings, setAppSettings] = useState(null);
   
+  // Returns Management State
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnForm, setReturnForm] = useState({
+    source_type: 'dispatch',
+    source_id: '',
+    return_date: new Date().toISOString().split('T')[0],
+    quantity: '',
+    reason: '',
+    notes: ''
+  });
+  
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
   const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
   const [scaleReadings, setScaleReadings] = useState([]);
