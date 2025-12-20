@@ -332,7 +332,7 @@ class ReportsTester:
             
             # Check for CSV headers
             header_line = lines[0]
-            expected_headers = ["Dispatch Number", "Date", "Customer", "Bora Number", "Total Items", "Total Quantity"]
+            expected_headers = ["Dispatch No", "Date", "Customer", "Bora No", "Items", "Total Qty"]
             
             headers_found = 0
             for header in expected_headers:
