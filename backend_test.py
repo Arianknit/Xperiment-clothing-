@@ -127,54 +127,68 @@ class QuickActionTester:
             self.log_result("Send to Outsourcing", False, f"Exception occurred: {str(e)}")
             return False, None
 
-    def test_get_returns(self):
-        """Test GET /api/returns - Fetch all returns"""
+    def test_receive_outsourcing(self):
+        """Test POST /api/scan/receive-outsourcing - Receive lot from outsourcing"""
         try:
-            response = requests.get(f"{self.base_url}/returns", headers=self.get_headers())
+            # First, find a pending outsourcing order
+            orders_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
+            if orders_response.status_code != 200:
+                self.log_result("Receive from Outsourcing", False, 
+                              "Failed to get outsourcing orders")
+                return False, None
+            
+            orders = orders_response.json()
+            pending_order = next((order for order in orders if order.get('status') != 'Received'), None)
+            
+            if not pending_order:
+                self.log_result("Receive from Outsourcing", False, 
+                              "No pending outsourcing orders found for testing")
+                return False, None
+            
+            lot_number = pending_order.get('cutting_lot_number')
+            
+            # Test data for receiving
+            receive_data = {
+                "lot_number": lot_number,
+                "received_distribution": {"S": 10, "M": 10, "L": 10},
+                "mistake_distribution": {"S": 0, "M": 0, "L": 0}
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/scan/receive-outsourcing",
+                json=receive_data,
+                headers=self.get_headers()
+            )
             
             if response.status_code != 200:
-                self.log_result("Get Returns", False, 
-                              f"Failed to get returns. Status: {response.status_code}", 
+                self.log_result("Receive from Outsourcing", False, 
+                              f"Failed to receive from outsourcing. Status: {response.status_code}", 
                               response.text)
                 return False, None
                 
-            returns = response.json()
+            result = response.json()
             
-            if not isinstance(returns, list):
-                self.log_result("Get Returns", False, 
-                              "Response is not a list", returns)
+            # Validate response
+            if "Receipt recorded successfully" not in result.get('message', ''):
+                self.log_result("Receive from Outsourcing", False, 
+                              f"Unexpected message: {result.get('message')}", result)
                 return False, None
             
-            # Find our test return
-            test_returns = [r for r in returns if r.get('source_id') == 'test-dispatch-123']
+            # Verify receipt was created
+            receipts_response = requests.get(f"{self.base_url}/outsourcing-receipts", headers=self.get_headers())
+            if receipts_response.status_code == 200:
+                receipts = receipts_response.json()
+                matching_receipt = next((receipt for receipt in receipts if receipt.get('dc_number') == pending_order.get('dc_number')), None)
+                
+                if matching_receipt:
+                    self.created_resources.append(('outsourcing_receipt', matching_receipt.get('id')))
             
-            if not test_returns:
-                self.log_result("Get Returns", False, 
-                              "Test return not found in returns list")
-                return False, None
-            
-            test_return = test_returns[0]
-            
-            # Validate return structure
-            required_fields = ['id', 'source_type', 'source_id', 'quantity', 'reason', 'status', 'created_at']
-            for field in required_fields:
-                if field not in test_return:
-                    self.log_result("Get Returns", False, 
-                                  f"Missing required field: {field}")
-                    return False, None
-            
-            # Validate initial status is "Pending"
-            if test_return.get('status') != 'Pending':
-                self.log_result("Get Returns", False, 
-                              f"Expected status 'Pending', got '{test_return.get('status')}'")
-                return False, None
-            
-            self.log_result("Get Returns", True, 
-                          f"Successfully retrieved {len(returns)} returns. Test return found with status: {test_return.get('status')}")
-            return True, test_return
+            self.log_result("Receive from Outsourcing", True, 
+                          f"Successfully received lot '{lot_number}' from outsourcing. Received: {result.get('received', 0)} pieces")
+            return True, lot_number
             
         except Exception as e:
-            self.log_result("Get Returns", False, f"Exception occurred: {str(e)}")
+            self.log_result("Receive from Outsourcing", False, f"Exception occurred: {str(e)}")
             return False, None
 
     def test_accept_return(self, return_id):
