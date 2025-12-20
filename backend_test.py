@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Garment Manufacturing App - Auto-Stock Creation from Ironing Receipt
-Tests the auto-stock creation feature when ironing receipts are created
+Backend Testing Suite for Garment Manufacturing App - Stock Lot Name and Color from Ironing
+Tests the new stock_lot_name and stock_color fields in ironing orders and their effect on auto-created stock entries
 """
 
 import requests
