@@ -4933,7 +4933,17 @@ _Arian Knit Fab_`;
                               </div>
                               {stock.notes && <p className="text-sm text-slate-600">{stock.notes}</p>}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
+                              {/* Quick +1 Pack Button */}
+                              <Button 
+                                size="sm" 
+                                className="bg-amber-500 hover:bg-amber-600 text-white"
+                                onClick={() => handleQuickDispatch(stock.id)}
+                                disabled={completePacks < 1}
+                                data-testid={`quick-dispatch-${stock.id}`}
+                              >
+                                📦 +1 Pack
+                              </Button>
                               <Button 
                                 size="sm" 
                                 className="bg-green-600 hover:bg-green-700 text-white"
@@ -4959,7 +4969,20 @@ _Arian Knit Fab_`;
                                 data-testid={`catalog-stock-${stock.id}`}
                               >
                                 <BookOpen className="h-4 w-4 mr-1" />
-                                Create Catalog
+                                Catalog
+                              </Button>
+                              {/* QR Code Button */}
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-slate-600 hover:bg-slate-50"
+                                onClick={() => {
+                                  setSelectedStockForQR(stock);
+                                  setStockQRDialogOpen(true);
+                                }}
+                                data-testid={`qr-stock-${stock.id}`}
+                              >
+                                <QrCode className="h-4 w-4" />
                               </Button>
                               {currentUser?.role === 'admin' && (
                                 <Button 
