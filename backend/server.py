@@ -6882,50 +6882,123 @@ class ReturnCreate(BaseModel):
     notes: Optional[str] = ""
 
 @api_router.post("/returns")
-async def create_return(return_data: ReturnCreate):
+async def create_return(return_data: ReturnCreate, current_user: dict = Depends(get_current_user)):
     """Record a return/rejection"""
     return_dict = return_data.model_dump()
     return_dict['id'] = str(uuid.uuid4())
     return_dict['return_date'] = return_dict['return_date'].isoformat()
     return_dict['created_at'] = datetime.now(timezone.utc).isoformat()
     return_dict['status'] = 'Pending'
+    return_dict['created_by'] = current_user.get('username', 'system')
+    return_dict['stock_restored'] = False
     
     await db.returns.insert_one(return_dict)
+    
+    # Log activity
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "Return Recorded",
+        "entity_type": "return",
+        "entity_id": return_dict['id'],
+        "details": f"Return from {return_data.source_type}: {return_data.quantity} pcs - {return_data.reason}",
+        "user": current_user.get('username', 'system'),
+        "timestamp": datetime.now(timezone.utc)
+    })
+    
     return {"message": "Return recorded", "id": return_dict['id']}
 
 @api_router.get("/returns")
-async def get_returns():
+async def get_returns(current_user: dict = Depends(get_current_user)):
     """Get all returns"""
     returns = await db.returns.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return returns
 
 @api_router.put("/returns/{return_id}/process")
-async def process_return(return_id: str, action: str = "accept"):
+async def process_return(return_id: str, action: str = "accept", current_user: dict = Depends(get_current_user)):
     """Process a return - accept or reject"""
+    if action not in ['accept', 'reject']:
+        raise HTTPException(status_code=400, detail="Action must be 'accept' or 'reject'")
+    
     return_doc = await db.returns.find_one({"id": return_id}, {"_id": 0})
     if not return_doc:
         raise HTTPException(status_code=404, detail="Return not found")
     
+    if return_doc.get('status') != 'Pending':
+        raise HTTPException(status_code=400, detail="Return has already been processed")
+    
     new_status = "Accepted" if action == "accept" else "Rejected"
-    await db.returns.update_one(
-        {"id": return_id},
-        {"$set": {"status": new_status, "processed_at": datetime.now(timezone.utc).isoformat()}}
-    )
+    update_data = {
+        "status": new_status,
+        "processed_at": datetime.now(timezone.utc).isoformat(),
+        "processed_by": current_user.get('username', 'system')
+    }
     
     # If accepted from dispatch, restore stock
+    stock_restored = False
     if action == "accept" and return_doc.get('source_type') == 'dispatch':
-        # Find the stock item and restore quantity
-        # This is simplified - in production you'd track exact items
-        pass
+        source_id = return_doc.get('source_id')
+        quantity = return_doc.get('quantity', 0)
+        
+        # Find the bulk dispatch and associated stock items
+        dispatch = await db.bulk_dispatches.find_one({"id": source_id}, {"_id": 0})
+        if dispatch and dispatch.get('items'):
+            # Add returned quantity to first stock item in dispatch
+            first_item = dispatch['items'][0] if dispatch['items'] else None
+            if first_item and first_item.get('stock_id'):
+                stock_item = await db.stock_items.find_one({"id": first_item['stock_id']}, {"_id": 0})
+                if stock_item:
+                    new_available = stock_item.get('available_quantity', 0) + quantity
+                    await db.stock_items.update_one(
+                        {"id": first_item['stock_id']},
+                        {"$set": {"available_quantity": new_available, "updated_at": datetime.now(timezone.utc)}}
+                    )
+                    stock_restored = True
     
-    return {"message": f"Return {new_status.lower()}"}
+    update_data['stock_restored'] = stock_restored
+    
+    await db.returns.update_one(
+        {"id": return_id},
+        {"$set": update_data}
+    )
+    
+    # Log activity
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": f"Return {new_status}",
+        "entity_type": "return",
+        "entity_id": return_id,
+        "details": f"Return {new_status.lower()} by {current_user.get('username', 'system')}" + (" - Stock restored" if stock_restored else ""),
+        "user": current_user.get('username', 'system'),
+        "timestamp": datetime.now(timezone.utc)
+    })
+    
+    return {"message": f"Return {new_status.lower()}", "stock_restored": stock_restored}
 
 @api_router.delete("/returns/{return_id}")
-async def delete_return(return_id: str):
-    """Delete a return record"""
+async def delete_return(return_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a return record (admin only)"""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Only admins can delete returns")
+    
+    return_record = await db.returns.find_one({"id": return_id}, {"_id": 0})
+    if not return_record:
+        raise HTTPException(status_code=404, detail="Return not found")
+    
     result = await db.returns.delete_one({"id": return_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Return not found")
+    
+    # Log activity
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": "Return Deleted",
+        "entity_type": "return",
+        "entity_id": return_id,
+        "details": "Return record deleted",
+        "user": current_user.get('username', 'system'),
+        "timestamp": datetime.now(timezone.utc)
+    })
+    
     return {"message": "Return deleted"}
 
 
