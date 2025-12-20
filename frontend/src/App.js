@@ -1969,6 +1969,10 @@ _Arian Knit Fab_`;
               <Factory className="h-4 w-4 mr-2" />
               Ironing
             </TabsTrigger>
+            <TabsTrigger value="stock" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-stock">
+              <Package className="h-4 w-4 mr-2" />
+              Stock
+            </TabsTrigger>
             <TabsTrigger value="catalog" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white" data-testid="tab-catalog">
               <BookOpen className="h-4 w-4 mr-2" />
               Catalog
