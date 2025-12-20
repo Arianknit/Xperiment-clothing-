@@ -75,51 +75,56 @@ class QuickActionTester:
             return {}
         return {"Authorization": f"Bearer {self.auth_token}"}
 
-    def test_create_return(self):
-        """Test POST /api/returns - Create a new return record"""
+    def test_send_outsourcing(self):
+        """Test POST /api/scan/send-outsourcing - Send lot to outsourcing"""
         try:
-            return_data = {
-                "source_type": "dispatch",
-                "source_id": "test-dispatch-123",
-                "return_date": "2025-12-20T00:00:00Z",
-                "quantity": 15,
-                "reason": "Defective",
-                "notes": "Test return for testing"
+            # Test data as specified in the review
+            outsourcing_data = {
+                "lot_number": "cut 002",
+                "unit_name": "Satish Printing House",
+                "operation_type": "Embroidery",
+                "rate_per_pcs": 5.0
             }
             
             response = requests.post(
-                f"{self.base_url}/returns",
-                json=return_data,
+                f"{self.base_url}/scan/send-outsourcing",
+                json=outsourcing_data,
                 headers=self.get_headers()
             )
             
             if response.status_code != 200:
-                self.log_result("Create Return", False, 
-                              f"Failed to create return. Status: {response.status_code}", 
+                self.log_result("Send to Outsourcing", False, 
+                              f"Failed to send to outsourcing. Status: {response.status_code}", 
                               response.text)
                 return False, None
                 
             result = response.json()
             
-            # Validate response structure
-            if not result.get('id'):
-                self.log_result("Create Return", False, 
-                              "No return ID in response", result)
-                return False, None
-            
-            if result.get('message') != "Return recorded":
-                self.log_result("Create Return", False, 
+            # Validate response message
+            if result.get('message') != "Sent to outsourcing successfully":
+                self.log_result("Send to Outsourcing", False, 
                               f"Unexpected message: {result.get('message')}", result)
                 return False, None
             
-            self.created_resources.append(('return', result['id']))
+            # Verify outsourcing order was created
+            orders_response = requests.get(f"{self.base_url}/outsourcing-orders", headers=self.get_headers())
+            if orders_response.status_code == 200:
+                orders = orders_response.json()
+                matching_order = next((order for order in orders if order.get('cutting_lot_number') == 'cut 002'), None)
+                
+                if not matching_order:
+                    self.log_result("Send to Outsourcing", False, 
+                                  "Outsourcing order not found after creation")
+                    return False, None
+                
+                self.created_resources.append(('outsourcing_order', matching_order.get('id')))
             
-            self.log_result("Create Return", True, 
-                          f"Successfully created return {result['id']} for {return_data['quantity']} pieces")
-            return True, result['id']
+            self.log_result("Send to Outsourcing", True, 
+                          f"Successfully sent lot 'cut 002' to outsourcing. DC: {result.get('dc_number', 'N/A')}")
+            return True, result.get('dc_number')
             
         except Exception as e:
-            self.log_result("Create Return", False, f"Exception occurred: {str(e)}")
+            self.log_result("Send to Outsourcing", False, f"Exception occurred: {str(e)}")
             return False, None
 
     def test_get_returns(self):
