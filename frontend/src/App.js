@@ -4828,6 +4828,32 @@ _Arian Knit Fab_`;
                         <Label htmlFor="ironing-rate">Rate per Piece (₹)</Label>
                         <Input id="ironing-rate" type="number" step="0.01" value={ironingForm.rate_per_pcs} onChange={(e) => setIroningForm({...ironingForm, rate_per_pcs: e.target.value})} required placeholder="0.00" data-testid="ironing-rate-input" />
                       </div>
+                      <div className="space-y-2 bg-green-50 p-4 rounded-lg border border-green-200">
+                        <Label className="text-green-900 font-semibold">📦 Stock Details (For Stock Tab)</Label>
+                        <p className="text-xs text-slate-600 mb-2">These will be shown when the lot moves to Stock after ironing</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="stock-lot-name">Lot Name for Stock</Label>
+                            <Input 
+                              id="stock-lot-name" 
+                              value={ironingForm.stock_lot_name} 
+                              onChange={(e) => setIroningForm({...ironingForm, stock_lot_name: e.target.value})} 
+                              placeholder="e.g., Summer Collection Lot 1" 
+                              data-testid="stock-lot-name-input" 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="stock-color">Color for Stock</Label>
+                            <Input 
+                              id="stock-color-ironing" 
+                              value={ironingForm.stock_color} 
+                              onChange={(e) => setIroningForm({...ironingForm, stock_color: e.target.value})} 
+                              placeholder="e.g., Navy Blue, Red" 
+                              data-testid="stock-color-input" 
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <div className="space-y-2 bg-purple-50 p-4 rounded-lg border border-purple-200">
                         <Label className="text-purple-900 font-semibold">📦 Master Pack Ratio (Optional)</Label>
                         <p className="text-xs text-slate-600 mb-2">Define how many pieces of each size make 1 master pack</p>
