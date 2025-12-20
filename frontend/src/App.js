@@ -534,10 +534,25 @@ function App() {
               }
             };
             
+            // iOS-optimized camera config
+            const cameraConfig = {
+              facingMode: "environment"
+            };
+            
+            const scanConfig = { 
+              fps: 10, 
+              qrbox: { width: 200, height: 200 }, // Smaller for iOS
+              videoConstraints: {
+                facingMode: "environment",
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 }
+              }
+            };
+            
             // Start camera scanning
             html5QrCode.start(
-              { facingMode: "environment" },
-              { fps: 10, qrbox: { width: 250, height: 250 } },
+              cameraConfig,
+              scanConfig,
               onScanSuccess,
               () => {} // Ignore errors
             ).catch(err => {
