@@ -4757,20 +4757,24 @@ _Arian Knit Fab_`;
                           >
                             <MessageCircle className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => openEditOutsourcingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-outsourcing-order-${order.id}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          {currentUser?.role === 'admin' && (
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => handleDeleteOutsourcingOrder(order.id, order.dc_number)}
-                              className="h-8 w-8 text-red-600 hover:bg-red-50"
-                              title="Delete Order (Admin)"
-                              data-testid={`delete-outsourcing-order-${order.id}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          {isAdmin ? (
+                            <>
+                              <Button size="icon" variant="ghost" onClick={() => openEditOutsourcingOrder(order)} className="h-8 w-8 text-blue-600 hover:bg-blue-50" data-testid={`edit-outsourcing-order-${order.id}`}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                onClick={() => handleDeleteOutsourcingOrder(order.id, order.dc_number)}
+                                className="h-8 w-8 text-red-600 hover:bg-red-50"
+                                title="Delete Order (Admin)"
+                                data-testid={`delete-outsourcing-order-${order.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic px-2">Contact admin to edit/delete</span>
                           )}
                         </div>
                       </div>
