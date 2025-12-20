@@ -14,9 +14,12 @@ import uuid
 from datetime import datetime, timezone, date, timedelta
 import barcode
 from barcode.writer import ImageWriter
+import qrcode
+from qrcode.image.pil import PilImage
 import io
 import hashlib
 import jwt
+import json
 
 
 ROOT_DIR = Path(__file__).parent
