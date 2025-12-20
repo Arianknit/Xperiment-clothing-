@@ -605,20 +605,28 @@ function App() {
           // Clear any previous content
           element.innerHTML = '';
           
-          scanner = new Html5QrcodeScanner('unified-qr-reader', {
+          // iOS-optimized configuration
+          const config = {
             fps: 10,
-            qrbox: { width: 250, height: 250 },
+            qrbox: { width: 200, height: 200 }, // Smaller qrbox works better on iOS
             aspectRatio: 1.0,
             showTorchButtonIfSupported: true,
             showZoomSliderIfSupported: true,
-            defaultZoomValueIfSupported: 2,
             supportedScanTypes: [
               Html5QrcodeScanType.SCAN_TYPE_CAMERA,
               Html5QrcodeScanType.SCAN_TYPE_FILE
             ],
             rememberLastUsedCamera: true,
-            formatsToSupport: [ 0 ] // QR_CODE only
-          }, false); // verbose = false
+            // iOS needs this to avoid BarcodeDetector issues
+            useBarCodeDetectorIfSupported: false,
+            videoConstraints: {
+              facingMode: "environment",
+              width: { min: 640, ideal: 1280, max: 1920 },
+              height: { min: 480, ideal: 720, max: 1080 }
+            }
+          };
+          
+          scanner = new Html5QrcodeScanner('unified-qr-reader', config, false);
           
           scanner.render(
             (decodedText) => {
@@ -637,7 +645,7 @@ function App() {
             }
           );
         }
-      }, 200);
+      }, 300); // Increased delay for iOS
     }
     
     return () => {
