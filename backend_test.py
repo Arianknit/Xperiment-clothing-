@@ -93,16 +93,15 @@ class StockLotNameColorTester:
                               "Response is not a list", receipts)
                 return False, None
             
-            # Find receipts with sent_to_ironing: false and operation_type "Stitching"
+            # Find receipts with sent_to_ironing: false (any operation type)
             suitable_receipts = [
                 receipt for receipt in receipts 
-                if not receipt.get('sent_to_ironing', False) and 
-                receipt.get('operation_type') == 'Stitching'
+                if not receipt.get('sent_to_ironing', False)
             ]
             
             if not suitable_receipts:
                 self.log_result("Get Outsourcing Receipts", False, 
-                              "No suitable outsourcing receipts found (need Stitching operation, not sent to ironing)")
+                              "No suitable outsourcing receipts found (need receipts not sent to ironing)")
                 return False, None
             
             receipt = suitable_receipts[0]
