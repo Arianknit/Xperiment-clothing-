@@ -206,7 +206,11 @@ function App() {
     rate_per_pcs: 0,
     master_pack_ratio: { M: 2, L: 2, XL: 2, XXL: 2 }
   });
-  const [scanActionDialog, setScanActionDialog] = useState(null); // 'send', 'receive', 'ironing'
+  const [scanReceiveIroningForm, setScanReceiveIroningForm] = useState({
+    received_distribution: {},
+    mistake_distribution: {}
+  });
+  const [scanActionDialog, setScanActionDialog] = useState(null); // 'send', 'receive', 'ironing', 'receive-ironing'
   
   // Cutting order form state
   const [cuttingForm, setCuttingForm] = useState({
