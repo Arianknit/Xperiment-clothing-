@@ -87,6 +87,12 @@ function App() {
   const [stockSummary, setStockSummary] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Analytics & Notifications State
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  
   const [rollWeightsDialogOpen, setRollWeightsDialogOpen] = useState(false);
   const [selectedLotForWeights, setSelectedLotForWeights] = useState(null);
   const [scaleReadings, setScaleReadings] = useState([]);
