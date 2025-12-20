@@ -6703,6 +6703,377 @@ async def get_profit_loss_report(format: str = "html"):
     return HTMLResponse(content=html)
 
 
+# ==================== PHASE 3: ORDER TRACKING, RETURNS, QUALITY, EXPORT, ACTIVITY LOG, SETTINGS ====================
+
+# Order/Lot Journey Tracking
+@api_router.get("/tracking/lot/{lot_number}")
+async def track_lot_journey(lot_number: str):
+    """Track complete journey of a lot from cutting to dispatch"""
+    journey = {
+        "lot_number": lot_number,
+        "stages": [],
+        "current_stage": "Unknown",
+        "total_quantity": 0,
+        "dispatched_quantity": 0
+    }
+    
+    # 1. Find in Cutting Orders
+    cutting = await db.cutting_orders.find_one(
+        {"$or": [{"cutting_lot_number": lot_number}, {"lot_number": lot_number}]},
+        {"_id": 0}
+    )
+    if cutting:
+        journey["stages"].append({
+            "stage": "Cutting",
+            "status": "Completed",
+            "date": cutting.get('date', cutting.get('created_at', '')),
+            "details": {
+                "category": cutting.get('category'),
+                "style_type": cutting.get('style_type'),
+                "color": cutting.get('color'),
+                "quantity": cutting.get('total_quantity', 0),
+                "fabric_lot": cutting.get('fabric_lot_id')
+            }
+        })
+        journey["total_quantity"] = cutting.get('total_quantity', 0)
+        journey["current_stage"] = "Cutting"
+    
+    # 2. Find in Outsourcing Orders
+    outsourcing = await db.outsourcing_orders.find(
+        {"cutting_lot_number": lot_number},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for order in outsourcing:
+        journey["stages"].append({
+            "stage": f"Outsourcing - {order.get('operation_type', '')}",
+            "status": order.get('status', 'Sent'),
+            "date": order.get('dc_date', ''),
+            "details": {
+                "dc_number": order.get('dc_number'),
+                "unit_name": order.get('unit_name'),
+                "quantity": order.get('total_quantity', 0),
+                "rate": order.get('rate_per_pcs', 0),
+                "amount": order.get('total_amount', 0)
+            }
+        })
+        if order.get('status') == 'Sent':
+            journey["current_stage"] = f"At {order.get('unit_name')} ({order.get('operation_type')})"
+        elif order.get('status') == 'Received':
+            journey["current_stage"] = f"Received from {order.get('operation_type')}"
+    
+    # 3. Find in Outsourcing Receipts
+    receipts = await db.outsourcing_receipts.find(
+        {"cutting_lot_number": lot_number},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for receipt in receipts:
+        total_received = sum(receipt.get('received_distribution', {}).values())
+        journey["stages"].append({
+            "stage": f"Receipt - {receipt.get('operation_type', '')}",
+            "status": "Completed",
+            "date": receipt.get('receipt_date', ''),
+            "details": {
+                "dc_number": receipt.get('dc_number'),
+                "received": total_received,
+                "shortage": receipt.get('total_shortage', 0)
+            }
+        })
+    
+    # 4. Find in Ironing Orders
+    ironing = await db.ironing_orders.find(
+        {"cutting_lot_number": lot_number},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for order in ironing:
+        journey["stages"].append({
+            "stage": "Ironing",
+            "status": order.get('status', 'Sent'),
+            "date": order.get('dc_date', ''),
+            "details": {
+                "dc_number": order.get('dc_number'),
+                "unit_name": order.get('unit_name'),
+                "quantity": order.get('total_quantity', 0)
+            }
+        })
+        if order.get('status') == 'Sent':
+            journey["current_stage"] = f"At Ironing - {order.get('unit_name')}"
+        elif order.get('status') == 'Received':
+            journey["current_stage"] = "Ironing Complete"
+    
+    # 5. Find in Stock
+    stock = await db.stock.find_one(
+        {"lot_number": lot_number},
+        {"_id": 0}
+    )
+    if stock:
+        journey["stages"].append({
+            "stage": "Stock",
+            "status": "In Stock",
+            "date": stock.get('created_at', ''),
+            "details": {
+                "stock_code": stock.get('stock_code'),
+                "available": stock.get('available_quantity', 0),
+                "total": stock.get('total_quantity', 0)
+            }
+        })
+        journey["current_stage"] = "In Stock"
+    
+    # 6. Find in Dispatches
+    dispatches = await db.bulk_dispatches.find({}, {"_id": 0}).to_list(1000)
+    dispatched_qty = 0
+    for dispatch in dispatches:
+        for item in dispatch.get('items', []):
+            if item.get('lot_number') == lot_number:
+                dispatched_qty += item.get('total_quantity', 0)
+                journey["stages"].append({
+                    "stage": "Dispatch",
+                    "status": "Dispatched",
+                    "date": dispatch.get('dispatch_date', ''),
+                    "details": {
+                        "dispatch_number": dispatch.get('dispatch_number'),
+                        "customer": dispatch.get('customer_name'),
+                        "quantity": item.get('total_quantity', 0)
+                    }
+                })
+    
+    journey["dispatched_quantity"] = dispatched_qty
+    if dispatched_qty > 0:
+        journey["current_stage"] = f"Partially Dispatched ({dispatched_qty} pcs)"
+    if stock and stock.get('available_quantity', 0) == 0 and dispatched_qty > 0:
+        journey["current_stage"] = "Fully Dispatched"
+    
+    return journey
+
+
+# Returns/Rejection Management
+class ReturnCreate(BaseModel):
+    source_type: str  # 'dispatch', 'outsourcing', 'ironing'
+    source_id: str
+    return_date: datetime
+    quantity: int
+    reason: str
+    notes: Optional[str] = ""
+
+@api_router.post("/returns")
+async def create_return(return_data: ReturnCreate):
+    """Record a return/rejection"""
+    return_dict = return_data.model_dump()
+    return_dict['id'] = str(uuid.uuid4())
+    return_dict['return_date'] = return_dict['return_date'].isoformat()
+    return_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    return_dict['status'] = 'Pending'
+    
+    await db.returns.insert_one(return_dict)
+    return {"message": "Return recorded", "id": return_dict['id']}
+
+@api_router.get("/returns")
+async def get_returns():
+    """Get all returns"""
+    returns = await db.returns.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return returns
+
+@api_router.put("/returns/{return_id}/process")
+async def process_return(return_id: str, action: str = "accept"):
+    """Process a return - accept or reject"""
+    return_doc = await db.returns.find_one({"id": return_id}, {"_id": 0})
+    if not return_doc:
+        raise HTTPException(status_code=404, detail="Return not found")
+    
+    new_status = "Accepted" if action == "accept" else "Rejected"
+    await db.returns.update_one(
+        {"id": return_id},
+        {"$set": {"status": new_status, "processed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # If accepted from dispatch, restore stock
+    if action == "accept" and return_doc.get('source_type') == 'dispatch':
+        # Find the stock item and restore quantity
+        # This is simplified - in production you'd track exact items
+        pass
+    
+    return {"message": f"Return {new_status.lower()}"}
+
+@api_router.delete("/returns/{return_id}")
+async def delete_return(return_id: str):
+    """Delete a return record"""
+    result = await db.returns.delete_one({"id": return_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Return not found")
+    return {"message": "Return deleted"}
+
+
+# Quality Check Module
+class QualityCheckCreate(BaseModel):
+    lot_number: str
+    check_date: datetime
+    check_type: str  # 'pre-production', 'in-process', 'final'
+    parameters: Dict[str, str]  # {'stitching': 'Pass', 'color': 'Pass', etc.}
+    overall_status: str  # 'Pass', 'Fail', 'Conditional'
+    defects_found: Optional[List[str]] = []
+    notes: Optional[str] = ""
+
+@api_router.post("/quality-checks")
+async def create_quality_check(check: QualityCheckCreate):
+    """Create a quality check record"""
+    check_dict = check.model_dump()
+    check_dict['id'] = str(uuid.uuid4())
+    check_dict['check_date'] = check_dict['check_date'].isoformat()
+    check_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.quality_checks.insert_one(check_dict)
+    return {"message": "Quality check recorded", "id": check_dict['id']}
+
+@api_router.get("/quality-checks")
+async def get_quality_checks(lot_number: Optional[str] = None):
+    """Get quality checks, optionally filtered by lot"""
+    query = {}
+    if lot_number:
+        query["lot_number"] = lot_number
+    
+    checks = await db.quality_checks.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return checks
+
+@api_router.delete("/quality-checks/{check_id}")
+async def delete_quality_check(check_id: str):
+    """Delete a quality check"""
+    result = await db.quality_checks.delete_one({"id": check_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Quality check not found")
+    return {"message": "Quality check deleted"}
+
+
+# Data Export/Backup
+@api_router.get("/export/all")
+async def export_all_data():
+    """Export all data as JSON for backup"""
+    data = {
+        "export_date": datetime.now(timezone.utc).isoformat(),
+        "fabric_lots": await db.fabric_lots.find({}, {"_id": 0}).to_list(10000),
+        "cutting_orders": await db.cutting_orders.find({}, {"_id": 0}).to_list(10000),
+        "outsourcing_orders": await db.outsourcing_orders.find({}, {"_id": 0}).to_list(10000),
+        "outsourcing_receipts": await db.outsourcing_receipts.find({}, {"_id": 0}).to_list(10000),
+        "ironing_orders": await db.ironing_orders.find({}, {"_id": 0}).to_list(10000),
+        "ironing_receipts": await db.ironing_receipts.find({}, {"_id": 0}).to_list(10000),
+        "stock": await db.stock.find({}, {"_id": 0}).to_list(10000),
+        "catalogs": await db.catalogs.find({}, {"_id": 0}).to_list(10000),
+        "bulk_dispatches": await db.bulk_dispatches.find({}, {"_id": 0}).to_list(10000),
+        "outsourcing_units": await db.outsourcing_units.find({}, {"_id": 0}).to_list(1000),
+        "returns": await db.returns.find({}, {"_id": 0}).to_list(10000),
+        "quality_checks": await db.quality_checks.find({}, {"_id": 0}).to_list(10000),
+        "activity_logs": await db.activity_logs.find({}, {"_id": 0}).to_list(10000),
+        "settings": await db.settings.find({}, {"_id": 0}).to_list(100)
+    }
+    
+    return Response(
+        content=json.dumps(data, indent=2, default=str),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename=backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"}
+    )
+
+@api_router.get("/export/csv/{collection}")
+async def export_collection_csv(collection: str):
+    """Export a specific collection as CSV"""
+    valid_collections = ['fabric_lots', 'cutting_orders', 'outsourcing_orders', 'outsourcing_receipts', 
+                         'ironing_orders', 'ironing_receipts', 'stock', 'catalogs', 'bulk_dispatches']
+    
+    if collection not in valid_collections:
+        raise HTTPException(status_code=400, detail=f"Invalid collection. Valid: {valid_collections}")
+    
+    data = await db[collection].find({}, {"_id": 0}).to_list(10000)
+    
+    if not data:
+        return Response(content="No data", media_type="text/csv")
+    
+    # Get all keys from all documents
+    all_keys = set()
+    for doc in data:
+        all_keys.update(doc.keys())
+    keys = sorted(list(all_keys))
+    
+    csv_content = ",".join(keys) + "\n"
+    for doc in data:
+        row = []
+        for key in keys:
+            val = doc.get(key, '')
+            if isinstance(val, (dict, list)):
+                val = json.dumps(val)
+            row.append(str(val).replace(',', ';').replace('\n', ' '))
+        csv_content += ",".join(row) + "\n"
+    
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={collection}_{datetime.now().strftime('%Y%m%d')}.csv"}
+    )
+
+
+# Activity Log
+@api_router.post("/activity-log")
+async def log_activity(action: str, entity_type: str, entity_id: str, details: str = "", user: str = "system"):
+    """Log an activity"""
+    log_entry = {
+        "id": str(uuid.uuid4()),
+        "action": action,
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "details": details,
+        "user": user,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.activity_logs.insert_one(log_entry)
+    return {"message": "Activity logged"}
+
+@api_router.get("/activity-logs")
+async def get_activity_logs(limit: int = 100, entity_type: Optional[str] = None):
+    """Get recent activity logs"""
+    query = {}
+    if entity_type:
+        query["entity_type"] = entity_type
+    
+    logs = await db.activity_logs.find(query, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
+    return logs
+
+
+# Settings
+@api_router.get("/settings")
+async def get_settings():
+    """Get application settings"""
+    settings = await db.settings.find_one({"type": "app_settings"}, {"_id": 0})
+    if not settings:
+        # Return defaults
+        settings = {
+            "type": "app_settings",
+            "company_name": "Arian Knit Fab",
+            "sizes": {
+                "Mens": ["M", "L", "XL", "XXL"],
+                "Womens": ["S", "M", "L", "XL"],
+                "Kids": ["2/3", "3/4", "5/6", "7/8", "9/10", "11/12", "13/14"]
+            },
+            "categories": ["Mens", "Womens", "Kids"],
+            "operations": ["Stitching", "Overlock", "Button", "Packaging", "Checking"],
+            "default_master_pack_ratio": {"M": 2, "L": 2, "XL": 2, "XXL": 2},
+            "low_stock_threshold": 50,
+            "currency_symbol": "₹"
+        }
+    return settings
+
+@api_router.put("/settings")
+async def update_settings(settings: Dict):
+    """Update application settings"""
+    settings["type"] = "app_settings"
+    settings["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.settings.update_one(
+        {"type": "app_settings"},
+        {"$set": settings},
+        upsert=True
+    )
+    return {"message": "Settings updated"}
+
+
 # Unit Payment Endpoint
 class UnitPayment(BaseModel):
     unit_name: str
