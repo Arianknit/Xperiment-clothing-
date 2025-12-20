@@ -5893,6 +5893,15 @@ _Arian Knit Fab_`;
                             <Button 
                               size="sm" 
                               variant="outline"
+                              className="text-green-600 hover:bg-green-50"
+                              onClick={() => openWhatsAppDialog('dispatch', dispatch, '')}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              WhatsApp
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
                               onClick={() => handlePrintDispatch(dispatch.id)}
                             >
                               <Printer className="h-4 w-4 mr-1" />
