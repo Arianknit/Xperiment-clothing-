@@ -1139,6 +1139,16 @@ async def get_cutting_order(order_id: str):
     
     return order
 
+@api_router.get("/cutting-orders/check-lot/{lot_number}")
+async def check_cutting_lot_unique(lot_number: str, exclude_id: Optional[str] = None):
+    """Check if a cutting lot number is unique"""
+    query = {"cutting_lot_number": lot_number}
+    if exclude_id:
+        query["id"] = {"$ne": exclude_id}
+    
+    existing = await db.cutting_orders.find_one(query, {"_id": 0})
+    return {"unique": existing is None, "lot_number": lot_number}
+
 @api_router.put("/cutting-orders/{order_id}", response_model=CuttingOrder)
 async def update_cutting_order(order_id: str, order_update: CuttingOrderUpdate):
     # Get existing order
