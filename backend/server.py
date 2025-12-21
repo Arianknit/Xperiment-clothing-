@@ -1018,6 +1018,16 @@ async def create_cutting_order(order: CuttingOrderCreate):
     # Auto-generate cutting lot number if not provided
     if not order_dict.get('cutting_lot_number'):
         order_dict['cutting_lot_number'] = await generate_cutting_lot_number()
+    else:
+        # Validate uniqueness of cutting_lot_number
+        existing = await db.cutting_orders.find_one({
+            "cutting_lot_number": order_dict['cutting_lot_number']
+        }, {"_id": 0})
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cutting lot number '{order_dict['cutting_lot_number']}' already exists. Please use a unique lot number."
+            )
     
     # Calculate fabric and rib used
     fabric_used = order_dict.get('fabric_taken', 0) - order_dict.get('fabric_returned', 0)
