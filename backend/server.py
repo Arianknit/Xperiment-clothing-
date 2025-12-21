@@ -1151,6 +1151,18 @@ async def update_cutting_order(order_id: str, order_update: CuttingOrderUpdate):
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
     
+    # Validate unique cutting_lot_number if being updated
+    if 'cutting_lot_number' in update_data and update_data['cutting_lot_number'] != existing_order.get('cutting_lot_number'):
+        existing = await db.cutting_orders.find_one({
+            "cutting_lot_number": update_data['cutting_lot_number'],
+            "id": {"$ne": order_id}
+        }, {"_id": 0})
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cutting lot number '{update_data['cutting_lot_number']}' already exists. Please use a unique lot number."
+            )
+    
     # If fabric/rib quantities changed, recalculate
     if 'fabric_taken' in update_data or 'fabric_returned' in update_data:
         fabric_taken = update_data.get('fabric_taken', existing_order['fabric_taken'])
