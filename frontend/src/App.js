@@ -4219,7 +4219,7 @@ _Arian Knit Fab_`;
               <div className="flex items-center justify-end">
                 <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setCuttingForm({ cutting_master_name: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {}, bundle_distribution: { 'Front': 0, 'Back': 0, 'Sleeve': 0, 'Rib': 0, 'Patti': 0, 'Collar': 0, 'Front L Panel': 0, 'Front R Panel': 0, 'Back L Panel': 0, 'Back R Panel': 0 } }); }} data-testid="add-cutting-button">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg" onClick={() => { setEditingCuttingOrder(null); setLotNumberError(""); setCuttingForm({ cutting_lot_number: "", cutting_master_name: "", cutting_date: new Date().toISOString().split('T')[0], fabric_lot_id: "", lot_number: "", category: "Kids", style_type: "", fabric_taken: "", fabric_returned: "", rib_taken: "", rib_returned: "", cutting_rate_per_pcs: "", size_distribution: {}, bundle_distribution: { 'Front': 0, 'Back': 0, 'Sleeve': 0, 'Rib': 0, 'Patti': 0, 'Collar': 0, 'Front L Panel': 0, 'Front R Panel': 0, 'Back L Panel': 0, 'Back R Panel': 0 } }); }} data-testid="add-cutting-button">
                       <Plus className="h-4 w-4 mr-2" />
                       New Cutting Order
                     </Button>
@@ -4230,10 +4230,34 @@ _Arian Knit Fab_`;
                       <DialogDescription>Enter cutting operation details</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleCuttingSubmit} className="space-y-4">
-                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200 mb-4">
-                        <p className="text-sm text-indigo-700">
-                          <strong>ℹ️ Cutting Lot Number:</strong> Will be auto-generated (e.g., cut 001, cut 002, etc.)
-                        </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="cutting-lot-number">Cutting Lot Number (Optional - auto-generated if empty)</Label>
+                        <Input 
+                          id="cutting-lot-number" 
+                          value={cuttingForm.cutting_lot_number} 
+                          onChange={async (e) => {
+                            const value = e.target.value;
+                            setCuttingForm({...cuttingForm, cutting_lot_number: value});
+                            if (value.trim()) {
+                              try {
+                                const excludeId = editingCuttingOrder?.id || "";
+                                const res = await axios.get(`${API}/cutting-orders/check-lot/${encodeURIComponent(value)}${excludeId ? `?exclude_id=${excludeId}` : ""}`);
+                                if (!res.data.unique) {
+                                  setLotNumberError(`Lot number "${value}" already exists`);
+                                } else {
+                                  setLotNumberError("");
+                                }
+                              } catch (err) {
+                                setLotNumberError("");
+                              }
+                            } else {
+                              setLotNumberError("");
+                            }
+                          }}
+                          placeholder="Leave empty for auto-generate (e.g., cut 001)"
+                          className={lotNumberError ? "border-red-500" : ""}
+                        />
+                        {lotNumberError && <p className="text-sm text-red-600">{lotNumberError}</p>}
                       </div>
                       <div className="flex items-center space-x-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
                         <input
