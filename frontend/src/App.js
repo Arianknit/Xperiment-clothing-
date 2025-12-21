@@ -1243,6 +1243,13 @@ function App() {
     e.preventDefault();
     setLoading(true);
     
+    // Check for lot number uniqueness error
+    if (lotNumberError) {
+      toast.error(lotNumberError);
+      setLoading(false);
+      return;
+    }
+    
     try {
       // Validate fabric availability
       const selectedLot = fabricLots.find(lot => lot.id === cuttingForm.fabric_lot_id);
