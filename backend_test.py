@@ -878,19 +878,70 @@ class StitchingBusinessRuleTester:
 
 def main():
     """Main test execution"""
-    print("🏭 Garment Manufacturing App - Stitching Before Ironing Business Rule Tests")
+    print("🏭 Garment Manufacturing App - Backend API Tests")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print()
     
-    tester = StitchingBusinessRuleTester()
-    success = tester.run_comprehensive_tests()
+    # Determine which tests to run based on command line arguments
+    if len(sys.argv) > 1 and sys.argv[1] == "unique-lot":
+        # Run only Unique Cutting Lot Number tests
+        tester = UniqueCuttingLotTester()
+        success = tester.run_unique_lot_tests()
+        
+        if success:
+            print("\n🎉 All Unique Cutting Lot Number tests passed!")
+            sys.exit(0)
+        else:
+            print("\n⚠️  Some Unique Cutting Lot Number tests failed. Please check the issues above.")
+            sys.exit(1)
     
-    if success:
-        print("\n🎉 All tests passed! Stitching Before Ironing business rule is working correctly.")
-        sys.exit(0)
+    elif len(sys.argv) > 1 and sys.argv[1] == "stitching":
+        # Run only Stitching Before Ironing tests
+        tester = StitchingBusinessRuleTester()
+        success = tester.run_comprehensive_tests()
+        
+        if success:
+            print("\n🎉 All Stitching Before Ironing tests passed!")
+            sys.exit(0)
+        else:
+            print("\n⚠️  Some Stitching Before Ironing tests failed. Please check the issues above.")
+            sys.exit(1)
+    
     else:
-        print("\n⚠️  Some tests failed. Please check the issues above.")
-        sys.exit(1)
+        # Run all tests by default
+        print("🧪 Running ALL Backend Tests")
+        print("=" * 60)
+        
+        # Run Unique Cutting Lot Number tests
+        print("\n1️⃣  UNIQUE CUTTING LOT NUMBER TESTS")
+        unique_tester = UniqueCuttingLotTester()
+        unique_success = unique_tester.run_unique_lot_tests()
+        
+        print("\n" + "=" * 60)
+        
+        # Run Stitching Before Ironing tests
+        print("\n2️⃣  STITCHING BEFORE IRONING TESTS")
+        stitching_tester = StitchingBusinessRuleTester()
+        stitching_success = stitching_tester.run_comprehensive_tests()
+        
+        # Overall summary
+        print("\n" + "=" * 80)
+        print("🏆 OVERALL TEST SUMMARY")
+        print("=" * 80)
+        
+        if unique_success and stitching_success:
+            print("🎉 ALL TESTS PASSED! Both features are working correctly.")
+            sys.exit(0)
+        else:
+            failed_features = []
+            if not unique_success:
+                failed_features.append("Unique Cutting Lot Number")
+            if not stitching_success:
+                failed_features.append("Stitching Before Ironing")
+            
+            print(f"⚠️  FAILED FEATURES: {', '.join(failed_features)}")
+            print("Please check the detailed results above.")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
