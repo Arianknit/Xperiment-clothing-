@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Garment Manufacturing App - Stitching Before Ironing Business Rule
-Tests the "Stitching Before Ironing" business rule implementation
+Backend Testing Suite for Garment Manufacturing App
+Tests various business rules and API functionality
 """
 
 import requests
@@ -9,6 +9,7 @@ import json
 from datetime import datetime, timezone
 import sys
 import os
+import uuid
 
 # Get backend URL from environment
 BACKEND_URL = "https://arian-textiles.preview.emergentagent.com/api"
