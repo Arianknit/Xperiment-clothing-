@@ -298,6 +298,7 @@ function App() {
   });
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
   const [editingCuttingOrder, setEditingCuttingOrder] = useState(null);
+  const [lotNumberError, setLotNumberError] = useState("");
   
   // Payment form state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
