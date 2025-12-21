@@ -1339,6 +1339,7 @@ function App() {
 
   const openEditCuttingOrder = (order) => {
     setEditingCuttingOrder(order);
+    setLotNumberError("");
     setCuttingForm({
       cutting_lot_number: order.cutting_lot_number || "",
       cutting_master_name: order.cutting_master_name || "",
