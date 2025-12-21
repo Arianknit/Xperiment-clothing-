@@ -85,6 +85,66 @@ backend:
         agent: "testing"
         comment: "✅ PASS: All Quick Action endpoints correctly require authentication. Unauthorized requests properly return 401/403 status codes."
 
+  - task: "GET /api/cutting-orders/check-lot/{lot_number} - uniqueness validation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS: Successfully tested lot number uniqueness validation. API correctly returns unique=false for existing lot 'cut 001', unique=true for new lot 'newlot123', and properly handles exclude_id parameter for editing scenarios."
+
+  - task: "POST /api/cutting-orders - duplicate lot number validation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS: Successfully validated duplicate lot number prevention. API correctly rejects creation of cutting order with existing lot number 'cut 001' with 400 status and proper error message: 'Cutting lot number 'cut 001' already exists. Please use a unique lot number.'"
+
+  - task: "POST /api/cutting-orders - unique lot number creation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS: Successfully created cutting order with unique lot number. API correctly accepts and creates cutting orders with unique lot numbers, returning proper response with correct cutting_lot_number field."
+
+  - task: "PUT /api/cutting-orders/{order_id} - duplicate lot number update validation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS: Successfully validated duplicate lot number prevention on updates. API correctly rejects updating cutting order to existing lot number 'cut 001' with 400 status and proper error message about duplicate lot number."
+
+  - task: "PUT /api/cutting-orders/{order_id} - unique lot number update"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASS: Successfully updated cutting order with unique lot number. API correctly accepts updates to unique lot numbers and returns proper response with updated cutting_lot_number field."
+
 frontend:
   - task: "Send Iron button validation based on stitching status"
     implemented: true
