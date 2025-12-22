@@ -3701,7 +3701,16 @@ _Arian Knit Fab_`;
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="fabric-type">Fabric Type</Label>
-                          <Input id="fabric-type" value={lotForm.fabric_type} onChange={(e) => setLotForm({...lotForm, fabric_type: e.target.value})} placeholder="Cotton" required data-testid="fabric-type-input" />
+                          <Select value={lotForm.fabric_type} onValueChange={(value) => setLotForm({...lotForm, fabric_type: value})}>
+                            <SelectTrigger data-testid="fabric-type-select">
+                              <SelectValue placeholder="Select fabric type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {FABRIC_TYPES.map(type => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="supplier-name">Supplier Name</Label>
