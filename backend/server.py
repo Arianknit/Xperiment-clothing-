@@ -2106,7 +2106,11 @@ async def get_overdue_outsourcing_orders():
         # Parse dc_date
         dc_date = order.get('dc_date')
         if isinstance(dc_date, str):
-            dc_date = datetime.fromisoformat(dc_date)
+            dc_date = datetime.fromisoformat(dc_date.replace('Z', '+00:00'))
+        
+        # Make sure dc_date is timezone-aware
+        if dc_date and dc_date.tzinfo is None:
+            dc_date = dc_date.replace(tzinfo=timezone.utc)
         
         # Check if overdue (more than 7 days)
         if dc_date and dc_date < cutoff_date:
