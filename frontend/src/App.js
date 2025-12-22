@@ -80,6 +80,31 @@ const BUNDLE_TYPES = ['Front', 'Back', 'Sleeve', 'Rib', 'Patti', 'Collar', 'Fron
 
 const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker', 'Stitching'];
 
+// Fabric Types for dropdown
+const FABRIC_TYPES = [
+  'Single Jersey',
+  'Double Jersey', 
+  'Interlock',
+  'Rib',
+  '1x1 Rib',
+  '2x2 Rib',
+  'Pique',
+  'Fleece',
+  'French Terry',
+  'Waffle',
+  'Pointelle',
+  'Jacquard',
+  'Lycra Jersey',
+  'Cotton Jersey',
+  'Polyester',
+  'Cotton Blend',
+  'Viscose',
+  'Modal',
+  'Bamboo',
+  'Organic Cotton',
+  'Other'
+];
+
 function App() {
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
