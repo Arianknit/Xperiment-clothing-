@@ -1,14 +1,15 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Depends
-from fastapi.responses import StreamingResponse, HTMLResponse, Response
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Depends, Request
+from fastapi.responses import StreamingResponse, HTMLResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, validator
 from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, date, timedelta
@@ -20,6 +21,13 @@ import io
 import hashlib
 import jwt
 import json
+import re
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Rate limiter for API protection
+limiter = Limiter(key_func=get_remote_address)
 
 
 ROOT_DIR = Path(__file__).parent
