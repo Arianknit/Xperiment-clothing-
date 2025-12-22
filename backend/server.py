@@ -7580,6 +7580,10 @@ app.include_router(api_router)
 # Mount static files for serving uploaded images
 app.mount("/api/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
+# Add GZip compression for responses
+from starlette.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
