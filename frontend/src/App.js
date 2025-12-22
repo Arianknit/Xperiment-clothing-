@@ -433,27 +433,74 @@ function App() {
     checkAuthStatus();
   }, []);
 
-  // Fetch data when authenticated
+  // Fetch data when authenticated - LAZY LOADING based on active tab
   useEffect(() => {
     if (isAuthenticated) {
+      // Always fetch essential data
       fetchDashboardStats();
-      fetchFabricLots();
-      fetchCuttingOrders();
-      fetchOutsourcingOrders();
-      fetchOutsourcingReceipts();
-      fetchOutsourcingUnits();
-      fetchIroningOrders();
-      fetchIroningReceipts();
-      fetchCatalogs();
-      fetchStocks();
-      fetchStockSummary();
-      fetchOverdueOrders();
-      fetchBulkDispatches();
-      fetchAnalytics();
       fetchNotifications();
-      fetchReturns();
     }
   }, [isAuthenticated]);
+
+  // Lazy load data based on active tab
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    switch (activeTab) {
+      case 'dashboard':
+        fetchAnalytics();
+        fetchOverdueOrders();
+        break;
+      case 'fabric-lots':
+        fetchFabricLots();
+        break;
+      case 'cutting':
+        fetchCuttingOrders();
+        fetchFabricLots();
+        break;
+      case 'outsourcing':
+        fetchOutsourcingOrders();
+        fetchOutsourcingReceipts();
+        fetchOutsourcingUnits();
+        fetchCuttingOrders();
+        break;
+      case 'receipts':
+        fetchOutsourcingReceipts();
+        fetchOutsourcingOrders();
+        break;
+      case 'ironing':
+        fetchIroningOrders();
+        fetchIroningReceipts();
+        fetchOutsourcingReceipts();
+        break;
+      case 'stock':
+        fetchStocks();
+        fetchStockSummary();
+        break;
+      case 'dispatch':
+        fetchStocks();
+        fetchBulkDispatches();
+        break;
+      case 'catalog':
+        fetchCatalogs();
+        fetchStocks();
+        fetchCuttingOrders();
+        break;
+      case 'reports':
+        fetchCuttingOrders();
+        fetchOutsourcingOrders();
+        fetchIroningOrders();
+        fetchStocks();
+        fetchBulkDispatches();
+        break;
+      case 'returns':
+        fetchReturns();
+        fetchBulkDispatches();
+        break;
+      default:
+        break;
+    }
+  }, [isAuthenticated, activeTab]);
 
   // QR Scanner for Stock (Add Lot and Dispatch)
   useEffect(() => {
