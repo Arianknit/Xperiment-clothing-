@@ -522,6 +522,8 @@ function App() {
         break;
       case 'fabric-lots':
         fetchFabricLots();
+        fetchFabricTypes();
+        fetchSuppliers();
         break;
       case 'cutting':
         fetchCuttingOrders();
