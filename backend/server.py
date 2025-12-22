@@ -2845,6 +2845,32 @@ async def get_ironing_order(order_id: str):
     
     return order
 
+@api_router.put("/ironing-orders/{order_id}")
+async def update_ironing_order(order_id: str, update_data: dict, current_user: dict = Depends(get_current_user)):
+    """Update an ironing order"""
+    order = await db.ironing_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Ironing order not found")
+    
+    # Fields that can be updated
+    allowed_fields = ['unit_name', 'rate_per_pcs', 'master_pack_ratio', 'notes']
+    update_dict = {k: v for k, v in update_data.items() if k in allowed_fields and v is not None}
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Recalculate amount if rate changed
+    if 'rate_per_pcs' in update_dict:
+        update_dict['total_amount'] = order.get('total_quantity', 0) * float(update_dict['rate_per_pcs'])
+    
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    update_dict['updated_by'] = current_user.get('username', 'system')
+    
+    await db.ironing_orders.update_one({"id": order_id}, {"$set": update_dict})
+    
+    updated_order = await db.ironing_orders.find_one({"id": order_id}, {"_id": 0})
+    return updated_order
+
 @api_router.delete("/ironing-orders/{order_id}")
 async def delete_ironing_order(order_id: str):
     order = await db.ironing_orders.find_one({"id": order_id}, {"_id": 0})
