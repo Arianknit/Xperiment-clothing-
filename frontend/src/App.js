@@ -4042,11 +4042,16 @@ _Arian Knit Fab_`;
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Fabric Type</Label>
-                        <Input 
-                          value={editFabricForm.fabric_type}
-                          onChange={(e) => setEditFabricForm({...editFabricForm, fabric_type: e.target.value})}
-                          placeholder="Cotton, Polyester, etc."
-                        />
+                        <Select value={editFabricForm.fabric_type} onValueChange={(value) => setEditFabricForm({...editFabricForm, fabric_type: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select fabric type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FABRIC_TYPES.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label>Color</Label>
