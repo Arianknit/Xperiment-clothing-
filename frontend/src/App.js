@@ -37,6 +37,39 @@ import { Html5QrcodeScanner, Html5QrcodeScanType, Html5Qrcode } from "html5-qrco
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Configure axios defaults for better performance and security
+axios.defaults.timeout = 30000; // 30 second timeout
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+// Request interceptor to add auth token
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for error handling
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED') {
+      toast.error('Request timeout. Please try again.');
+    } else if (error.response?.status === 429) {
+      toast.error('Too many requests. Please wait a moment.');
+    } else if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
+
 const SIZE_CONFIG = {
   Kids: ['2/3', '3/4', '5/6', '7/8', '9/10', '11/12', '13/14'],
   Mens: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL'],
