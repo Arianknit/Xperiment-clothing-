@@ -1022,6 +1022,79 @@ function App() {
     }
   };
 
+  // Fetch Master Data (Fabric Types & Suppliers)
+  const fetchFabricTypes = async () => {
+    try {
+      const response = await axios.get(`${API}/master/fabric-types`);
+      if (response.data.length > 0) {
+        setFabricTypes(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching fabric types:", error);
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await axios.get(`${API}/master/suppliers`);
+      setSuppliers(response.data);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+    }
+  };
+
+  const handleAddFabricType = async () => {
+    if (!newFabricType.trim()) {
+      toast.error("Please enter a fabric type name");
+      return;
+    }
+    try {
+      await axios.post(`${API}/master/fabric-types`, { name: newFabricType.trim() });
+      toast.success("Fabric type added successfully");
+      setNewFabricType("");
+      fetchFabricTypes();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to add fabric type");
+    }
+  };
+
+  const handleDeleteFabricType = async (name) => {
+    if (!window.confirm(`Delete fabric type "${name}"?`)) return;
+    try {
+      await axios.delete(`${API}/master/fabric-types/${encodeURIComponent(name)}`);
+      toast.success("Fabric type deleted");
+      fetchFabricTypes();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete fabric type");
+    }
+  };
+
+  const handleAddSupplier = async () => {
+    if (!newSupplier.trim()) {
+      toast.error("Please enter a supplier name");
+      return;
+    }
+    try {
+      await axios.post(`${API}/master/suppliers`, { name: newSupplier.trim() });
+      toast.success("Supplier added successfully");
+      setNewSupplier("");
+      fetchSuppliers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to add supplier");
+    }
+  };
+
+  const handleDeleteSupplier = async (name) => {
+    if (!window.confirm(`Delete supplier "${name}"?`)) return;
+    try {
+      await axios.delete(`${API}/master/suppliers/${encodeURIComponent(name)}`);
+      toast.success("Supplier deleted");
+      fetchSuppliers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete supplier");
+    }
+  };
+
   const fetchFabricLots = async () => {
     try {
       const response = await axios.get(`${API}/fabric-lots`);
