@@ -810,6 +810,75 @@ async def update_user_role(user_id: str, role_data: dict, current_user: dict = D
     return {"message": f"User role updated to '{new_role}' successfully"}
 
 
+# ==================== MASTER DATA ROUTES (Fabric Types & Suppliers) ====================
+
+@api_router.get("/master/fabric-types")
+async def get_fabric_types():
+    """Get all fabric types"""
+    types = await db.fabric_types.find({}, {"_id": 0}).sort("name", 1).to_list(100)
+    return [t['name'] for t in types]
+
+@api_router.post("/master/fabric-types")
+async def add_fabric_type(data: dict):
+    """Add a new fabric type"""
+    name = sanitize_string(data.get('name', '').strip(), 100)
+    if not name:
+        raise HTTPException(status_code=400, detail="Fabric type name is required")
+    
+    # Check if already exists
+    existing = await db.fabric_types.find_one({"name": {"$regex": f"^{re.escape(name)}$", "$options": "i"}})
+    if existing:
+        raise HTTPException(status_code=400, detail="Fabric type already exists")
+    
+    await db.fabric_types.insert_one({
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Fabric type added successfully", "name": name}
+
+@api_router.delete("/master/fabric-types/{name}")
+async def delete_fabric_type(name: str):
+    """Delete a fabric type"""
+    result = await db.fabric_types.delete_one({"name": name})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Fabric type not found")
+    return {"message": "Fabric type deleted successfully"}
+
+@api_router.get("/master/suppliers")
+async def get_suppliers():
+    """Get all suppliers"""
+    suppliers = await db.suppliers.find({}, {"_id": 0}).sort("name", 1).to_list(100)
+    return [s['name'] for s in suppliers]
+
+@api_router.post("/master/suppliers")
+async def add_supplier(data: dict):
+    """Add a new supplier"""
+    name = sanitize_string(data.get('name', '').strip(), 200)
+    if not name:
+        raise HTTPException(status_code=400, detail="Supplier name is required")
+    
+    # Check if already exists
+    existing = await db.suppliers.find_one({"name": {"$regex": f"^{re.escape(name)}$", "$options": "i"}})
+    if existing:
+        raise HTTPException(status_code=400, detail="Supplier already exists")
+    
+    await db.suppliers.insert_one({
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Supplier added successfully", "name": name}
+
+@api_router.delete("/master/suppliers/{name}")
+async def delete_supplier(name: str):
+    """Delete a supplier"""
+    result = await db.suppliers.delete_one({"name": name})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    return {"message": "Supplier deleted successfully"}
+
+
 # ==================== FABRIC LOT ROUTES ====================
 
 @api_router.post("/fabric-lots", response_model=FabricLot)
