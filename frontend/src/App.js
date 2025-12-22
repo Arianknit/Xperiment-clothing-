@@ -6182,6 +6182,8 @@ _Arian Knit Fab_`;
                           </SelectContent>
                         </Select>
                       </div>
+                        </>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="ironing-unit">Ironing Unit Name</Label>
                         <Input id="ironing-unit" value={ironingForm.unit_name} onChange={(e) => setIroningForm({...ironingForm, unit_name: e.target.value})} required placeholder="Enter unit name" data-testid="ironing-unit-input" />
@@ -6190,6 +6192,7 @@ _Arian Knit Fab_`;
                         <Label htmlFor="ironing-rate">Rate per Piece (₹)</Label>
                         <Input id="ironing-rate" type="number" step="0.01" value={ironingForm.rate_per_pcs} onChange={(e) => setIroningForm({...ironingForm, rate_per_pcs: e.target.value})} required placeholder="0.00" data-testid="ironing-rate-input" />
                       </div>
+                      {!editingIroningOrder && (
                       <div className="space-y-2 bg-green-50 p-4 rounded-lg border border-green-200">
                         <Label className="text-green-900 font-semibold">📦 Stock Details (For Stock Tab)</Label>
                         <p className="text-xs text-slate-600 mb-2">These will be shown when the lot moves to Stock after ironing</p>
