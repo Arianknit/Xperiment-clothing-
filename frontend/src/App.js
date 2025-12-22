@@ -4136,6 +4136,77 @@ _Arian Knit Fab_`;
                 </DialogContent>
               </Dialog>
 
+              {/* Master Data Dialog (Fabric Types & Suppliers) */}
+              <Dialog open={masterDataDialogOpen} onOpenChange={setMasterDataDialogOpen}>
+                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>⚙️ Manage Fabric Types & Suppliers</DialogTitle>
+                    <DialogDescription>Add or remove fabric types and suppliers</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    {/* Fabric Types Section */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                        <Package className="h-4 w-4" /> Fabric Types
+                      </h3>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Enter new fabric type..." 
+                          value={newFabricType} 
+                          onChange={(e) => setNewFabricType(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFabricType())}
+                        />
+                        <Button onClick={handleAddFabricType} className="bg-indigo-600 hover:bg-indigo-700">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg">
+                        {fabricTypes.map(type => (
+                          <Badge key={type} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                            {type}
+                            <button onClick={() => handleDeleteFabricType(type)} className="ml-1 hover:text-red-600">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Suppliers Section */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                        <Users className="h-4 w-4" /> Suppliers
+                      </h3>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Enter new supplier name..." 
+                          value={newSupplier} 
+                          onChange={(e) => setNewSupplier(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSupplier())}
+                        />
+                        <Button onClick={handleAddSupplier} className="bg-green-600 hover:bg-green-700">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg">
+                        {suppliers.length === 0 ? (
+                          <p className="text-sm text-slate-500 italic">No suppliers added yet</p>
+                        ) : (
+                          suppliers.map(supplier => (
+                            <Badge key={supplier} variant="outline" className="flex items-center gap-1 px-2 py-1 bg-white">
+                              {supplier}
+                              <button onClick={() => handleDeleteSupplier(supplier)} className="ml-1 hover:text-red-600">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               {/* Edit Fabric Lot Dialog (Admin Only) */}
               <Dialog open={editFabricDialogOpen} onOpenChange={setEditFabricDialogOpen}>
                 <DialogContent className="sm:max-w-[500px]">
@@ -4152,7 +4223,7 @@ _Arian Knit Fab_`;
                             <SelectValue placeholder="Select fabric type" />
                           </SelectTrigger>
                           <SelectContent>
-                            {FABRIC_TYPES.map(type => (
+                            {fabricTypes.map(type => (
                               <SelectItem key={type} value={type}>{type}</SelectItem>
                             ))}
                           </SelectContent>
