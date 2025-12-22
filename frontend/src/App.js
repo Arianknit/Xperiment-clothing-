@@ -9307,7 +9307,13 @@ _Arian Knit Fab_`;
                     disabled={scannedLot.ironing || !scannedLot.stitching_completed}
                     title={!scannedLot.stitching_completed ? "Complete stitching first" : ""}
                     onClick={() => {
-                      setScanIroningForm({ unit_name: "", rate_per_pcs: 0, master_pack_ratio: { M: 2, L: 2, XL: 2, XXL: 2 } });
+                      // Initialize master pack ratio with correct sizes based on category
+                      const category = scannedLot.order?.category || 'Mens';
+                      const sizes = SIZE_CONFIG[category] || SIZE_CONFIG['Mens'];
+                      const initialRatio = {};
+                      sizes.forEach(size => { initialRatio[size] = 2; });
+                      
+                      setScanIroningForm({ unit_name: "", rate_per_pcs: 0, master_pack_ratio: initialRatio });
                       setScanActionDialog('ironing');
                     }}
                   >
