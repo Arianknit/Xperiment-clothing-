@@ -40,6 +40,60 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# ==================== DATABASE INDEXES ====================
+# Create indexes on startup for better query performance
+async def create_indexes():
+    """Create database indexes for better performance"""
+    try:
+        # Cutting orders indexes
+        await db.cutting_orders.create_index("cutting_lot_number", unique=True, sparse=True)
+        await db.cutting_orders.create_index("created_at")
+        await db.cutting_orders.create_index("category")
+        
+        # Fabric lots indexes
+        await db.fabric_lots.create_index("lot_number")
+        await db.fabric_lots.create_index("created_at")
+        
+        # Outsourcing indexes
+        await db.outsourcing_orders.create_index("cutting_lot_number")
+        await db.outsourcing_orders.create_index("status")
+        await db.outsourcing_orders.create_index("unit_name")
+        await db.outsourcing_orders.create_index([("cutting_lot_number", 1), ("operation_type", 1)])
+        
+        await db.outsourcing_receipts.create_index("outsourcing_order_id")
+        await db.outsourcing_receipts.create_index("cutting_lot_number")
+        
+        # Ironing indexes
+        await db.ironing_orders.create_index("cutting_lot_number")
+        await db.ironing_orders.create_index("status")
+        
+        await db.ironing_receipts.create_index("ironing_order_id")
+        
+        # Stock indexes
+        await db.stock.create_index("stock_code", unique=True, sparse=True)
+        await db.stock.create_index("lot_number")
+        await db.stock.create_index("is_active")
+        await db.stock.create_index([("is_active", 1), ("available_quantity", -1)])
+        
+        # Dispatch indexes
+        await db.bulk_dispatches.create_index("dispatch_number")
+        await db.bulk_dispatches.create_index("created_at")
+        
+        # Catalog indexes
+        await db.catalogs.create_index("catalog_code")
+        
+        # Users index
+        await db.users.create_index("username", unique=True)
+        
+        logging.info("Database indexes created successfully")
+    except Exception as e:
+        logging.warning(f"Index creation warning (may already exist): {e}")
+
+@app.on_event("startup")
+async def startup_event():
+    """Run on application startup"""
+    await create_indexes()
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'garment-manufacturing-secret-key-2025')
 JWT_ALGORITHM = "HS256"
