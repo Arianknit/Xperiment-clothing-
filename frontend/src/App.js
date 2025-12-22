@@ -6119,50 +6119,52 @@ _Arian Knit Fab_`;
               </div>
 
               <div className="flex items-center justify-end">
-                <Dialog open={ironingDialogOpen} onOpenChange={setIroningDialogOpen}>
+                <Dialog open={ironingDialogOpen} onOpenChange={(open) => { if (!open) { setEditingIroningOrder(null); } setIroningDialogOpen(open); }}>
                   <DialogTrigger asChild>
-                    <Button className="bg-amber-600 hover:bg-amber-700 text-white shadow-lg" data-testid="add-ironing-button">
+                    <Button className="bg-amber-600 hover:bg-amber-700 text-white shadow-lg" onClick={() => setEditingIroningOrder(null)} data-testid="add-ironing-button">
                       <Plus className="h-4 w-4 mr-2" />
                       Send to Ironing
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[600px]" data-testid="ironing-dialog">
                     <DialogHeader>
-                      <DialogTitle>Send to Ironing Unit</DialogTitle>
-                      <DialogDescription>Create a new ironing order from received stitching items</DialogDescription>
+                      <DialogTitle>{editingIroningOrder ? `✏️ Edit Ironing Order - ${editingIroningOrder.dc_number}` : 'Send to Ironing Unit'}</DialogTitle>
+                      <DialogDescription>{editingIroningOrder ? 'Update ironing order details' : 'Create a new ironing order from received stitching items'}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleIroningSubmit} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="ironing-dc-date">DC Date</Label>
-                        <Input id="ironing-dc-date" type="date" value={ironingForm.dc_date} onChange={(e) => setIroningForm({...ironingForm, dc_date: e.target.value})} required data-testid="ironing-dc-date-input" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="ironing-receipt">Select Stitching Receipt</Label>
-                        <Select 
-                          value={ironingForm.receipt_id} 
-                          onValueChange={(value) => {
-                            // Get the category from the selected receipt's outsourcing order
-                            const selectedReceipt = outsourcingReceipts.find(r => r.id === value);
-                            const order = selectedReceipt ? outsourcingOrders.find(o => o.id === selectedReceipt.outsourcing_order_id) : null;
-                            const category = order?.category || 'Mens';
-                            
-                            // Reset master pack ratio with correct sizes for the category
-                            const newRatio = {};
-                            SIZE_CONFIG[category]?.forEach(size => {
-                              newRatio[size] = 0;
-                            });
-                            
-                            setIroningForm({
-                              ...ironingForm, 
-                              receipt_id: value,
-                              master_pack_ratio: newRatio
-                            });
-                          }}
-                          data-testid="ironing-receipt-select"
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select receipt" />
-                          </SelectTrigger>
+                      {!editingIroningOrder && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="ironing-dc-date">DC Date</Label>
+                            <Input id="ironing-dc-date" type="date" value={ironingForm.dc_date} onChange={(e) => setIroningForm({...ironingForm, dc_date: e.target.value})} required data-testid="ironing-dc-date-input" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="ironing-receipt">Select Stitching Receipt</Label>
+                            <Select 
+                              value={ironingForm.receipt_id} 
+                              onValueChange={(value) => {
+                                // Get the category from the selected receipt's outsourcing order
+                                const selectedReceipt = outsourcingReceipts.find(r => r.id === value);
+                                const order = selectedReceipt ? outsourcingOrders.find(o => o.id === selectedReceipt.outsourcing_order_id) : null;
+                                const category = order?.category || 'Mens';
+                                
+                                // Reset master pack ratio with correct sizes for the category
+                                const newRatio = {};
+                                SIZE_CONFIG[category]?.forEach(size => {
+                                  newRatio[size] = 0;
+                                });
+                                
+                                setIroningForm({
+                                  ...ironingForm, 
+                                  receipt_id: value,
+                                  master_pack_ratio: newRatio
+                                });
+                              }}
+                              data-testid="ironing-receipt-select"
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select receipt" />
+                              </SelectTrigger>
                           <SelectContent>
                             {outsourcingReceipts
                               .filter(r => {
