@@ -1945,9 +1945,12 @@ async def toggle_unit_status(unit_id: str):
 
 # Outsourcing Order Routes
 @api_router.post("/outsourcing-orders", response_model=OutsourcingOrder)
-async def create_outsourcing_order(order: OutsourcingOrderCreate):
+async def create_outsourcing_order(order: OutsourcingOrderCreate, current_user: dict = Depends(get_current_user)):
     """Create a new outsourcing order with multiple cutting lots"""
     order_dict = order.model_dump()
+    
+    # Track who created this entry
+    order_dict['created_by'] = current_user.get('username', 'system')
     
     cutting_order_ids = order_dict['cutting_order_ids']
     operation_type = order_dict['operation_type']
