@@ -169,6 +169,13 @@ function App() {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [appSettings, setAppSettings] = useState(null);
   
+  // Master Data State (Fabric Types & Suppliers)
+  const [fabricTypes, setFabricTypes] = useState(DEFAULT_FABRIC_TYPES);
+  const [suppliers, setSuppliers] = useState([]);
+  const [masterDataDialogOpen, setMasterDataDialogOpen] = useState(false);
+  const [newFabricType, setNewFabricType] = useState("");
+  const [newSupplier, setNewSupplier] = useState("");
+  
   // Returns Management State
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
   const [returnForm, setReturnForm] = useState({
