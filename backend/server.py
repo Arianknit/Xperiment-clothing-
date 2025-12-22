@@ -1186,8 +1186,11 @@ async def update_roll_weights(lot_id: str, weights_update: RollWeightsUpdate):
 
 # Cutting Order Routes
 @api_router.post("/cutting-orders", response_model=CuttingOrder)
-async def create_cutting_order(order: CuttingOrderCreate):
+async def create_cutting_order(order: CuttingOrderCreate, current_user: dict = Depends(get_current_user)):
     order_dict = order.model_dump()
+    
+    # Track who created this entry
+    order_dict['created_by'] = current_user.get('username', 'system')
     
     # Auto-generate cutting lot number if not provided
     if not order_dict.get('cutting_lot_number'):
