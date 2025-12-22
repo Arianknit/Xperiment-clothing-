@@ -80,8 +80,8 @@ const BUNDLE_TYPES = ['Front', 'Back', 'Sleeve', 'Rib', 'Patti', 'Collar', 'Fron
 
 const OPERATION_TYPES = ['Printing', 'Embroidery', 'Stone', 'Sequins', 'Sticker', 'Stitching'];
 
-// Fabric Types for dropdown
-const FABRIC_TYPES = [
+// Default Fabric Types (used to seed initial data)
+const DEFAULT_FABRIC_TYPES = [
   'Single Jersey',
   'Double Jersey', 
   'Interlock',
