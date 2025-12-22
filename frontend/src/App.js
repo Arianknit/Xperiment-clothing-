@@ -10073,6 +10073,8 @@ _Arian Knit Fab_`;
                     try {
                       const tempQr = new Html5Qrcode("temp-qr-reader");
                       const result = await tempQr.scanFile(file, true);
+                      // Clean up the scanner
+                      try { await tempQr.clear(); } catch(cleanErr) {}
                       console.log("File scan result:", result);
                       toast.success("QR code found in image!");
                       setScannerDialogOpen(false);
