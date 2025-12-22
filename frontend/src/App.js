@@ -1893,6 +1893,21 @@ function App() {
     window.open(`${API}/ironing-orders/${orderId}/dc`, '_blank');
   };
 
+  // Edit Ironing Order Handler
+  const openEditIroningOrder = (order) => {
+    setEditingIroningOrder(order);
+    setIroningForm({
+      dc_date: new Date(order.dc_date).toISOString().split('T')[0],
+      receipt_id: order.receipt_id || "",
+      unit_name: order.unit_name || "",
+      rate_per_pcs: order.rate_per_pcs?.toString() || "",
+      master_pack_ratio: order.master_pack_ratio || {},
+      stock_lot_name: order.stock_lot_name || "",
+      stock_color: order.stock_color || ""
+    });
+    setIroningDialogOpen(true);
+  };
+
   // Edit Receipt Handler
   const handleEditReceipt = (receipt) => {
     setSelectedEditReceipt(receipt);
