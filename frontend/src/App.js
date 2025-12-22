@@ -2875,7 +2875,8 @@ _Arian Knit Fab_`;
   };
 
   // Filtered data based on search and filters
-  const filteredFabricLots = fabricLots.filter(lot => {
+  // Memoized filtered lists for better performance
+  const filteredFabricLots = useMemo(() => fabricLots.filter(lot => {
     const searchLower = fabricSearch.toLowerCase();
     const matchesSearch = !fabricSearch || 
       lot.lot_number?.toLowerCase().includes(searchLower) ||
@@ -2886,9 +2887,9 @@ _Arian Knit Fab_`;
       (fabricStatusFilter === "in_stock" && lot.remaining_quantity > 0) ||
       (fabricStatusFilter === "exhausted" && lot.remaining_quantity <= 0);
     return matchesSearch && matchesStatus;
-  });
+  }), [fabricLots, fabricSearch, fabricStatusFilter]);
 
-  const filteredCuttingOrders = cuttingOrders.filter(order => {
+  const filteredCuttingOrders = useMemo(() => cuttingOrders.filter(order => {
     const searchLower = cuttingSearch.toLowerCase();
     const matchesSearch = !cuttingSearch || 
       order.lot_number?.toLowerCase().includes(searchLower) ||
@@ -2897,9 +2898,9 @@ _Arian Knit Fab_`;
       order.color?.toLowerCase().includes(searchLower);
     const matchesCategory = cuttingCategoryFilter === "all" || order.category === cuttingCategoryFilter;
     return matchesSearch && matchesCategory;
-  });
+  }), [cuttingOrders, cuttingSearch, cuttingCategoryFilter]);
 
-  const filteredOutsourcingOrders = outsourcingOrders.filter(order => {
+  const filteredOutsourcingOrders = useMemo(() => outsourcingOrders.filter(order => {
     const searchLower = outsourcingSearch.toLowerCase();
     const matchesSearch = !outsourcingSearch || 
       order.dc_number?.toLowerCase().includes(searchLower) ||
@@ -2909,14 +2910,14 @@ _Arian Knit Fab_`;
     const matchesOperation = outsourcingOperationFilter === "all" || order.operation_type === outsourcingOperationFilter;
     const matchesStatus = outsourcingStatusFilter === "all" || order.status === outsourcingStatusFilter;
     return matchesSearch && matchesOperation && matchesStatus;
-  });
+  }), [outsourcingOrders, outsourcingSearch, outsourcingOperationFilter, outsourcingStatusFilter]);
 
-  const allReceipts = [
+  const allReceipts = useMemo(() => [
     ...outsourcingReceipts.map(r => ({ ...r, type: 'Outsourcing' })),
     ...ironingReceipts.map(r => ({ ...r, type: 'Ironing' }))
-  ].sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
+  ].sort((a, b) => new Date(b.received_date) - new Date(a.received_date)), [outsourcingReceipts, ironingReceipts]);
 
-  const filteredReceipts = allReceipts.filter(receipt => {
+  const filteredReceipts = useMemo(() => allReceipts.filter(receipt => {
     const searchLower = receiptsSearch.toLowerCase();
     const order = receipt.type === 'Outsourcing' 
       ? outsourcingOrders.find(o => o.id === receipt.outsourcing_order_id)
@@ -2927,9 +2928,9 @@ _Arian Knit Fab_`;
       order?.cutting_lot_number?.toLowerCase().includes(searchLower);
     const matchesType = receiptsTypeFilter === "all" || receipt.type === receiptsTypeFilter;
     return matchesSearch && matchesType;
-  });
+  }), [allReceipts, receiptsSearch, receiptsTypeFilter, outsourcingOrders, ironingOrders]);
 
-  const filteredIroningOrders = ironingOrders.filter(order => {
+  const filteredIroningOrders = useMemo(() => ironingOrders.filter(order => {
     const searchLower = ironingSearch.toLowerCase();
     const matchesSearch = !ironingSearch || 
       order.dc_number?.toLowerCase().includes(searchLower) ||
@@ -2937,9 +2938,9 @@ _Arian Knit Fab_`;
       order.cutting_lot_number?.toLowerCase().includes(searchLower);
     const matchesStatus = ironingStatusFilter === "all" || order.status === ironingStatusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [ironingOrders, ironingSearch, ironingStatusFilter]);
 
-  const filteredCatalogs = catalogs.filter(catalog => {
+  const filteredCatalogs = useMemo(() => catalogs.filter(catalog => {
     const searchLower = catalogSearch.toLowerCase();
     const matchesSearch = !catalogSearch || 
       catalog.catalog_name?.toLowerCase().includes(searchLower) ||
@@ -2947,9 +2948,9 @@ _Arian Knit Fab_`;
       catalog.color?.toLowerCase().includes(searchLower);
     const matchesCategory = catalogCategoryFilter === "all" || catalog.category === catalogCategoryFilter;
     return matchesSearch && matchesCategory;
-  });
+  }), [catalogs, catalogSearch, catalogCategoryFilter]);
 
-  const filteredStocks = stocks.filter(stock => {
+  const filteredStocks = useMemo(() => stocks.filter(stock => {
     const searchLower = stockSearch.toLowerCase();
     return !stockSearch || 
       stock.lot_number?.toLowerCase().includes(searchLower) ||
@@ -2957,7 +2958,7 @@ _Arian Knit Fab_`;
       stock.category?.toLowerCase().includes(searchLower) ||
       stock.style_type?.toLowerCase().includes(searchLower) ||
       stock.color?.toLowerCase().includes(searchLower);
-  });
+  }), [stocks, stockSearch]);
 
   // Show loading while checking auth
   if (authLoading) {
