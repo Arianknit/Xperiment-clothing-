@@ -4393,6 +4393,12 @@ _Arian Knit Fab_`;
                               <p className="font-semibold text-indigo-600">₹{lot.rate_per_kg}/kg</p>
                             </div>
                           </div>
+                          {lot.created_by && (
+                            <div className="flex items-center gap-1 mt-2 text-xs text-slate-500">
+                              <User className="h-3 w-3" />
+                              <span>Created by: <strong>{lot.created_by}</strong></span>
+                            </div>
+                          )}
                           {lot.roll_numbers && lot.roll_numbers.length > 0 && (
                             <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 mt-2">
                               <p className="text-xs text-purple-900 font-semibold mb-2">
