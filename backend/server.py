@@ -2724,8 +2724,11 @@ async def add_cutting_payment(order_id: str, payment: PaymentRecord):
 
 # Ironing Order Routes
 @api_router.post("/ironing-orders", response_model=IroningOrder)
-async def create_ironing_order(order: IroningOrderCreate):
+async def create_ironing_order(order: IroningOrderCreate, current_user: dict = Depends(get_current_user)):
     order_dict = order.model_dump()
+    
+    # Track who created this entry
+    order_dict['created_by'] = current_user.get('username', 'system')
     
     # Get outsourcing receipt
     receipt = await db.outsourcing_receipts.find_one({"id": order_dict['receipt_id']}, {"_id": 0})
