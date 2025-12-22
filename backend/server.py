@@ -43,10 +43,46 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(
+    title="Arian Knit Fab Production Pro",
+    description="Garment Manufacturing Production Management System",
+    version="2.0.0"
+)
+
+# Add rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# ==================== SECURITY MIDDLEWARE ====================
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    # Security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+# ==================== INPUT SANITIZATION ====================
+def sanitize_string(value: str, max_length: int = 500) -> str:
+    """Sanitize string input to prevent injection attacks"""
+    if not value:
+        return value
+    # Remove potentially dangerous characters
+    value = re.sub(r'[<>"\';]', '', value)
+    # Truncate to max length
+    return value[:max_length].strip()
+
+def sanitize_search(value: str) -> str:
+    """Sanitize search input for regex safety"""
+    if not value:
+        return value
+    # Escape regex special characters
+    return re.escape(value.strip()[:100])
 
 # ==================== DATABASE INDEXES ====================
 # Create indexes on startup for better query performance
