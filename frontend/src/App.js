@@ -9441,7 +9441,8 @@ _Arian Knit Fab_`;
           <DialogHeader>
             <DialogTitle>🔥 Create Ironing Order</DialogTitle>
             <DialogDescription>
-              {scannedLot && (scannedLot.order.cutting_lot_number || scannedLot.order.lot_number)}
+              {scannedLot && (scannedLot.order.cutting_lot_number || scannedLot.order.lot_number)} 
+              {scannedLot && ` (${scannedLot.order.category})`}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleScanCreateIroning} className="space-y-4">
@@ -9468,9 +9469,9 @@ _Arian Knit Fab_`;
               />
             </div>
             <div className="space-y-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-              <Label className="font-semibold text-purple-800">Master Pack Ratio</Label>
+              <Label className="font-semibold text-purple-800">Master Pack Ratio ({scannedLot?.order?.category || 'Mens'} sizes)</Label>
               <div className="grid grid-cols-4 gap-2">
-                {['M', 'L', 'XL', 'XXL'].map((size) => (
+                {(SIZE_CONFIG[scannedLot?.order?.category] || SIZE_CONFIG['Mens']).map((size) => (
                   <div key={size} className="space-y-1">
                     <Label className="text-xs">{size}</Label>
                     <Input 
