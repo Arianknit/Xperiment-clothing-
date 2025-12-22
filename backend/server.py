@@ -719,9 +719,13 @@ async def register_user(user_data: UserCreate):
     }
 
 @api_router.post("/auth/login")
-async def login_user(credentials: UserLogin):
+@limiter.limit("5/minute")  # Rate limit: 5 login attempts per minute
+async def login_user(request: Request, credentials: UserLogin):
     """Login and get JWT token"""
-    user = await db.users.find_one({"username": credentials.username}, {"_id": 0})
+    # Sanitize input
+    username = sanitize_string(credentials.username, 50)
+    
+    user = await db.users.find_one({"username": username}, {"_id": 0})
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
