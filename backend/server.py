@@ -882,8 +882,11 @@ async def delete_supplier(name: str):
 # ==================== FABRIC LOT ROUTES ====================
 
 @api_router.post("/fabric-lots", response_model=FabricLot)
-async def create_fabric_lot(lot: FabricLotCreate):
+async def create_fabric_lot(lot: FabricLotCreate, current_user: dict = Depends(get_current_user)):
     lot_dict = lot.model_dump()
+    
+    # Track who created this entry
+    lot_dict['created_by'] = current_user.get('username', 'system')
     
     # Auto-generate lot number if not provided
     if not lot_dict.get('lot_number'):
