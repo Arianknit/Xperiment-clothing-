@@ -8724,6 +8724,8 @@ _Arian Knit Fab_`;
                       try {
                         const tempQr = new Html5Qrcode("temp-qr-reader");
                         const result = await tempQr.scanFile(file, true);
+                        // Clean up the scanner
+                        try { await tempQr.clear(); } catch(cleanErr) {}
                         console.log("Unified scanner file result:", result);
                         // Don't close - just call handler which will set scannedLot
                         handleLotQRScan(result);
