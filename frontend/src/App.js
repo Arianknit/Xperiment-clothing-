@@ -6299,6 +6299,15 @@ _Arian Knit Fab_`;
                               <Printer className="h-4 w-4 mr-1" />
                               DC
                             </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="text-blue-600 hover:bg-blue-50"
+                              onClick={() => openEditIroningOrder(order)}
+                              data-testid={`edit-ironing-${order.id}`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
                             {order.status === 'Sent' && (
                               <Button 
                                 size="sm" 
