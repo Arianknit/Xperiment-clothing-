@@ -743,7 +743,16 @@ function App() {
         clearTimeout(timeoutId);
       }
       if (scanner) {
-        scanner.clear().catch(() => {});
+        try {
+          const state = scanner.getState ? scanner.getState() : null;
+          if (state === 2 || state === 3) { // SCANNING or PAUSED
+            scanner.clear().catch(() => {});
+          } else if (scanner.clear) {
+            scanner.clear().catch(() => {});
+          }
+        } catch (e) {
+          // Ignore cleanup errors
+        }
       }
     };
   }, [scannerDialogOpen]);
