@@ -6267,9 +6267,9 @@ _Arian Knit Fab_`;
                         <p className="text-xs text-slate-500 mt-2">Example: 2-2-2-2 means 2 of each size = 1 master pack</p>
                       </div>
                       <div className="flex justify-end gap-3 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIroningDialogOpen(false)} data-testid="ironing-cancel-button">Cancel</Button>
+                        <Button type="button" variant="outline" onClick={() => { setIroningDialogOpen(false); setEditingIroningOrder(null); }} data-testid="ironing-cancel-button">Cancel</Button>
                         <Button type="submit" className="bg-amber-600 hover:bg-amber-700" disabled={loading} data-testid="ironing-submit-button">
-                          {loading ? "Creating..." : "Create Order"}
+                          {loading ? (editingIroningOrder ? "Updating..." : "Creating...") : (editingIroningOrder ? "Update Order" : "Create Order")}
                         </Button>
                       </div>
                     </form>
