@@ -4813,6 +4813,12 @@ _Arian Knit Fab_`;
                               <span className="font-semibold">Master:</span> {order.cutting_master_name}
                             </div>
                           )}
+                          {order.created_by && (
+                            <div className="flex items-center gap-1 text-xs text-slate-500">
+                              <User className="h-3 w-3" />
+                              <span>Entry by: <strong>{order.created_by}</strong></span>
+                            </div>
+                          )}
                           {order.completed_operations && order.completed_operations.length > 0 && (
                             <div className="flex items-center gap-2 mt-2">
                               <span className="text-xs text-slate-500 font-semibold">Operations Done:</span>
