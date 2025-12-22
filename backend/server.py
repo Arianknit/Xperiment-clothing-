@@ -4263,9 +4263,21 @@ async def upload_catalog_image(file: UploadFile = File(...)):
 
 # Stock Routes
 @api_router.get("/stock", response_model=List[Stock])
-async def get_all_stock():
+async def get_all_stock(limit: int = 100, skip: int = 0, search: str = None):
     """Get all stock entries with calculated master packs"""
-    stocks = await db.stock.find({"is_active": True}, {"_id": 0}).to_list(1000)
+    query = {"is_active": True}
+    
+    # Add search filter if provided
+    if search:
+        query["$or"] = [
+            {"stock_code": {"$regex": search, "$options": "i"}},
+            {"lot_number": {"$regex": search, "$options": "i"}},
+            {"category": {"$regex": search, "$options": "i"}},
+            {"style_type": {"$regex": search, "$options": "i"}},
+            {"color": {"$regex": search, "$options": "i"}}
+        ]
+    
+    stocks = await db.stock.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     # Calculate master packs for each stock
     for stock in stocks:
