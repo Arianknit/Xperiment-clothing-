@@ -6189,28 +6189,43 @@ _Arian Knit Fab_`;
                       <div className="space-y-2 bg-purple-50 p-4 rounded-lg border border-purple-200">
                         <Label className="text-purple-900 font-semibold">📦 Master Pack Ratio (Optional)</Label>
                         <p className="text-xs text-slate-600 mb-2">Define how many pieces of each size make 1 master pack</p>
-                        <div className="grid grid-cols-4 gap-2">
-                          {['S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'].map(size => (
-                            <div key={size}>
-                              <Label className="text-xs">{size}</Label>
-                              <Input 
-                                type="number" 
-                                min="0"
-                                placeholder="0"
-                                className="h-8"
-                                value={ironingForm.master_pack_ratio[size] || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value === '' ? 0 : parseInt(e.target.value);
-                                  setIroningForm({
-                                    ...ironingForm, 
-                                    master_pack_ratio: {...ironingForm.master_pack_ratio, [size]: value}
-                                  });
-                                }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-slate-500 mt-2">Example: 2-2-2-2 means 2S + 2M + 2L + 2XL = 1 master pack</p>
+                        {(() => {
+                          // Get the category from selected receipt
+                          const selectedReceipt = outsourcingReceipts.find(r => r.id === ironingForm.receipt_id);
+                          const order = selectedReceipt ? outsourcingOrders.find(o => o.id === selectedReceipt.outsourcing_order_id) : null;
+                          const category = order?.category || 'Mens';
+                          const sizes = SIZE_CONFIG[category] || SIZE_CONFIG['Mens'];
+                          
+                          return (
+                            <>
+                              <div className="text-xs text-purple-700 mb-2 font-medium">
+                                Category: {category} sizes
+                              </div>
+                              <div className="grid grid-cols-4 gap-2">
+                                {sizes.map(size => (
+                                  <div key={size}>
+                                    <Label className="text-xs">{size}</Label>
+                                    <Input 
+                                      type="number" 
+                                      min="0"
+                                      placeholder="0"
+                                      className="h-8"
+                                      value={ironingForm.master_pack_ratio[size] || ''}
+                                      onChange={(e) => {
+                                        const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                        setIroningForm({
+                                          ...ironingForm, 
+                                          master_pack_ratio: {...ironingForm.master_pack_ratio, [size]: value}
+                                        });
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          );
+                        })()}
+                        <p className="text-xs text-slate-500 mt-2">Example: 2-2-2-2 means 2 of each size = 1 master pack</p>
                       </div>
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setIroningDialogOpen(false)} data-testid="ironing-cancel-button">Cancel</Button>
