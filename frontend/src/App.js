@@ -1815,14 +1815,26 @@ function App() {
     setLoading(true);
     
     try {
-      await axios.post(`${API}/ironing-orders`, {
-        ...ironingForm,
-        dc_date: new Date(ironingForm.dc_date).toISOString(),
-        rate_per_pcs: parseFloat(ironingForm.rate_per_pcs)
-      });
-      toast.success("Ironing order created successfully");
+      if (editingIroningOrder) {
+        // Update existing ironing order
+        await axios.put(`${API}/ironing-orders/${editingIroningOrder.id}`, {
+          unit_name: ironingForm.unit_name,
+          rate_per_pcs: parseFloat(ironingForm.rate_per_pcs),
+          master_pack_ratio: ironingForm.master_pack_ratio
+        });
+        toast.success("Ironing order updated successfully");
+      } else {
+        // Create new ironing order
+        await axios.post(`${API}/ironing-orders`, {
+          ...ironingForm,
+          dc_date: new Date(ironingForm.dc_date).toISOString(),
+          rate_per_pcs: parseFloat(ironingForm.rate_per_pcs)
+        });
+        toast.success("Ironing order created successfully");
+      }
       
       setIroningDialogOpen(false);
+      setEditingIroningOrder(null);
       setIroningForm({
         dc_date: new Date().toISOString().split('T')[0],
         receipt_id: "",
@@ -1836,8 +1848,8 @@ function App() {
       fetchOutsourcingReceipts();
       fetchDashboardStats();
     } catch (error) {
-      console.error("Error creating ironing order:", error);
-      toast.error(error.response?.data?.detail || "Failed to create ironing order");
+      console.error("Error saving ironing order:", error);
+      toast.error(error.response?.data?.detail || "Failed to save ironing order");
     } finally {
       setLoading(false);
     }
