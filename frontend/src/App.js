@@ -3792,7 +3792,7 @@ _Arian Knit Fab_`;
                               <SelectValue placeholder="Select fabric type" />
                             </SelectTrigger>
                             <SelectContent>
-                              {FABRIC_TYPES.map(type => (
+                              {fabricTypes.map(type => (
                                 <SelectItem key={type} value={type}>{type}</SelectItem>
                               ))}
                             </SelectContent>
@@ -3800,8 +3800,27 @@ _Arian Knit Fab_`;
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="supplier-name">Supplier Name</Label>
-                          <Input id="supplier-name" value={lotForm.supplier_name} onChange={(e) => setLotForm({...lotForm, supplier_name: e.target.value})} placeholder="ABC Textiles" required data-testid="supplier-name-input" />
+                          {suppliers.length > 0 ? (
+                            <Select value={lotForm.supplier_name} onValueChange={(value) => setLotForm({...lotForm, supplier_name: value})}>
+                              <SelectTrigger data-testid="supplier-name-select">
+                                <SelectValue placeholder="Select supplier" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {suppliers.map(supplier => (
+                                  <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input id="supplier-name" value={lotForm.supplier_name} onChange={(e) => setLotForm({...lotForm, supplier_name: e.target.value})} placeholder="ABC Textiles" required data-testid="supplier-name-input" />
+                          )}
                         </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setMasterDataDialogOpen(true)}>
+                          <Settings className="h-3 w-3 mr-1" />
+                          Manage Types & Suppliers
+                        </Button>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="color">Color</Label>
