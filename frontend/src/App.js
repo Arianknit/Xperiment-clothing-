@@ -417,6 +417,7 @@ function App() {
     stock_color: ""
   });
   const [ironingDialogOpen, setIroningDialogOpen] = useState(false);
+  const [editingIroningOrder, setEditingIroningOrder] = useState(null);
   
   // Ironing receipt form state
   const [ironingReceiptForm, setIroningReceiptForm] = useState({
