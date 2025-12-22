@@ -4841,9 +4841,12 @@ def generate_dispatch_number():
     return f"DSP-{timestamp}"
 
 @api_router.post("/bulk-dispatches")
-async def create_bulk_dispatch(dispatch: BulkDispatchCreate):
+async def create_bulk_dispatch(dispatch: BulkDispatchCreate, current_user: dict = Depends(get_current_user)):
     """Create a bulk dispatch with multiple stock items"""
     dispatch_dict = dispatch.model_dump()
+    
+    # Track who created this entry
+    dispatch_dict['created_by'] = current_user.get('username', 'system')
     
     # Generate dispatch number
     dispatch_dict['id'] = str(uuid.uuid4())
