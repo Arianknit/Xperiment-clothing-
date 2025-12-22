@@ -6112,7 +6112,24 @@ _Arian Knit Fab_`;
                         <Label htmlFor="ironing-receipt">Select Stitching Receipt</Label>
                         <Select 
                           value={ironingForm.receipt_id} 
-                          onValueChange={(value) => setIroningForm({...ironingForm, receipt_id: value})}
+                          onValueChange={(value) => {
+                            // Get the category from the selected receipt's outsourcing order
+                            const selectedReceipt = outsourcingReceipts.find(r => r.id === value);
+                            const order = selectedReceipt ? outsourcingOrders.find(o => o.id === selectedReceipt.outsourcing_order_id) : null;
+                            const category = order?.category || 'Mens';
+                            
+                            // Reset master pack ratio with correct sizes for the category
+                            const newRatio = {};
+                            SIZE_CONFIG[category]?.forEach(size => {
+                              newRatio[size] = 0;
+                            });
+                            
+                            setIroningForm({
+                              ...ironingForm, 
+                              receipt_id: value,
+                              master_pack_ratio: newRatio
+                            });
+                          }}
                           data-testid="ironing-receipt-select"
                         >
                           <SelectTrigger>
@@ -6128,7 +6145,7 @@ _Arian Knit Fab_`;
                                 const order = outsourcingOrders.find(o => o.id === receipt.outsourcing_order_id);
                                 return (
                                   <SelectItem key={receipt.id} value={receipt.id}>
-                                    {receipt.dc_number} - {order?.unit_name} ({receipt.total_received} pcs)
+                                    {receipt.dc_number} - {order?.unit_name} ({order?.category}) - {receipt.total_received} pcs
                                   </SelectItem>
                                 );
                               })}
