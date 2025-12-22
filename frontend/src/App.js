@@ -6471,6 +6471,8 @@ _Arian Knit Fab_`;
                                 try {
                                   const html5QrCode = new Html5Qrcode("temp-qr-reader");
                                   const result = await html5QrCode.scanFile(file, true);
+                                  // Clean up the scanner
+                                  try { await html5QrCode.clear(); } catch(e) {}
                                   
                                   // Parse QR code
                                   let stockCode = result;
