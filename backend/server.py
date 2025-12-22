@@ -4433,7 +4433,7 @@ async def get_all_stock(limit: int = 100, skip: int = 0, search: str = None):
 
 
 @api_router.post("/stock", response_model=Stock)
-async def create_stock(stock: StockCreate, username: str = None):
+async def create_stock(stock: StockCreate, current_user: dict = Depends(get_current_user)):
     """Add historical stock entry"""
     # Generate unique stock code
     count = await db.stock.count_documents({})
@@ -4455,7 +4455,7 @@ async def create_stock(stock: StockCreate, username: str = None):
         "master_pack_ratio": stock.master_pack_ratio or {},
         "notes": stock.notes,
         "is_active": True,
-        "created_by": username,
+        "created_by": current_user.get('username', 'system'),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": None
     }
