@@ -599,11 +599,16 @@ function App() {
         clearTimeout(timeoutId);
       }
       if (scanner) {
-        // Handle both Html5Qrcode and Html5QrcodeScanner cleanup
-        if (scanner.stop) {
-          scanner.stop().catch(() => {});
-        } else if (scanner.clear) {
-          scanner.clear().catch(() => {});
+        try {
+          // Handle both Html5Qrcode and Html5QrcodeScanner cleanup
+          const state = scanner.getState ? scanner.getState() : null;
+          if (scanner.stop && (state === 2 || state === 3)) { // SCANNING or PAUSED
+            scanner.stop().catch(() => {});
+          } else if (scanner.clear) {
+            scanner.clear().catch(() => {});
+          }
+        } catch (e) {
+          // Ignore cleanup errors
         }
       }
     };
