@@ -6219,14 +6219,20 @@ _Arian Knit Fab_`;
                           </div>
                         </div>
                       </div>
+                      )}
                       <div className="space-y-2 bg-purple-50 p-4 rounded-lg border border-purple-200">
                         <Label className="text-purple-900 font-semibold">📦 Master Pack Ratio (Optional)</Label>
                         <p className="text-xs text-slate-600 mb-2">Define how many pieces of each size make 1 master pack</p>
                         {(() => {
-                          // Get the category from selected receipt
-                          const selectedReceipt = outsourcingReceipts.find(r => r.id === ironingForm.receipt_id);
-                          const order = selectedReceipt ? outsourcingOrders.find(o => o.id === selectedReceipt.outsourcing_order_id) : null;
-                          const category = order?.category || 'Mens';
+                          // Get the category from selected receipt or editing order
+                          let category = 'Mens';
+                          if (editingIroningOrder) {
+                            category = editingIroningOrder.category || 'Mens';
+                          } else {
+                            const selectedReceipt = outsourcingReceipts.find(r => r.id === ironingForm.receipt_id);
+                            const order = selectedReceipt ? outsourcingOrders.find(o => o.id === selectedReceipt.outsourcing_order_id) : null;
+                            category = order?.category || 'Mens';
+                          }
                           const sizes = SIZE_CONFIG[category] || SIZE_CONFIG['Mens'];
                           
                           return (
