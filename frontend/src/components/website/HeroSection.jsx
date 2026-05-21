@@ -123,7 +123,7 @@ export default function HeroSection() {
           display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap',
           animation: 'fadeInUp 0.8s ease-out 0.48s both',
         }}>
-          {['Xperiment', 'UnitedHart', "Men's Hosiery", "Kids' Hosiery", 'Tirupur Manufacturer'].map((tag, i) => (
+          {['Xperiment', 'UnitedHart', "Men's Hosiery", "Kids' Hosiery", 'Corporate Orders', 'Global Exports'].map((tag, i) => (
             <span key={i} style={{
               border: '1px solid rgba(201,168,76,0.3)',
               color: '#888', padding: '6px 16px',

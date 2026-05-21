@@ -7,6 +7,7 @@ import BrandsSection from './components/website/BrandsSection';
 import ProductsSection from './components/website/ProductsSection';
 import ProcessSection from './components/website/ProcessSection';
 import CorporateSection from './components/website/CorporateSection';
+import ExportSection from './components/website/ExportSection';
 import ContactSection from './components/website/ContactSection';
 import Footer from './components/website/Footer';
 
@@ -21,6 +22,7 @@ function App() {
         <section id="process"><ProcessSection /></section>
         <section id="products"><ProductsSection /></section>
         <section id="corporate"><CorporateSection /></section>
+        <section id="export"><ExportSection /></section>
         <section id="contact"><ContactSection /></section>
       </main>
       <Footer />
