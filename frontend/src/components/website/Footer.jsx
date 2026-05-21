@@ -101,7 +101,7 @@ export default function Footer() {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
               {[
-                { Icon: MapPin, text: 'Tirupur, Tamil Nadu, India' },
+                { Icon: MapPin, text: '13/8 LRG Layout, Rayapuram, Tirupur – 641601' },
                 { Icon: Phone,  text: '+91 70100 15644'              },
                 { Icon: Mail,   text: 'arianknitfab@gmail.com'     },
               ].map(({ Icon, text }, i) => (

@@ -3,7 +3,7 @@ import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const INFO = [
-  { Icon: MapPin, label: 'Address',        value: 'Tirupur, Tamil Nadu — 641 XXX', sub: 'India'                            },
+  { Icon: MapPin, label: 'Address',        value: '13/8 LRG Layout, Rayapuram',    sub: 'Tirupur, Tamil Nadu – 641601'     },
   { Icon: Phone,  label: 'Phone',          value: '+91 70100 15644',               sub: 'Mon – Sat, 9 AM – 6 PM'          },
   { Icon: Mail,   label: 'Email',          value: 'arianknitfab@gmail.com',        sub: 'We reply within 24 hours'         },
   { Icon: Clock,  label: 'Business Hours', value: 'Mon – Sat: 9:00 AM – 6:00 PM', sub: 'Sunday: Closed'                   },
