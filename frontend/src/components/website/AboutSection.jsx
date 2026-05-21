@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Award, MapPin, Calendar, Package, Factory, TrendingUp } from 'lucide-react';
 
 const STATS = [
-  { icon: Calendar,   value: '7+',       label: 'Years of Excellence',   sub: 'Established 2018'          },
+  { icon: Calendar,   value: '9+',       label: 'Years of Excellence',   sub: 'Established 2016'          },
   { icon: Award,      value: '2',        label: 'Premium Brands',        sub: 'Xperiment & UnitedHart'  },
   { icon: Package,    value: '500+',     label: 'Product Variants',      sub: "Men's & Kids' Range"        },
   { icon: TrendingUp, value: 'Pan-India',label: 'Distribution Network',  sub: 'Tirupur Based'             },
@@ -48,7 +48,7 @@ export default function AboutSection() {
             </h2>
 
             <p style={{ color: '#a0a0a0', lineHeight: 1.85, marginBottom: '1.2rem', fontSize: '15px' }}>
-              Founded in 2018 in Tirupur — the knitwear capital of India — Arian Knit Fab (AKF)
+              Founded in 2016 in Tirupur — the knitwear capital of India — Arian Knit Fab (AKF)
               was established with a singular vision: to deliver premium hosiery products that combine
               superior craftsmanship with accessible pricing.
             </p>

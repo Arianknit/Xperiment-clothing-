@@ -31,11 +31,11 @@ export default function Footer() {
               </div>
               <div>
                 <div style={{ color: '#fff', fontWeight: '600', fontSize: '15px' }}>Arian Knit Fab</div>
-                <div style={{ color: '#C9A84C', fontSize: '10px', letterSpacing: '2.5px', textTransform: 'uppercase' }}>Est. 2018</div>
+                <div style={{ color: '#C9A84C', fontSize: '10px', letterSpacing: '2.5px', textTransform: 'uppercase' }}>Est. 2016</div>
               </div>
             </div>
             <p style={{ color: '#555', fontSize: '13px', lineHeight: 1.85, marginBottom: '1.75rem' }}>
-              Tirupur's premier hosiery manufacturer. Crafting quality men's and kids' clothing with pride since 2018.
+              Tirupur's premier hosiery manufacturer. Crafting quality men's and kids' clothing with pride since 2016.
             </p>
             {/* Social */}
             <div style={{ display: 'flex', gap: '10px' }}>

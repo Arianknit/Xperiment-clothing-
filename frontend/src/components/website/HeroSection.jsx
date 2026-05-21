@@ -45,7 +45,7 @@ export default function HeroSection() {
         }}>
           <div style={{ width: '40px', height: '1px', backgroundColor: '#C9A84C' }} />
           <span style={{ color: '#C9A84C', fontSize: '11px', letterSpacing: '4px', textTransform: 'uppercase', fontWeight: '500' }}>
-            Established 2018 · Tirupur, India
+            Established 2016 · Tirupur, India
           </span>
           <div style={{ width: '40px', height: '1px', backgroundColor: '#C9A84C' }} />
         </div>

@@ -57,7 +57,7 @@ export default function Navbar() {
           </div>
           <div style={{ textAlign: 'left' }}>
             <div style={{ color: '#fff', fontWeight: '600', fontSize: '15px', letterSpacing: '0.3px', lineHeight: 1.2 }}>Arian Knit Fab</div>
-            <div style={{ color: '#C9A84C', fontSize: '10px', letterSpacing: '2.5px', textTransform: 'uppercase', lineHeight: 1.2 }}>Est. 2018</div>
+            <div style={{ color: '#C9A84C', fontSize: '10px', letterSpacing: '2.5px', textTransform: 'uppercase', lineHeight: 1.2 }}>Est. 2016</div>
           </div>
         </button>
 
