@@ -24,7 +24,7 @@ jobs:
 
       - name: Build
         working-directory: frontend
-        run: yarn build
+        run: PUBLIC_URL=/Xperiment-clothing- yarn build
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
