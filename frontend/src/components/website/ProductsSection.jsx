@@ -3,36 +3,40 @@ import { Shirt, Layers, Activity, Package, Star, Users, Shield, Award } from 'lu
 
 const PRODUCTS = [
   {
-    Icon: Shirt,   category: "Men's & Kids'", name: 'Round Neck T-Shirts',
-    desc: 'Soft, breathable cotton blend for all-day comfort. Wide range of sizes, fits, and colours.',
+    Icon: Shirt,    category: "Men's", name: "Men's T-Shirt",
+    desc: 'Soft, breathable cotton blend t-shirts for all-day comfort. Available in a wide range of sizes and colours.',
   },
   {
-    Icon: Award,   category: "Men's",          name: 'Polo T-Shirts',
-    desc: 'Smart collared t-shirts in premium pique fabric — perfect for work and leisure.',
+    Icon: Activity, category: "Men's", name: "Men's Track Pant",
+    desc: 'Stretch-comfort track pants for sport and everyday wear, with elastic drawstring waist and a relaxed fit.',
   },
   {
-    Icon: Layers,  category: "Men's & Kids'", name: 'Shorts',
-    desc: 'Lightweight and comfortable shorts for active lifestyles. Multiple lengths and styles.',
+    Icon: Package,  category: "Men's", name: "Men's Coordinate Set",
+    desc: 'Matching top and bottom coord sets — effortlessly stylish for casual outings and lounge wear.',
   },
   {
-    Icon: Activity,category: "Men's & Kids'", name: 'Track Pants',
-    desc: 'Stretch-comfort track pants for sport and everyday wear with elastic drawstring waist.',
+    Icon: Shield,   category: "Men's", name: "Men's Singlets",
+    desc: 'Premium cotton sleeveless vests for everyday comfort. Lightweight, breathable, and durable.',
   },
   {
-    Icon: Package, category: "Men's & Kids'", name: 'Coord Sets',
-    desc: 'Matching top and bottom coord sets — effortlessly stylish for casual and lounge wear.',
+    Icon: Star,     category: "Kids'", name: "Kids' T-Shirt",
+    desc: 'Playful and durable t-shirts made with child-safe fabrics. Vibrant prints and solid colours kids love.',
   },
   {
-    Icon: Star,    category: "Kids'",          name: "Kids' T-Shirts",
-    desc: 'Playful and durable t-shirts made with child-safe fabrics and vibrant designs.',
+    Icon: Layers,   category: "Kids'", name: "Kids' Shorts",
+    desc: 'Lightweight, comfortable shorts perfect for active children. Elastic waistband for an easy fit.',
   },
   {
-    Icon: Users,   category: "Kids'",          name: "Kids' Track Pants",
-    desc: 'Comfortable, durable track pants built for active children with easy elastic waistbands.',
+    Icon: Users,    category: "Kids'", name: "Kids' Track Pant",
+    desc: 'Comfortable, durable track pants built for active kids. Easy pull-on elastic waistband.',
   },
   {
-    Icon: Shield,  category: "Men's & Kids'", name: 'Innerwear Basics',
-    desc: 'Premium cotton innerwear providing all-day comfort, trusted for quality and durability.',
+    Icon: Award,    category: "Kids'", name: "Kids' Singlets",
+    desc: 'Soft, breathable sleeveless vests in child-safe fabrics — ideal for layering or summer wear.',
+  },
+  {
+    Icon: Package,  category: "Kids'", name: "Kids' Coordinate Set",
+    desc: 'Matching top and bottom sets for kids — fun designs, easy to wear, built to last.',
   },
 ];
 
@@ -77,45 +81,42 @@ export default function ProductsSection() {
           </p>
         </div>
 
-        {/* Grid */}
+        {/* Men's group label */}
+        <div style={{ marginBottom: '1.5rem', opacity: visible ? 1 : 0, transition: 'opacity 0.8s ease-out 0.1s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#C9A84C', fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', fontWeight: '600' }}>Men's Collection</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#252525' }} />
+          </div>
+        </div>
+
+        {/* Men's grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-          gap: '1.5rem',
+          gap: '1.25rem',
+          marginBottom: '3.5rem',
         }}>
-          {PRODUCTS.map(({ Icon, category, name, desc }, i) => (
-            <div key={i} style={{
-              backgroundColor: '#1A1A1A',
-              border: '1px solid #252525',
-              borderRadius: '14px', padding: '2rem',
-              opacity: visible ? 1 : 0,
-              transform: visible ? 'translateY(0)' : 'translateY(28px)',
-              transition: `all 0.65s ease-out ${(i % 4) * 0.08}s`,
-            }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)';
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.backgroundColor = '#1E1E1E';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = '#252525';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.backgroundColor = '#1A1A1A';
-              }}
-            >
-              <div style={{
-                width: '50px', height: '50px', borderRadius: '12px',
-                backgroundColor: 'rgba(201,168,76,0.08)',
-                border: '1px solid rgba(201,168,76,0.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '1.25rem',
-              }}>
-                <Icon size={22} color="#C9A84C" />
-              </div>
-              <div style={{ color: '#555', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '0.4rem' }}>{category}</div>
-              <h3 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', marginBottom: '0.75rem', lineHeight: 1.3 }}>{name}</h3>
-              <p style={{ color: '#888', fontSize: '13px', lineHeight: 1.75 }}>{desc}</p>
-            </div>
+          {PRODUCTS.slice(0, 4).map(({ Icon, category, name, desc }, i) => (
+            <ProductCard key={i} Icon={Icon} category={category} name={name} desc={desc} visible={visible} delay={i * 0.08} />
+          ))}
+        </div>
+
+        {/* Kids' group label */}
+        <div style={{ marginBottom: '1.5rem', opacity: visible ? 1 : 0, transition: 'opacity 0.8s ease-out 0.3s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#C9A84C', fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', fontWeight: '600' }}>Kids' Collection</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#252525' }} />
+          </div>
+        </div>
+
+        {/* Kids' grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: '1.25rem',
+        }}>
+          {PRODUCTS.slice(4).map(({ Icon, category, name, desc }, i) => (
+            <ProductCard key={i} Icon={Icon} category={category} name={name} desc={desc} visible={visible} delay={(i + 4) * 0.08} />
           ))}
         </div>
 
@@ -140,6 +141,43 @@ export default function ProductsSection() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ProductCard({ Icon, category, name, desc, visible, delay }) {
+  return (
+    <div style={{
+      backgroundColor: '#1A1A1A',
+      border: '1px solid #252525',
+      borderRadius: '14px', padding: '2rem',
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(28px)',
+      transition: `all 0.65s ease-out ${delay}s`,
+    }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)';
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.backgroundColor = '#1E1E1E';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = '#252525';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.backgroundColor = '#1A1A1A';
+      }}
+    >
+      <div style={{
+        width: '50px', height: '50px', borderRadius: '12px',
+        backgroundColor: 'rgba(201,168,76,0.08)',
+        border: '1px solid rgba(201,168,76,0.18)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: '1.25rem',
+      }}>
+        <Icon size={22} color="#C9A84C" />
+      </div>
+      <div style={{ color: '#555', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '0.4rem' }}>{category}</div>
+      <h3 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', marginBottom: '0.75rem', lineHeight: 1.3 }}>{name}</h3>
+      <p style={{ color: '#888', fontSize: '13px', lineHeight: 1.75 }}>{desc}</p>
     </div>
   );
 }
