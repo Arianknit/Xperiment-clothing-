@@ -102,8 +102,8 @@ export default function Footer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
               {[
                 { Icon: MapPin, text: 'Tirupur, Tamil Nadu, India' },
-                { Icon: Phone,  text: '+91 XXXXX XXXXX'            },
-                { Icon: Mail,   text: 'info@arianknit.com'         },
+                { Icon: Phone,  text: '+91 70100 15644'              },
+                { Icon: Mail,   text: 'arianknitfab@gmail.com'     },
               ].map(({ Icon, text }, i) => (
                 <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                   <Icon size={13} color="#C9A84C" style={{ marginTop: '2px', minWidth: '13px' }} />

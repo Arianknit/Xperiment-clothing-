@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 
 const INFO = [
   { Icon: MapPin, label: 'Address',        value: 'Tirupur, Tamil Nadu — 641 XXX', sub: 'India'                            },
-  { Icon: Phone,  label: 'Phone',          value: '+91 XXXXX XXXXX',               sub: 'Mon – Sat, 9 AM – 6 PM'          },
-  { Icon: Mail,   label: 'Email',          value: 'info@arianknit.com',            sub: 'We reply within 24 hours'         },
+  { Icon: Phone,  label: 'Phone',          value: '+91 70100 15644',               sub: 'Mon – Sat, 9 AM – 6 PM'          },
+  { Icon: Mail,   label: 'Email',          value: 'arianknitfab@gmail.com',        sub: 'We reply within 24 hours'         },
   { Icon: Clock,  label: 'Business Hours', value: 'Mon – Sat: 9:00 AM – 6:00 PM', sub: 'Sunday: Closed'                   },
 ];
 
@@ -176,7 +176,7 @@ export default function ContactSection() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <FIELD label="Phone" required>
-                    <input type="tel" name="phone" value={form.phone} onChange={onChange} required placeholder="+91 XXXXX XXXXX" style={inputCss}
+                    <input type="tel" name="phone" value={form.phone} onChange={onChange} required placeholder="+91 70100 15644" style={inputCss}
                       onFocus={e => e.target.style.borderColor = '#C9A84C'}
                       onBlur={e => e.target.style.borderColor = '#2A2A2A'} />
                   </FIELD>
