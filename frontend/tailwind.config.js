@@ -52,6 +52,23 @@ module.exports = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			gold: {
+  				DEFAULT: '#C9A84C',
+  				light: '#E8C96A',
+  				dark: '#A68830',
+  			},
+  			charcoal: {
+  				DEFAULT: '#1a1a1a',
+  				950: '#0A0A0A',
+  				900: '#111111',
+  				800: '#1A1A1A',
+  				700: '#252525',
+  				600: '#333333',
+  				500: '#555555',
+  				400: '#888888',
+  				300: '#AAAAAA',
+  				200: '#CCCCCC',
   			}
   		},
   		keyframes: {
