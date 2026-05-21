@@ -84,7 +84,7 @@ export default function Footer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {[
                 { name: 'Xperiment',    sub: 'Bold & Trendy Hosiery'      },
-                { name: 'United Heart', sub: 'Classic & Comfortable Basics' },
+                { name: 'UnitedHart', sub: 'Classic & Comfortable Basics' },
               ].map(({ name, sub }, i) => (
                 <div key={i} style={{ borderLeft: '2px solid #C9A84C', paddingLeft: '1rem' }}>
                   <div style={{ color: '#fff', fontSize: '14px', fontWeight: '500' }}>{name}</div>

@@ -3,7 +3,7 @@ import { Award, MapPin, Calendar, Package, Factory, TrendingUp } from 'lucide-re
 
 const STATS = [
   { icon: Calendar,   value: '7+',       label: 'Years of Excellence',   sub: 'Established 2018'          },
-  { icon: Award,      value: '2',        label: 'Premium Brands',        sub: 'Xperiment & United Heart'  },
+  { icon: Award,      value: '2',        label: 'Premium Brands',        sub: 'Xperiment & UnitedHart'  },
   { icon: Package,    value: '500+',     label: 'Product Variants',      sub: "Men's & Kids' Range"        },
   { icon: TrendingUp, value: 'Pan-India',label: 'Distribution Network',  sub: 'Tirupur Based'             },
 ];

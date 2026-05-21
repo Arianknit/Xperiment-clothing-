@@ -13,10 +13,10 @@ const BRANDS = [
   },
   {
     Icon: Heart,
-    name: 'United Heart',
+    name: 'UnitedHart',
     tagline: 'Classic. Comfortable. Trusted.',
     description:
-      'United Heart is the family\'s everyday companion. Rooted in the values of comfort, quality, and durability, this brand delivers timeless hosiery basics that hold up through every wash and every adventure. Whether for daily wear or casual outings, United Heart stands for trust.',
+      'UnitedHart is the family\'s everyday companion. Rooted in the values of comfort, quality, and durability, this brand delivers timeless hosiery basics that hold up through every wash and every adventure. Whether for daily wear or casual outings, UnitedHart stands for trust.',
     products: ['Round Neck T-Shirts', 'Basic Shorts', 'Track Pants', "Kids' Essentials", 'Innerwear Basics'],
     glow: 'rgba(166,136,48,0.10)',
   },

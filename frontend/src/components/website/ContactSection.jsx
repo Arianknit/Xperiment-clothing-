@@ -121,7 +121,7 @@ export default function ContactSection() {
             }}>
               <div style={{ color: '#555', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '1rem' }}>Our Brands</div>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {['Xperiment', 'United Heart'].map((b, i) => (
+                {['Xperiment', 'UnitedHart'].map((b, i) => (
                   <span key={i} style={{
                     backgroundColor: 'rgba(201,168,76,0.08)',
                     border: '1px solid rgba(201,168,76,0.28)',
