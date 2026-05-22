@@ -6,7 +6,7 @@ const STEPS = [
     title: 'Raw Cotton Harvesting',
     subtitle: 'The Beginning',
     desc: 'Premium cotton is carefully harvested from the finest farms across India. We source only the best quality cotton — long-staple fibers that form the very foundation of our superior hosiery products.',
-    img: 'https://images.unsplash.com/photo-7tCyoE0mgD8?w=700&auto=format&fit=crop&q=80',
+    img: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=700&auto=format&fit=crop&q=80',
     alt: 'Cotton field harvest',
   },
   {
@@ -22,7 +22,7 @@ const STEPS = [
     title: 'Spinning into Yarn',
     subtitle: 'Creating the Thread',
     desc: 'Clean cotton fibers are carded, combed, and drawn into slivers before being spun into yarn. The fineness and twist of the yarn directly determines the softness and strength of the finished fabric.',
-    img: 'https://images.unsplash.com/photo-gJy15WkguVg?w=700&auto=format&fit=crop&q=80',
+    img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&auto=format&fit=crop&q=80',
     alt: 'Yarn spinning spools',
   },
   {
@@ -38,7 +38,7 @@ const STEPS = [
     title: 'Dyeing & Finishing',
     subtitle: 'Adding Life and Colour',
     desc: 'The knitted fabric is dyed using responsible, eco-conscious processes to achieve rich, long-lasting colours. Finishing treatments — softening, shrink-proofing — give our fabrics their signature comfortable feel.',
-    img: 'https://images.unsplash.com/photo-0ohjyDUIUq0?w=700&auto=format&fit=crop&q=80',
+    img: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=700&auto=format&fit=crop&q=80',
     alt: 'Fabric dyeing process',
   },
   {
@@ -46,7 +46,7 @@ const STEPS = [
     title: 'Pattern Cutting',
     subtitle: 'Precision in Every Panel',
     desc: 'Skilled cutters lay fabric in precise layers and cut clean garment panels using pattern templates. Accuracy here ensures every garment fits perfectly and fabric wastage is kept to an absolute minimum.',
-    img: 'https://images.unsplash.com/photo-eV4R96svevs?w=700&auto=format&fit=crop&q=80',
+    img: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=700&auto=format&fit=crop&q=80',
     alt: 'Fabric cutting pattern',
   },
   {
@@ -54,7 +54,7 @@ const STEPS = [
     title: 'Stitching & Assembly',
     subtitle: 'Craftsmanship at Its Core',
     desc: 'Expert tailors stitch the cut panels on industrial sewing machines. Every seam is reinforced and carefully examined — the precision of this step is what gives an AKF garment its durability and lasting quality.',
-    img: 'https://images.unsplash.com/photo-6Zh87jbMSEA?w=700&auto=format&fit=crop&q=80',
+    img: 'https://images.unsplash.com/photo-1558618047-3c8c76ca4c0b?w=700&auto=format&fit=crop&q=80',
     alt: 'Garment stitching sewing',
   },
   {
@@ -62,7 +62,7 @@ const STEPS = [
     title: 'Quality Inspection',
     subtitle: 'Zero Tolerance for Defects',
     desc: 'Every finished garment undergoes rigorous quality checks — stitching consistency, colour accuracy, measurements, and fabric integrity are all verified. Only pieces that meet our strict standards proceed to packaging.',
-    img: 'https://images.unsplash.com/photo-th0Xp30Su5s?w=700&auto=format&fit=crop&q=80',
+    img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=700&auto=format&fit=crop&q=80',
     alt: 'Quality inspection garments',
   },
   {
