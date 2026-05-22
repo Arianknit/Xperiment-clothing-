@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Xperiment-clothing-/static/css/main.14ee125c.css",
-    "main.js": "/Xperiment-clothing-/static/js/main.30335eae.js",
+    "main.js": "/Xperiment-clothing-/static/js/main.8fad68cb.js",
     "index.html": "/Xperiment-clothing-/index.html",
     "main.14ee125c.css.map": "/Xperiment-clothing-/static/css/main.14ee125c.css.map",
-    "main.30335eae.js.map": "/Xperiment-clothing-/static/js/main.30335eae.js.map"
+    "main.8fad68cb.js.map": "/Xperiment-clothing-/static/js/main.8fad68cb.js.map"
   },
   "entrypoints": [
     "static/css/main.14ee125c.css",
-    "static/js/main.30335eae.js"
+    "static/js/main.8fad68cb.js"
   ]
 }
